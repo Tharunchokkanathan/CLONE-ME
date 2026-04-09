@@ -1697,28 +1697,39 @@ function executeThunderStrike() {
   if (target) {
     player.thunderCooldown = THUNDER_COOLDOWN;
     
-    // Damage: 80% Current HP
+    // Initial Impact
     const dmg = Math.floor(target.hp * 0.8);
     target.hp -= dmg;
     target.flashTimer = 25;
     
-    // Create Lightning visual
-    const tx = target.x + (target.isGiant ? (PLAYER_W*GIANT_SIZE_MULT)/2 : PLAYER_W/2);
-    const ty = target.y + (target.isGiant ? (PLAYER_H*GIANT_SIZE_MULT)/2 : PLAYER_H/2);
-    
-    lightnings.push({
-      segments: generateLightningPath({x: tx, y: -50}, {x: tx, y: ty}),
-      life: 12,
-      maxLife: 12,
-      tx, ty
-    });
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "STORM OF JUDGEMENT!", "#ffff33");
+    addFloatText(target.x + 10, target.y - 30, `-${dmg} HEAVENLY DEVASTATION`, '#ffff00');
 
-    triggerShake(45);
-    screenFlash = 8; // Flash for 8 frames
-    spawnParticles(tx, ty, '#ffff33', 45, 9);
-    spawnParticles(tx, ty, '#ffffff', 20, 5);
-    addFloatText(tx, target.y - 30, `-${dmg} HEAVENLY THUNDER`, '#ffff00');
-    addFloatText(player.x + PLAYER_W/2, player.y - 50, "JUDGEMENT!", "#ffff33");
+    // Multi-Strike Loop (Visual)
+    for (let sIdx = 0; sIdx < 5; sIdx++) {
+      setTimeout(() => {
+        if (!target || !gameRunning) return;
+        
+        const tx = target.x + (target.isGiant ? (PLAYER_W*GIANT_SIZE_MULT)/2 : PLAYER_W/2) + (Math.random()-0.5)*30;
+        const ty = target.y + (target.isGiant ? (PLAYER_H*GIANT_SIZE_MULT)/2 : PLAYER_H/2) + (Math.random()-0.5)*20;
+        
+        lightnings.push({
+          segments: generateLightningPath({x: tx + (Math.random()-0.5)*100, y: -100}, {x: tx, y: ty}),
+          life: 12,
+          maxLife: 12,
+          tx, ty
+        });
+
+        triggerShake(35);
+        screenFlash = 5;
+        spawnParticles(tx, ty, '#ffff33', 15, 6);
+        spawnParticles(tx, ty, '#ffffff', 8, 3);
+        
+        // Minor extra damage for the follow-up bolts (visual consistency)
+        target.hp -= Math.floor(target.hp * 0.05); 
+        target.flashTimer = 15;
+      }, sIdx * 90);
+    }
   } else {
     // Miss / Out of range
     player.thunderCooldown = 60; // 1s penalty
