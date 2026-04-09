@@ -803,6 +803,24 @@ const SFX = {
     gain.connect(this.ctx.destination);
     osc.start();
     osc.stop(this.ctx.currentTime + 0.1);
+  },
+  playFire() {
+    if (!this.ctx || this.masterVolume <= 0) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(40 + Math.random() * 30, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.15);
+    filter.type = 'lowpass';
+    filter.frequency.value = 350 + Math.random() * 250;
+    gain.gain.setValueAtTime(0.14 * this.masterVolume, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.15);
   }
 };
 const W = canvas.width;   // 820 – internal resolution stays fixed
@@ -886,9 +904,9 @@ const GRAVITY_COOLDOWN   = 720; // 12 seconds
 const THUNDER_COOLDOWN   = 1080; // 18 seconds
 const THUNDER_RANGE      = 500;
 
-const FLAME_COOLDOWN     = 900;  // 15 seconds
-const FLAME_DURATION     = 100;  // 1.6 seconds of fire
-const FLAME_RANGE        = 220;
+const FLAME_COOLDOWN     = 600;  // 10 second cooldown
+const FLAME_DURATION     = 300;  // 5 seconds of fire
+const FLAME_RANGE        = 240;
 
 
 
@@ -1443,8 +1461,10 @@ function drawShockwaves() {
 function updatePlayer() {
   const spMult = globalTimeScale;
 
-  if (leftKey())       { player.vx = -MOVE_SPEED * spMult; player.facing = -1; }
-  else if (rightKey()) { player.vx =  MOVE_SPEED * spMult; player.facing =  1; }
+  const flamingMult = (player.isFlaming ? 0.75 : 1.0);
+
+  if (leftKey())       { player.vx = -MOVE_SPEED * spMult * flamingMult; player.facing = -1; }
+  else if (rightKey()) { player.vx =  MOVE_SPEED * spMult * flamingMult; player.facing =  1; }
   else                 { player.vx *= 0.75; }
 
   // Jump logic
@@ -1501,6 +1521,7 @@ function updatePlayer() {
 
   if (player.isFlaming) {
     player.flameTimer -= spMult;
+    if (Math.random() < 0.3) SFX.playFire();
     if (player.flameTimer <= 0 || !flameKey()) {
       player.isFlaming = false;
     } else {
@@ -2246,24 +2267,25 @@ function drawLightnings() {
 
 // ── Flame Thrower Logic ────────────────────────────────────
 function updateFlameLogic(spMult) {
-  // Spawn particles
-  const fx = player.x + PLAYER_W/2 + player.facing * 15;
+  // Spawn high-density particles
+  const fx = player.x + PLAYER_W/2 + player.facing * 18;
   const fy = player.y + PLAYER_H/2;
   
-  for (let i = 0; i < 6; i++) {
-    const angle = (Math.random() - 0.5) * 0.4;
-    const speed = 6 + Math.random() * 5;
+  const particleCount = 12; // Doubled for smoothness
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (Math.random() - 0.5) * 0.55; // Slightly wider spray
+    const speed = 7 + Math.random() * 6;
     const vx = Math.cos(angle) * speed * player.facing;
-    const vy = Math.sin(angle) * speed - (1 + Math.random() * 2);
+    const vy = Math.sin(angle) * speed - (1.5 + Math.random() * 2.5);
     spawnFireParticle(fx, fy, vx, vy);
   }
 
   // Detect and Damage
   const flameRect = {
     x: player.facing === 1 ? player.x + PLAYER_W : player.x - FLAME_RANGE,
-    y: player.y - 20,
+    y: player.y - 40,
     w: FLAME_RANGE,
-    h: PLAYER_H + 40
+    h: PLAYER_H + 80
   };
 
   const targets = [...clones];
@@ -2273,31 +2295,33 @@ function updateFlameLogic(spMult) {
     const ex = ent.x + (ent.isGiant ? (PLAYER_W*GIANT_SIZE_MULT)/2 : PLAYER_W/2);
     const ey = ent.y + (ent.isGiant ? (PLAYER_H*GIANT_SIZE_MULT)/2 : PLAYER_H/2);
     
-    // Simple box check for flame stream
+    // Smooth overlap check
     const inX = ex > flameRect.x && ex < flameRect.x + flameRect.w;
     const inY = ey > flameRect.y && ey < flameRect.y + flameRect.h;
 
     if (inX && inY) {
-      const dmg = (ent.maxHp * 0.6) / FLAME_DURATION;
+      const dmg = (ent.maxHp * 0.7) / FLAME_DURATION; // Buffed damage slightly too
       ent.hp -= dmg * spMult;
-      ent.flashTimer = 5;
-      if (Math.random() < 0.2) {
-        spawnParticles(ex, ey, '#ff3300', 2, 2);
+      ent.flashTimer = 8; // Longer flash for visibility
+      if (Math.random() < 0.25) {
+        spawnParticles(ex, ey, '#ffaa00', 3, 2.5);
       }
     }
   });
 
-  if (Math.random() < 0.1) triggerShake(1.5);
+  if (Math.random() < 0.15) triggerShake(1.8);
 }
 
 function spawnFireParticle(x, y, vx, vy) {
   fireParticles.push({
     x, y, vx, vy,
     life: 1.0,
-    decay: 0.02 + Math.random() * 0.02,
-    size: 4 + Math.random() * 8,
+    decay: 0.015 + Math.random() * 0.015, // Longer particle life for smoothness
+    size: 5 + Math.random() * 10,
     angle: Math.random() * Math.PI * 2,
-    rotateSpeed: (Math.random() - 0.5) * 0.2
+    rotateSpeed: (Math.random() - 0.5) * 0.25,
+    wobble: Math.random() * 10,
+    growth: 0.35 + Math.random() * 0.25
   });
 }
 
@@ -2307,11 +2331,17 @@ function updateFireParticles() {
     const p = fireParticles[i];
     p.x += p.vx * ts;
     p.y += p.vy * ts;
-    p.vx *= 0.96;
-    p.vy *= 0.96;
-    p.vy -= 0.1 * ts; // Heat drift
+    
+    // Add organic turbulence
+    p.wobble += 0.15 * ts;
+    p.x += Math.sin(p.wobble) * 1.5;
+    p.y += Math.cos(p.wobble * 0.8) * 1.2;
+
+    p.vx *= (0.97 * ts);
+    p.vy *= (0.97 * ts);
+    p.vy -= 0.12 * ts; // Heat drift
     p.life -= p.decay * ts;
-    p.size += 0.4 * ts; // Smoke expand
+    p.size += p.growth * ts; // Particles grow as they heat up
     p.angle += p.rotateSpeed * ts;
     if (p.life <= 0) fireParticles.splice(i, 1);
   }
@@ -2320,32 +2350,41 @@ function updateFireParticles() {
 function drawFireParticles() {
   fireParticles.forEach(p => {
     ctx.save();
-    ctx.globalAlpha = Math.min(1.0, p.life * 1.5);
+    ctx.globalAlpha = Math.min(1.0, p.life * 1.8);
     ctx.translate(p.x, p.y);
     ctx.rotate(p.angle);
     
-    // Color lifecycle: White -> Yellow -> Orange -> Red -> Grey/Black (Smoke)
     let color;
-    if (p.life > 0.8) {
-      color = '#ffffff'; // White hot core
+    if (p.life > 0.75) {
+      color = '#ffffff'; // White core
       ctx.globalCompositeOperation = 'lighter';
-    } else if (p.life > 0.6) {
-      color = '#ffff33'; // Yellow
+    } else if (p.life > 0.5) {
+      color = '#ffff55'; // Vibrant Yellow
       ctx.globalCompositeOperation = 'lighter';
-    } else if (p.life > 0.4) {
-      color = '#ff6600'; // Orange
+    } else if (p.life > 0.35) {
+      color = '#ff9900'; // Hot Orange
       ctx.globalCompositeOperation = 'lighter';
-    } else if (p.life > 0.2) {
-      color = '#ff0000'; // Red
+    } else if (p.life > 0.15) {
+      color = '#ff3300'; // Deep Red
       ctx.globalCompositeOperation = 'source-over';
     } else {
-      color = `rgba(40, 40, 40, ${p.life * 3})`; // Grey Smoke
+      color = `rgba(30, 30, 30, ${p.life * 4})`; // Dissipating Smoke
       ctx.globalCompositeOperation = 'source-over';
     }
     
     ctx.fillStyle = color;
     const s = p.size * p.life;
-    ctx.fillRect(-s/2, -s/2, s, s);
+    
+    // Render soft circular fire for high quality
+    ctx.beginPath();
+    ctx.arc(0, 0, s/2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    if (p.life > 0.4) {
+      ctx.shadowBlur = 15 * p.life;
+      ctx.shadowColor = color;
+      ctx.fill();
+    }
     
     ctx.restore();
   });
