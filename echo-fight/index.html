@@ -709,7 +709,7 @@
     </div>
     
     <div id="thunder-bar-wrap">
-      <div class="hud-label"><span>⚡ Thunder</span> <span id="timer-thunder" class="cooldown-timer">READY</span></div>
+      <div class="hud-label"><span>⏳ Freeze</span> <span id="timer-thunder" class="cooldown-timer">READY</span></div>
       <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
     </div>
     
@@ -723,7 +723,7 @@
   <!-- Key Legend Box -->
   <div id="controls-legend" class="interface-hidden">
     <div class="legend-item"><span class="legend-key">F</span> Flame Thrower</div>
-    <div class="legend-item"><span class="legend-key">T</span> Thunder Strike</div>
+    <div class="legend-item"><span class="legend-key">T</span> Time Freeze</div>
     <div class="legend-item"><span class="legend-key">G</span> Anti-Gravity (Tornado)</div>
     <div class="legend-item"><span class="legend-key">E</span> Crimson Nova</div>
     <div class="legend-item"><span class="legend-key">P</span> Precision Pistol</div>
@@ -898,23 +898,23 @@ const SFX = {
     osc.start();
     osc.stop(this.ctx.currentTime + 0.1);
   },
-  playFire() {
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.15);
+  },
+  playFreeze() {
     if (!this.ctx || this.masterVolume <= 0) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    const filter = this.ctx.createBiquadFilter();
+    const noise = this.ctx.createOscillator();
     osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(40 + Math.random() * 30, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.15);
-    filter.type = 'lowpass';
-    filter.frequency.value = 350 + Math.random() * 250;
-    gain.gain.setValueAtTime(0.14 * this.masterVolume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-    osc.connect(filter);
-    filter.connect(gain);
+    osc.frequency.setValueAtTime(40, this.ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(10, this.ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.3 * this.masterVolume, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+    osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start();
-    osc.stop(this.ctx.currentTime + 0.15);
+    osc.stop(this.ctx.currentTime + 0.5);
   }
 };
 const W = canvas.width;   // 820 – internal resolution stays fixed
@@ -994,7 +994,8 @@ const GIANT_DMG_MULT     = 1.5;
 const GRAVITY_RADIUS     = 180;
 const GRAVITY_DURATION   = 180; // 3 seconds
 const GRAVITY_COOLDOWN   = 110; // ~1.8 seconds
-const THUNDER_COOLDOWN   = 110; // ~1.8 seconds
+const THUNDER_COOLDOWN   = 720; // 12 seconds (Time Freeze)
+const FREEZE_DURATION    = 180; // 3 seconds
 const FLAME_COOLDOWN     = 110; // ~1.8 seconds
 const FLAME_DURATION     = 300;  // 5 seconds of fire
 const FLAME_RANGE        = 240;
@@ -1161,6 +1162,8 @@ function createPlayer() {
     novaEnergy: 0,
     maxNovaEnergy: 100,
     pistolCooldown: 0,
+    thunderCooldown: 0,
+    freezeTimer: 0,
   };
 }
 
@@ -1620,11 +1623,16 @@ function updatePlayer() {
     }
   }
 
-  // Thunder Strike Activation
+  // Time Freeze Activation (Replaces Thunder)
   if (player.thunderCooldown > 0) player.thunderCooldown -= spMult;
   if (thunderKey() && (player.thunderCooldown || 0) <= 0) {
-    executeThunderStrike();
+    player.freezeTimer = FREEZE_DURATION;
+    player.thunderCooldown = THUNDER_COOLDOWN;
+    SFX.playFreeze();
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "TIME STOP!", "#00ffff");
+    triggerShake(15);
   }
+  if (player.freezeTimer > 0) player.freezeTimer -= spMult;
 
   // Activation check
   if (gravityKey() && (player.gravityCooldown || 0) <= 0) {
@@ -2391,7 +2399,7 @@ function updateFlameLogic(spMult) {
     const inY = ey > flameRect.y && ey < flameRect.y + flameRect.h;
 
     if (inX && inY) {
-      const dmg = (ent.maxHp * 0.7) / FLAME_DURATION; // Buffed damage slightly too
+      const dmg = (ent.maxHp * 0.9) / FLAME_DURATION; // Buffed to 90%
       ent.hp -= dmg * spMult;
       ent.flashTimer = 8; // Longer flash for visibility
       if (Math.random() < 0.25) {
@@ -2680,14 +2688,20 @@ function gameLoop(ts) {
   ctx.translate(shakeX, shakeY);
 
   if (!gameOver && gameRunning) {
-    survivalTime  = (ts - startTime) / 1000;
-    diffMult      = 1 + survivalTime / 30;
-
     recordFrame();
     updatePlayer();
 
-    nextEchoTimer -= dt;
-    if (nextEchoTimer <= 0 && !spawnPaused) {
+    // Time Scale for world entities
+    const eScale = player.freezeTimer > 0 ? 0 : globalTimeScale;
+    const eDt = eScale * dt;
+
+    if (eScale > 0) {
+      nextEchoTimer -= dt;
+      survivalTime = (ts - startTime) / 1000;
+      diffMult = 1 + survivalTime / 30;
+    }
+    
+    if (nextEchoTimer <= 0 && !spawnPaused && eScale > 0) {
       spawnClone();
       nextEchoTimer = spawnInterval();
     }
@@ -2708,8 +2722,9 @@ function gameLoop(ts) {
     // Update / cull clones
     if (!isBossPhase) {
       for (let i = clones.length - 1; i >= 0; i--) {
-        updateClone(clones[i]);
-        if (clones[i].hp <= 0) {
+        const c = clones[i];
+        if (eScale > 0) updateClone(c);
+        if (c.hp <= 0) {
           const c = clones[i];
           spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#cc44ff', 22, 5);
           addFloatText(c.x + PLAYER_W / 2, c.y - 22, 'ECHO BANISHED', '#dd88ff');
@@ -2719,7 +2734,7 @@ function gameLoop(ts) {
         }
       }
     } else if (giantEcho) {
-      updateGiantEcho(giantEcho);
+      if (eScale > 0) updateGiantEcho(giantEcho);
       if (giantEcho.hp <= 0) {
         // Giant Echo Defeated
         spawnParticles(giantEcho.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, giantEcho.y + (PLAYER_H * GIANT_SIZE_MULT) / 2, '#ff33ff', 40, 8);
@@ -2755,13 +2770,15 @@ function gameLoop(ts) {
     }
 
     // Update Shockwaves
-    updateShockwaves();
+    if (eScale > 0) updateShockwaves();
 
     // Update Weapons
     for (let i = droppedWeapons.length - 1; i >= 0; i--) {
       const w = droppedWeapons[i];
-      w.vy += GRAVITY * globalTimeScale;
-      w.y += w.vy * globalTimeScale;
+      if (eScale > 0) {
+        w.vy += GRAVITY * globalTimeScale;
+        w.y += w.vy * globalTimeScale;
+      }
       if (w.y + w.h >= ARENA.ground) {
         w.y = ARENA.ground - w.h;
         if (w.bounce > 0) { w.vy = -w.vy * 0.4; w.bounce--; } else { w.vy = 0; }
@@ -2854,19 +2871,27 @@ function gameLoop(ts) {
     ctx.restore();
   });
 
-  // Time Distortion UI Overlay
-  if (isTimeDistorted) {
-    const pulse = Math.abs(Math.sin(distortionTimer * 2)) * 0.1;
+  // Time Distortion & Freeze Overlay
+  if (isTimeDistorted || (player && player.freezeTimer > 0)) {
+    const isFrozen = player && player.freezeTimer > 0;
+    const pulse = Math.abs(Math.sin((isFrozen ? player.freezeTimer : distortionTimer) * 2)) * 0.1;
     ctx.save();
-    ctx.fillStyle = globalTimeScale < 1 
-      ? `rgba(0, 100, 255, ${0.05 + pulse})` // Blueish for slow
-      : `rgba(255, 50, 0, ${0.05 + pulse})`;  // Redish for fast
+    
+    if (isFrozen) {
+      ctx.fillStyle = `rgba(0, 180, 255, ${0.15 + pulse})`; // Cold heavy blue for freeze
+    } else {
+      ctx.fillStyle = globalTimeScale < 1 
+        ? `rgba(0, 100, 255, ${0.05 + pulse})` // Blueish for slow
+        : `rgba(255, 50, 0, ${0.05 + pulse})`;  // Redish for fast
+    }
+    
     ctx.fillRect(0, 0, W, H);
     
     ctx.font = 'bold 12px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.textAlign = 'center';
-    ctx.fillText(`TIME SCALE: ${globalTimeScale.toFixed(2)}x`, W / 2, H - 20);
+    const msg = isFrozen ? "STASIS ACTIVE" : `TIME SCALE: ${globalTimeScale.toFixed(2)}x`;
+    ctx.fillText(msg, W / 2, H - 20);
     ctx.restore();
   }
 
