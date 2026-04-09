@@ -414,6 +414,7 @@ let shakeAmt, shakeX, shakeY;
 let gameRunning, gameOver;
 let nextEchoTimer, diffMult;
 let giantEcho = null;
+let droppedWeapons = [];
 let isBossPhase = false;
 let spawnPaused = false;
 let shockwaves = [];
@@ -1181,22 +1182,24 @@ function drawCharacter(ent, isPlayer) {
 
   // Attack slash
   if (ent.isAttacking && ent.attackTimer > 0) {
+    const isPower = isPlayer && ent.hasPowerSword && ent.powerHits > 0;
     const prog  = ent.attackTimer / ATTACK_DUR;
     const atkX  = cx + ent.facing * (hw + 6 * s);
-    const atkLen = ATTACK_RANGE * s * prog;
+    const usedRange = isPower ? ATTACK_RANGE * 1.5 : ATTACK_RANGE;
+    const atkLen = usedRange * s * prog;
 
     ctx.save();
-    ctx.globalAlpha = prog * 0.9;
-    ctx.strokeStyle = isPlayer ? '#88ccff' : '#ff88cc';
-    ctx.shadowColor = isPlayer ? '#4488ff' : '#cc44ff';
-    ctx.shadowBlur  = 14;
-    ctx.lineWidth   = 3;
+    ctx.globalAlpha = prog * (isPower ? 1.0 : 0.9);
+    ctx.strokeStyle = isPlayer ? (isPower ? '#ffff00' : '#88ccff') : '#ff88cc';
+    ctx.shadowColor = isPlayer ? (isPower ? '#ffaa00' : '#4488ff') : '#cc44ff';
+    ctx.shadowBlur  = isPower ? 20 : 14;
+    ctx.lineWidth   = isPower ? 5 : 3;
     ctx.beginPath();
     ctx.moveTo(atkX, cy);
     ctx.lineTo(atkX + ent.facing * atkLen, cy);
     ctx.stroke();
     ctx.globalAlpha = prog * 0.45;
-    ctx.lineWidth   = 2;
+    ctx.lineWidth   = isPower ? 3 : 2;
     ctx.beginPath();
     ctx.arc(atkX, cy, atkLen * 0.55, -Math.PI / 2.8, Math.PI / 2.8);
     ctx.stroke();
@@ -1280,6 +1283,7 @@ function startGame() {
   particles    = [];
   floatingTexts= [];
   shockwaves   = [];
+  droppedWeapons = [];
   shakeAmt     = 0; shakeX = 0; shakeY = 0;
   clonesKilled = 0;
   survivalTime = 0;
@@ -1345,6 +1349,13 @@ function gameLoop(ts) {
         spawnParticles(giantEcho.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, giantEcho.y + (PLAYER_H * GIANT_SIZE_MULT) / 2, '#ff33ff', 40, 8);
         addFloatText(giantEcho.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, giantEcho.y - 40, 'GIANT DESTROYED', '#ff55ff');
         
+        // Spawn Power Sword
+        droppedWeapons.push({
+          x: giantEcho.x + (PLAYER_W * GIANT_SIZE_MULT) / 2 - 10,
+          y: giantEcho.y + (PLAYER_H * GIANT_SIZE_MULT) / 2,
+          w: 20, h: 20, vy: -12, bounce: 3
+        });
+        
         giantEcho = null;
         isBossPhase = false;
         spawnPaused = false;
@@ -1358,6 +1369,28 @@ function gameLoop(ts) {
 
     // Update Shockwaves
     updateShockwaves();
+
+    // Update Weapons
+    for (let i = droppedWeapons.length - 1; i >= 0; i--) {
+      const w = droppedWeapons[i];
+      w.vy += GRAVITY * globalTimeScale;
+      w.y += w.vy * globalTimeScale;
+      if (w.y + w.h >= ARENA.ground) {
+        w.y = ARENA.ground - w.h;
+        if (w.bounce > 0) { w.vy = -w.vy * 0.4; w.bounce--; } else { w.vy = 0; }
+      }
+      const pCx = player.x + PLAYER_W / 2;
+      const pCy = player.y + PLAYER_H / 2;
+      const wCx = w.x + w.w / 2;
+      const wCy = w.y + w.h / 2;
+      if (Math.abs(pCx - wCx) < (PLAYER_W/2 + w.w/2) && Math.abs(pCy - wCy) < (PLAYER_H/2 + w.h/2)) {
+         player.hasPowerSword = true;
+         player.powerHits = 15;
+         droppedWeapons.splice(i, 1);
+         addFloatText(pCx, pCy - 30, "POWER SWORD!", "#ffcc00");
+         spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ffcc00', 15, 4);
+      }
+    }
 
     // Time Distortion Logic
     if (isTimeDistorted) {
@@ -1406,6 +1439,21 @@ function gameLoop(ts) {
   drawParticles();
   drawFloatTexts();
   drawShockwaves();
+
+  // Draw weapons
+  droppedWeapons.forEach(w => {
+    ctx.save();
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#ffaa00';
+    ctx.fillStyle = '#ffcc00';
+    ctx.translate(w.x + w.w / 2, w.y + w.h / 2);
+    ctx.rotate(Math.sin(performance.now() / 200) * 0.2);
+    ctx.beginPath();
+    ctx.fillRect(-4, -10, 8, 20); // Blade
+    ctx.fillStyle = '#ff3300';
+    ctx.fillRect(-10, 2, 20, 5); // Guard
+    ctx.restore();
+  });
 
   // Time Distortion UI Overlay
   if (isTimeDistorted) {
