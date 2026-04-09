@@ -11,9 +11,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #0d0414;
-      background: radial-gradient(circle at center, #2b0d3e 0%, #0d0414 100%);
-      color: #f2eaf7;
+      background: #050505;
+      background: radial-gradient(circle at center, #2e2633 0%, #050505 100%);
+      color: #f5f5f5;
       font-family: 'Inter', sans-serif;
       display: flex;
       flex-direction: column;
@@ -37,11 +37,11 @@
       font-size: 1.8rem;
       font-weight: 900;
       letter-spacing: 0.12em;
-      background: linear-gradient(90deg, #c59dd9, #7a3f91, #f2eaf7);
+      background: linear-gradient(90deg, #c48d9e, #8e7c9d, #f5f5f5);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 0 18px #7a3f91aa);
+      filter: drop-shadow(0 0 18px #8e7c9daa);
     }
 
     #hud {
@@ -50,8 +50,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 6px 14px;
-      background: rgba(43,13,62,0.85);
-      border: 1px solid rgba(197,157,217,0.25);
+      background: rgba(46,38,51,0.85);
+      border: 1px solid rgba(196,141,158,0.25);
       border-radius: 10px;
       backdrop-filter: blur(8px);
     }
@@ -62,14 +62,14 @@
       font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: #c59dd9;
+      color: #c48d9e;
     }
 
     .hud-value {
       font-family: 'Orbitron', monospace;
       font-size: 1.05rem;
       font-weight: 700;
-      color: #f2eaf7;
+      color: #f5f5f5;
     }
 
     #health-bar-wrap {
@@ -84,19 +84,19 @@
     #health-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(122,63,145,0.18);
+      background: rgba(196,141,158,0.18);
       border-radius: 5px;
-      border: 1px solid rgba(122,63,145,0.3);
+      border: 1px solid rgba(196,141,158,0.3);
       overflow: hidden;
     }
 
     #health-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #7a3f91, #c59dd9);
+      background: linear-gradient(90deg, #c48d9e, #f5f5f5);
       border-radius: 5px;
       transition: width 0.15s ease, background 0.3s;
       width: 100%;
-      box-shadow: 0 0 8px #7a3f91;
+      box-shadow: 0 0 8px #c48d9e;
     }
 
     #echo-bar-wrap {
@@ -111,19 +111,19 @@
     #echo-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(197,157,217,0.18);
+      background: rgba(142,124,157,0.18);
       border-radius: 5px;
-      border: 1px solid rgba(197,157,217,0.3);
+      border: 1px solid rgba(142,124,157,0.3);
       overflow: hidden;
     }
 
     #echo-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #c59dd9, #f2eaf7);
+      background: linear-gradient(90deg, #8e7c9d, #c48d9e);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
-      box-shadow: 0 0 8px #c59dd9;
+      box-shadow: 0 0 8px #8e7c9d;
     }
 
     #nova-bar-wrap {
@@ -138,19 +138,19 @@
     #nova-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(242,234,247,0.1);
+      background: rgba(79,119,45,0.15);
       border-radius: 5px;
-      border: 1px solid rgba(242,234,247,0.2);
+      border: 1px solid rgba(79,119,45,0.25);
       overflow: hidden;
     }
 
     #nova-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #f2eaf7, #ffffff);
+      background: linear-gradient(90deg, #4f772d, #90a955);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
-      box-shadow: 0 0 10px #f2eaf7;
+      box-shadow: 0 0 10px #4f772d;
     }
 
     #pistol-bar-wrap {
@@ -165,27 +165,28 @@
     #pistol-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(197,157,217,0.1);
+      background: rgba(245,245,245,0.1);
       border-radius: 5px;
-      border: 1px solid rgba(197,157,217,0.2);
+      border: 1px solid rgba(245,245,245,0.2);
       overflow: hidden;
     }
 
     #pistol-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #c59dd9, #f2eaf7);
+      background: linear-gradient(90deg, #f5f5f5, #ffffff);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
+      box-shadow: 0 0 8px #f5f5f5;
     }
 
     canvas {
       display: block;
       border-radius: 14px;
-      border: 1.5px solid rgba(122,63,145,0.3);
+      border: 1.5px solid rgba(142,124,157,0.3);
       box-shadow:
-        0 0 40px rgba(43,13,62,0.4),
-        0 0 80px rgba(122,63,145,0.15),
+        0 0 40px rgba(0,0,0,0.6),
+        0 0 80px rgba(142,124,157,0.12),
         inset 0 0 60px rgba(0,0,0,0.8);
     }
 
@@ -193,20 +194,20 @@
       display: flex;
       gap: 20px;
       font-size: 0.65rem;
-      color: #c59dd9;
+      color: #8e7c9d;
       letter-spacing: 0.08em;
-      opacity: 0.7;
+      opacity: 0.8;
     }
 
     .ctrl { display: flex; align-items: center; gap: 5px; }
     .key {
-      background: rgba(122,63,145,0.2);
-      border: 1px solid rgba(197,157,217,0.3);
+      background: rgba(46,38,51,0.4);
+      border: 1px solid rgba(196,141,158,0.3);
       border-radius: 4px;
       padding: 1px 6px;
       font-family: 'Orbitron', monospace;
       font-size: 0.6rem;
-      color: #f2eaf7;
+      color: #f5f5f5;
     }
 
     #overlay {
@@ -218,8 +219,8 @@
       justify-content: center;
       gap: 18px;
       border-radius: 14px;
-      background: rgba(13,4,20,0.92);
-      backdrop-filter: blur(8px);
+      background: rgba(10,10,10,0.94);
+      backdrop-filter: blur(10px);
       z-index: 10;
     }
 
@@ -230,7 +231,7 @@
       font-size: 2.2rem;
       font-weight: 900;
       text-align: center;
-      background: linear-gradient(90deg, #c59dd9, #7a3f91, #f2eaf7);
+      background: linear-gradient(90deg, #c48d9e, #8e7c9d, #f5f5f5);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -239,12 +240,12 @@
 
     .overlay-sub {
       font-size: 0.8rem;
-      color: #c59dd9;
+      color: #f5f5f5;
       text-align: center;
       max-width: 440px;
       line-height: 1.7;
       letter-spacing: 0.05em;
-      opacity: 0.9;
+      opacity: 0.8;
     }
 
     .stat-row { display: flex; gap: 40px; }
@@ -254,8 +255,8 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      background: rgba(43,13,62,0.5);
-      border: 1px solid rgba(122,63,145,0.2);
+      background: rgba(46,38,51,0.5);
+      border: 1px solid rgba(142,124,157,0.2);
       border-radius: 10px;
       padding: 12px 24px;
     }
@@ -264,14 +265,14 @@
       font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      color: #c59dd9;
+      color: #c48d9e;
     }
 
     .stat-value {
       font-family: 'Orbitron', monospace;
       font-size: 1.5rem;
       font-weight: 700;
-      color: #f2eaf7;
+      color: #f5f5f5;
     }
 
     .btn {
@@ -283,15 +284,15 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      background: linear-gradient(135deg, #7a3f91, #2b0d3e);
-      color: #f2eaf7;
-      box-shadow: 0 0 20px rgba(122,63,145,0.4);
+      background: linear-gradient(135deg, #8e7c9d, #2e2633);
+      color: #f5f5f5;
+      box-shadow: 0 0 20px rgba(142,124,157,0.3);
       transition: all 0.2s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 28px rgba(197,157,217,0.5);
+      box-shadow: 0 4px 28px rgba(196,141,158,0.4);
     }
 
     .controls-grid {
@@ -305,7 +306,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #c59dd9;
+      color: #f5f5f5;
+      opacity: 0.8;
     }
 
     .ctrl-keys { display: flex; gap: 3px; align-items: center; }
@@ -313,12 +315,12 @@
     .divider {
       width: 90%;
       height: 1px;
-      background: rgba(122,63,145,0.2);
+      background: rgba(142,124,157,0.2);
     }
 
     @keyframes pulse-glow {
-      0%, 100% { filter: drop-shadow(0 0 8px #7a3f9188); }
-      50%       { filter: drop-shadow(0 0 22px #c59dd9cc); }
+      0%, 100% { filter: drop-shadow(0 0 8px #8e7c9d88); }
+      50%       { filter: drop-shadow(0 0 22px #c48d9ecc); }
     }
   </style>
 </head>
@@ -1222,14 +1224,14 @@ function spawnInterval() {
 function drawArena() {
   // BG
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#1a0d24');
-  bg.addColorStop(1, '#0d0414');
+  bg.addColorStop(0, '#1a161f');
+  bg.addColorStop(1, '#050505');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // Grid
   ctx.save();
-  ctx.strokeStyle = 'rgba(122,63,145,0.11)';
+  ctx.strokeStyle = 'rgba(142,124,157,0.11)';
   ctx.lineWidth = 1;
   for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 60) {
     ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.ground); ctx.stroke();
@@ -1241,21 +1243,21 @@ function drawArena() {
 
   // Ground glow
   const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
-  gGrad.addColorStop(0, 'rgba(197,157,217,0.45)');
+  gGrad.addColorStop(0, 'rgba(79,119,45,0.45)');
   gGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = gGrad;
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
 
   ctx.save();
-  ctx.shadowColor = '#c59dd9';
+  ctx.shadowColor = '#90a955';
   ctx.shadowBlur = 14;
-  ctx.fillStyle = 'rgba(242,234,247,0.9)';
+  ctx.fillStyle = 'rgba(144,169,85,0.9)';
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
   ctx.restore();
 
   // Border
   ctx.save();
-  ctx.strokeStyle = 'rgba(122,63,145,0.22)';
+  ctx.strokeStyle = 'rgba(142,124,157,0.22)';
   ctx.lineWidth = 1.5;
   ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.ground - ARENA.y);
   ctx.restore();
@@ -1265,26 +1267,26 @@ function drawArena() {
   ctx.save();
   ctx.globalAlpha = 0.04 + 0.015 * Math.sin(t * 0.7);
   const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 220);
-  b1.addColorStop(0, '#7a3f91'); b1.addColorStop(1, 'transparent');
+  b1.addColorStop(0, '#8e7c9d'); b1.addColorStop(1, 'transparent');
   ctx.fillStyle = b1; ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 0.033 + 0.015 * Math.sin(t * 0.9 + 1.2);
   const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 180);
-  b2.addColorStop(0, '#c59dd9'); b2.addColorStop(1, 'transparent');
+  b2.addColorStop(0, '#c48d9e'); b2.addColorStop(1, 'transparent');
   ctx.fillStyle = b2; ctx.fillRect(0, 0, W, H);
   ctx.restore();
 
   // Platforms
   PLATFORMS.forEach(p => {
     ctx.save();
-    ctx.shadowColor = 'rgba(122,63,145,0.5)';
+    ctx.shadowColor = 'rgba(142,124,157,0.5)';
     ctx.shadowBlur  = 10;
-    ctx.fillStyle   = 'rgba(122,63,145,0.18)';
+    ctx.fillStyle   = 'rgba(46,38,51,0.18)';
     ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = 'rgba(197,157,217,0.85)';
+    ctx.fillStyle = 'rgba(196,141,158,0.85)';
     ctx.fillRect(p.x, p.y, p.w, 2);
     // underside glow
     const pg = ctx.createLinearGradient(p.x, p.y + p.h, p.x, p.y + p.h + 18);
-    pg.addColorStop(0, 'rgba(122,63,145,0.25)');
+    pg.addColorStop(0, 'rgba(142,124,157,0.25)');
     pg.addColorStop(1, 'transparent');
     ctx.fillStyle = pg;
     ctx.fillRect(p.x, p.y + p.h, p.w, 18);
@@ -1302,7 +1304,7 @@ function drawCharacter(ent, isPlayer) {
     const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.fillStyle   = isPlayer ? '#f2eaf7' : (ent.isGiant ? '#c59dd9' : '#7a3f91');
+    ctx.fillStyle   = isPlayer ? '#90a955' : (ent.isGiant ? '#c48d9e' : '#8e7c9d');
     ctx.beginPath();
     ctx.roundRect(t.x, t.y, PLAYER_W * s, PLAYER_H * s, 5 * s);
     ctx.fill();
@@ -1334,17 +1336,17 @@ function drawCharacter(ent, isPlayer) {
   if (!isPlayer && ent.flashTimer > 0) ctx.filter = 'brightness(3)';
 
   if (isPlayer) {
-    ctx.shadowColor = '#c59dd9';
+    ctx.shadowColor = '#4f772d';
     ctx.shadowBlur  = 18;
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, '#f2eaf7');
-    g.addColorStop(1, '#c59dd9');
+    g.addColorStop(0, '#90a955');
+    g.addColorStop(1, '#4f772d');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Highlight
-    ctx.fillStyle = 'rgba(242,234,247,0.22)';
+    ctx.fillStyle = 'rgba(245,245,245,0.22)';
     ctx.beginPath();
     ctx.roundRect(cx - hw + 3 * s, cy - hh + 3 * s, (PLAYER_W - 6) * s, (PLAYER_H / 2 - 2) * s, 5 * s);
     ctx.fill();
@@ -1353,39 +1355,39 @@ function drawCharacter(ent, isPlayer) {
     ctx.fillStyle   = '#ffffff';
     const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#2b0d3e';
+    ctx.fillStyle = '#050505';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
 
   } else {
     // Boss Visual Glow Effect
     if (ent.isGiant) {
-      ctx.shadowColor = '#c59dd9';
+      ctx.shadowColor = '#c48d9e';
       ctx.shadowBlur  = 25;
-      ctx.strokeStyle = '#f2eaf7';
+      ctx.strokeStyle = '#f5f5f5';
       ctx.lineWidth   = 2;
       ctx.strokeRect(cx - hw - 2, cy - hh - 2, PLAYER_W * s + 4, PLAYER_H * s + 4);
     } else {
-      ctx.shadowColor = '#7a3f91';
+      ctx.shadowColor = '#8e7c9d';
       ctx.shadowBlur  = 16;
     }
     
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, ent.isGiant ? 'rgba(197,157,217,0.9)' : 'rgba(122,63,145,0.88)');
-    g.addColorStop(1, ent.isGiant ? 'rgba(43,13,62,0.9)' : 'rgba(43,13,62,0.88)');
+    g.addColorStop(0, ent.isGiant ? 'rgba(196,141,158,0.9)' : 'rgba(142,124,157,0.88)');
+    g.addColorStop(1, ent.isGiant ? 'rgba(46,38,51,0.9)' : 'rgba(46,38,51,0.88)');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Scanlines
-    ctx.fillStyle = 'rgba(13,4,20,0.12)';
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
     for (let sl = 0; sl < PLAYER_H * s; sl += 4 * s)
       ctx.fillRect(cx - hw, cy - hh + sl, PLAYER_W * s, 2 * s);
-    // Red/Pink eye
-    ctx.shadowColor = ent.isGiant ? '#f2eaf7' : '#c59dd9'; ctx.shadowBlur = 8 * s;
-    ctx.fillStyle   = ent.isGiant ? '#c59dd9' : '#7a3f91';
+    // Dark eye
+    ctx.shadowColor = ent.isGiant ? '#f5f5f5' : '#c48d9e'; ctx.shadowBlur = 8 * s;
+    ctx.fillStyle   = ent.isGiant ? '#c48d9e' : '#8e7c9d';
     const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3.2 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = ent.isGiant ? '#7a3f91' : '#2b0d3e';
+    ctx.fillStyle = ent.isGiant ? '#8e7c9d' : '#2e2633';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
   }
 
@@ -1400,8 +1402,8 @@ function drawCharacter(ent, isPlayer) {
 
     ctx.save();
     ctx.globalAlpha = prog * (isPower ? 1.0 : 0.9);
-    ctx.strokeStyle = isPlayer ? (isPower ? '#ffffff' : '#f2eaf7') : '#c59dd9';
-    ctx.shadowColor = isPlayer ? (isPower ? '#f2eaf7' : '#c59dd9') : '#7a3f91';
+    ctx.strokeStyle = isPlayer ? (isPower ? '#ffffff' : '#90a955') : '#c48d9e';
+    ctx.shadowColor = isPlayer ? (isPower ? '#f5f5f5' : '#4f772d') : '#8e7c9d';
     ctx.shadowBlur  = isPower ? 20 : 14;
     ctx.lineWidth   = isPower ? 5 : 3;
     ctx.beginPath();
@@ -1650,18 +1652,18 @@ function gameLoop(ts) {
 
   clones.forEach(c => {
     drawCharacter(c, false);
-    drawHpBar(c, '#7a3f91', '#2b0d3e');
+    drawHpBar(c, '#8e7c9d', '#462633');
   });
 
   if (isBossPhase && giantEcho) {
     drawCharacter(giantEcho, false);
-    drawHpBar(giantEcho, '#c59dd9', '#7a3f91');
+    drawHpBar(giantEcho, '#c48d9e', '#8e7c9d');
   }
 
 
   if (!gameOver) {
     drawCharacter(player, true);
-    drawHpBar(player, '#f2eaf7', '#c59dd9');
+    drawHpBar(player, '#90a955', '#4f772d');
   }
 
   drawParticles();
@@ -1704,13 +1706,13 @@ function gameLoop(ts) {
     const pulse = Math.abs(Math.sin(Date.now() / 110));
     ctx.save();
     ctx.globalAlpha = pulse * 0.22;
-    ctx.fillStyle   = '#7a3f91';
+    ctx.fillStyle   = '#8e7c9d';
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = pulse * 0.85;
     ctx.font        = 'bold 14px Orbitron, monospace';
-    ctx.fillStyle   = '#f2eaf7';
+    ctx.fillStyle   = '#f5f5f5';
     ctx.textAlign   = 'center';
-    ctx.shadowColor = '#c59dd9';
+    ctx.shadowColor = '#c48d9e';
     ctx.shadowBlur  = 14;
     ctx.fillText('⚡ ECHO SPAWNING...', W / 2, 56);
     ctx.restore();
@@ -1719,7 +1721,7 @@ function gameLoop(ts) {
   // Wave / difficulty badge
   ctx.save();
   ctx.font      = '600 11px Inter, sans-serif';
-  ctx.fillStyle = 'rgba(197,157,217,0.5)';
+  ctx.fillStyle = 'rgba(196,141,158,0.5)';
   ctx.textAlign = 'right';
   ctx.fillText(`WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
   ctx.restore();
