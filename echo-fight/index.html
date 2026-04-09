@@ -684,7 +684,14 @@
               <button id="fps-60" class="btn" style="flex:1;padding:8px">60 FPS</button>
               <button id="fps-90" class="btn" style="flex:1;padding:8px">90 FPS</button>
             </div>
+            <div class="setting-item" style="grid-column: span 2;">
+            <label class="setting-label">Gameplay Theme</label>
+            <div style="display:flex;gap:10px">
+              <button id="theme-neon" class="btn" style="flex:1;padding:8px">Neon Pulse</button>
+              <button id="theme-ruin" class="btn" style="flex:1;padding:8px">Echoes in Ruin</button>
+            </div>
           </div>
+        </div>
         </div>
         <button class="btn" id="settings-back-btn" style="margin-top:16px">BACK</button>
       </div>
@@ -1614,63 +1621,156 @@ function spawnInterval() {
 
 // ── Draw arena background ─────────────────────────────────────
 function drawArena() {
-  // BG
-  const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#0a0a0f');
-  bg.addColorStop(1, '#000000');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
-
-  // Grid
-  ctx.save();
-  ctx.strokeStyle = 'rgba(255,102,178,0.06)';
-  ctx.lineWidth = 1;
-  for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 60) {
-    ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.ground); ctx.stroke();
-  }
-  for (let gy = ARENA.y; gy <= ARENA.ground; gy += 60) {
-    ctx.beginPath(); ctx.moveTo(ARENA.x, gy); ctx.lineTo(ARENA.x + ARENA.w, gy); ctx.stroke();
-  }
-  ctx.restore();
-
-  // Ground glow
-  const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
-  gGrad.addColorStop(0, 'rgba(0,196,255,0.22)');
-  gGrad.addColorStop(1, 'transparent');
-  ctx.fillStyle = gGrad;
-  ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
-
-  ctx.save();
-  ctx.shadowColor = '#00ff41';
-  ctx.shadowBlur = 12;
-  ctx.fillStyle = 'rgba(0,255,65,0.7)';
-  ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
-  ctx.restore();
-
-  // Ambient blobs (Prism light)
+  const theme = window.gameCfg ? window.gameCfg.theme : 'neon';
   const t = Date.now() / 1000;
-  ctx.save();
-  ctx.globalAlpha = 0.05 + 0.02 * Math.sin(t * 0.6);
-  const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 250);
-  b1.addColorStop(0, '#ff66b2'); b1.addColorStop(1, 'transparent');
-  ctx.fillStyle = b1; ctx.fillRect(0, 0, W, H);
-  ctx.globalAlpha = 0.04 + 0.02 * Math.sin(t * 0.8 + 1.5);
-  const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 220);
-  b2.addColorStop(0, '#0066ff'); b2.addColorStop(1, 'transparent');
-  ctx.fillStyle = b2; ctx.fillRect(0, 0, W, H);
-  ctx.restore();
 
-  // Platforms
-  PLATFORMS.forEach(p => {
+  if (theme === 'ruin') {
+    // BG
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0a100d');
+    bg.addColorStop(1, '#050706');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Overgrown Grid / Vines
     ctx.save();
-    ctx.shadowColor = 'rgba(255,102,178,0.4)';
-    ctx.shadowBlur  = 10;
-    ctx.fillStyle   = 'rgba(15,15,20,0.8)';
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = 'rgba(255,102,178,0.9)';
-    ctx.fillRect(p.x, p.y, p.w, 2);
+    ctx.strokeStyle = 'rgba(76, 122, 93, 0.08)';
+    ctx.lineWidth = 1.5;
+    for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 80) {
+      ctx.beginPath(); ctx.moveTo(gx + Math.sin(gx)*10, ARENA.y); ctx.lineTo(gx - Math.sin(gx)*10, ARENA.ground); ctx.stroke();
+    }
+    for (let gy = ARENA.y; gy <= ARENA.ground; gy += 80) {
+      ctx.beginPath(); ctx.moveTo(ARENA.x, gy + Math.cos(gy)*10); ctx.lineTo(ARENA.x + ARENA.w, gy - Math.cos(gy)*10); ctx.stroke();
+    }
     ctx.restore();
-  });
+
+    // Mossy Ground glow
+    const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
+    gGrad.addColorStop(0, 'rgba(102, 161, 99, 0.15)');
+    gGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = gGrad;
+    ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
+    
+    ctx.save();
+    ctx.shadowColor = '#66a163';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = 'rgba(84, 130, 81, 0.6)';
+    ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
+    ctx.restore();
+
+    // Sunlight Rays (shifting)
+    ctx.save();
+    ctx.globalAlpha = 0.07 + 0.02 * Math.sin(t * 0.4);
+    ctx.fillStyle = '#ffcf54';
+    ctx.beginPath();
+    ctx.moveTo(100 + Math.sin(t*0.5)*50, 0); 
+    ctx.lineTo(300 + Math.sin(t*0.5)*50, 0); 
+    ctx.lineTo(200 + Math.sin(t*0.6)*80, H); 
+    ctx.lineTo(50 + Math.sin(t*0.6)*80, H);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.05 + 0.03 * Math.cos(t * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(500 + Math.cos(t*0.4)*40, 0); 
+    ctx.lineTo(650 + Math.cos(t*0.4)*40, 0); 
+    ctx.lineTo(800 + Math.cos(t*0.5)*70, ARENA.ground); 
+    ctx.lineTo(700 + Math.cos(t*0.5)*70, ARENA.ground);
+    ctx.fill();
+    ctx.restore();
+
+    // Ambient dust/pollen
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 220, 100, 0.4)';
+    for(let i=0; i<35; i++) {
+       let px = (Math.sin(i*123.45) * 1000 + t * 15 * (i%3+1)) % W;
+       if (px < 0) px += W;
+       let py = (Math.cos(i*321.12) * 1000 - t * 10 * (i%2+1)) % H;
+       if (py < 0) py += H;
+       ctx.beginPath();
+       ctx.arc(px, py, 1 + (i%2)*0.8, 0, Math.PI*2);
+       ctx.fill();
+    }
+    ctx.restore();
+
+    // Overgrown Platforms
+    PLATFORMS.forEach(p => {
+      ctx.save();
+      ctx.shadowColor = 'rgba(84, 130, 81, 0.3)';
+      ctx.shadowBlur  = 10;
+      ctx.fillStyle   = 'rgba(20, 25, 20, 0.9)';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillStyle = 'rgba(102, 161, 99, 0.8)';
+      ctx.fillRect(p.x, p.y, p.w, 3);
+      
+      // Hanging vines
+      ctx.strokeStyle = 'rgba(84, 130, 81, 0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x + 10, p.y+3); ctx.quadraticCurveTo(p.x+15, p.y+15, p.x+8, p.y+25 + Math.sin(t*2)*3);
+      ctx.moveTo(p.x + p.w - 15, p.y+3); ctx.quadraticCurveTo(p.x+p.w-10, p.y+20, p.x+p.w-18, p.y+35 + Math.cos(t*1.5)*3);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+  } else {
+    // Default Neon Theme
+    // BG
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0a0a0f');
+    bg.addColorStop(1, '#000000');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,102,178,0.06)';
+    ctx.lineWidth = 1;
+    for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 60) {
+      ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.ground); ctx.stroke();
+    }
+    for (let gy = ARENA.y; gy <= ARENA.ground; gy += 60) {
+      ctx.beginPath(); ctx.moveTo(ARENA.x, gy); ctx.lineTo(ARENA.x + ARENA.w, gy); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Ground glow
+    const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
+    gGrad.addColorStop(0, 'rgba(0,196,255,0.22)');
+    gGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = gGrad;
+    ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
+
+    ctx.save();
+    ctx.shadowColor = '#00ff41';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = 'rgba(0,255,65,0.7)';
+    ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
+    ctx.restore();
+
+    // Ambient blobs (Prism light)
+    ctx.save();
+    ctx.globalAlpha = 0.05 + 0.02 * Math.sin(t * 0.6);
+    const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 250);
+    b1.addColorStop(0, '#ff66b2'); b1.addColorStop(1, 'transparent');
+    ctx.fillStyle = b1; ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 0.04 + 0.02 * Math.sin(t * 0.8 + 1.5);
+    const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 220);
+    b2.addColorStop(0, '#0066ff'); b2.addColorStop(1, 'transparent');
+    ctx.fillStyle = b2; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+
+    // Platforms
+    PLATFORMS.forEach(p => {
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,102,178,0.4)';
+      ctx.shadowBlur  = 10;
+      ctx.fillStyle   = 'rgba(15,15,20,0.8)';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.fillStyle = 'rgba(255,102,178,0.9)';
+      ctx.fillRect(p.x, p.y, p.w, 2);
+      ctx.restore();
+    });
+  }
 }
 
 // ── Draw a character (player or clone) ───────────────────────
@@ -2286,7 +2386,7 @@ function showGameOver() {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-function startGame() {
+function startGame(savedData = null) {
   player       = createPlayer();
   clones       = [];
   inputBuffer  = [];
@@ -2298,11 +2398,21 @@ function startGame() {
   lightnings = [];
   fireParticles = [];
   shakeAmt     = 0; shakeX = 0; shakeY = 0;
-  clonesKilled = 0;
-  survivalTime = 0;
-  diffMult     = 1;
+  
+  if (savedData) {
+    clonesKilled = savedData.kills || 0;
+    survivalTime = savedData.time || 0;
+    startTime    = performance.now() - (survivalTime * 1000);
+  } else {
+    clonesKilled = 0;
+    survivalTime = 0;
+    startTime    = performance.now();
+  }
+  
+  diffMult     = 1 + survivalTime / 30;
+  window.currentWave = Math.floor(clonesKilled / 3 + 1);
+
   nextEchoTimer = 5000;
-  startTime    = performance.now();
   gameOver     = false;
   gameRunning  = true;
   globalTimeScale = 1.0;
@@ -2335,6 +2445,13 @@ function gameLoop(ts) {
     if (nextEchoTimer <= 0 && !spawnPaused) {
       spawnClone();
       nextEchoTimer = spawnInterval();
+    }
+
+    const newWave = Math.floor(clonesKilled / 3 + 1);
+    if (newWave > window.currentWave) {
+      window.currentWave = newWave;
+      saveSession();
+      addFloatText(W/2, H/2 - 40, "CHECKPOINT SAVED", "#00ff41");
     }
 
     // Check for merge
@@ -2548,10 +2665,20 @@ window.addEventListener('load', () => {
     requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
   });
 
-  // 3. LOAD GAME
+  // 3. LOAD GAME (Resume)
   document.getElementById('load-game-btn').addEventListener('click', () => {
-    loadSession();
-    showMenu('load-menu');
+    const raw = localStorage.getItem('echo_fight_save');
+    if (raw) {
+      const data = JSON.parse(raw);
+      showMenu('none');
+      scaleCanvas();
+      startGame(data); // New overload
+      requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+    } else {
+      // Show empty timeline or notification if no save
+      loadSession();
+      showMenu('load-menu');
+    }
   });
 
   // 4. SETTINGS
@@ -2576,8 +2703,9 @@ window.addEventListener('load', () => {
   // 7. Settings sliders - persist to localStorage
   const settingsKey = 'echo_fight_settings';
   const saved = JSON.parse(localStorage.getItem(settingsKey) || '{}');
-  const defaults = { music: 80, sense: 50, vibe: 70, fps: 60 };
+  const defaults = { music: 80, sense: 50, vibe: 70, fps: 60, theme: 'neon' };
   const cfg = { ...defaults, ...saved };
+  window.gameCfg = cfg; // Expose globally for rendering
 
   const setSlider = (id, valId, key) => {
     const el = document.getElementById(id);
@@ -2606,6 +2734,17 @@ window.addEventListener('load', () => {
   document.getElementById('fps-60').addEventListener('click', () => setFPS(60));
   document.getElementById('fps-90').addEventListener('click', () => setFPS(90));
   setFPS(cfg.fps);
+
+  // Theme toggle
+  const setTheme = theme => {
+    cfg.theme = theme;
+    localStorage.setItem(settingsKey, JSON.stringify(cfg));
+    document.getElementById('theme-neon').style.borderColor = theme === 'neon' ? '#ff66b2' : '#333';
+    document.getElementById('theme-ruin').style.borderColor = theme === 'ruin' ? '#00ff41' : '#333';
+  };
+  document.getElementById('theme-neon').addEventListener('click', () => setTheme('neon'));
+  document.getElementById('theme-ruin').addEventListener('click', () => setTheme('ruin'));
+  setTheme(cfg.theme);
 
 });
 </script>
