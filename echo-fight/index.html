@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Echo Fight — Battle Your Past Self</title>
+  <meta name="description" content="A 2D real-time arena game where you fight clones of your own past actions. How long can you survive yourself?" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #050810;
+      color: #e0e8ff;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #game-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #title {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      background: linear-gradient(90deg, #4488ff, #aa55ff, #ff4488);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 18px #6644ffaa);
+    }
+
+    #hud {
+      width: 820px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      background: rgba(20,24,50,0.85);
+      border: 1px solid rgba(80,120,255,0.25);
+      border-radius: 10px;
+      backdrop-filter: blur(8px);
+    }
+
+    .hud-section { display: flex; flex-direction: column; gap: 3px; }
+
+    .hud-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #6688bb;
+    }
+
+    .hud-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #aaccff;
+    }
+
+    #health-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      flex: 1;
+      max-width: 220px;
+    }
+
+    #health-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,80,80,0.18);
+      border-radius: 5px;
+      border: 1px solid rgba(255,80,80,0.3);
+      overflow: hidden;
+    }
+
+    #health-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff3355, #ff6644);
+      border-radius: 5px;
+      transition: width 0.15s ease, background 0.3s;
+      width: 100%;
+    }
+
+    #echo-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      flex: 1;
+      max-width: 180px;
+    }
+
+    #echo-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(160,80,255,0.18);
+      border-radius: 5px;
+      border: 1px solid rgba(160,80,255,0.3);
+      overflow: hidden;
+    }
+
+    #echo-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8833ff, #cc44ff);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      width: 0%;
+    }
+
+    canvas {
+      display: block;
+      border-radius: 14px;
+      border: 1.5px solid rgba(80,120,255,0.3);
+      box-shadow:
+        0 0 40px rgba(60,80,200,0.25),
+        0 0 80px rgba(100,60,200,0.12),
+        inset 0 0 60px rgba(0,0,0,0.6);
+    }
+
+    #controls-hint {
+      display: flex;
+      gap: 20px;
+      font-size: 0.65rem;
+      color: #445577;
+      letter-spacing: 0.08em;
+    }
+
+    .ctrl { display: flex; align-items: center; gap: 5px; }
+    .key {
+      background: rgba(80,100,180,0.2);
+      border: 1px solid rgba(80,120,255,0.3);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      color: #7799cc;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      border-radius: 14px;
+      background: rgba(5,8,18,0.9);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+
+    #overlay.hidden { display: none; }
+
+    .overlay-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 2.2rem;
+      font-weight: 900;
+      text-align: center;
+      background: linear-gradient(90deg, #4488ff, #aa55ff, #ff4488);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+    .overlay-sub {
+      font-size: 0.8rem;
+      color: #6688ab;
+      text-align: center;
+      max-width: 440px;
+      line-height: 1.7;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-row { display: flex; gap: 40px; }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: rgba(30,40,80,0.5);
+      border: 1px solid rgba(80,120,255,0.2);
+      border-radius: 10px;
+      padding: 12px 24px;
+    }
+
+    .stat-label {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #556688;
+    }
+
+    .stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #aaccff;
+    }
+
+    .btn {
+      padding: 12px 36px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #3355cc, #6633cc);
+      color: #e0e8ff;
+      box-shadow: 0 0 20px rgba(60,80,200,0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 28px rgba(100,60,255,0.6);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 32px;
+      font-size: 0.7rem;
+    }
+
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #7799bb;
+    }
+
+    .ctrl-keys { display: flex; gap: 3px; align-items: center; }
+
+    .divider {
+      width: 90%;
+      height: 1px;
+      background: rgba(80,120,255,0.15);
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { filter: drop-shadow(0 0 8px #6644ff88); }
+      50%       { filter: drop-shadow(0 0 22px #aa44ffcc); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <div id="title">ECHO FIGHT</div>
+
+  <div id="hud">
+    <div id="health-bar-wrap">
+      <div class="hud-label">⚡ Player Health</div>
+      <div id="health-bar-bg"><div id="health-bar-fill"></div></div>
+    </div>
+
+    <div class="hud-section" style="align-items:center;">
+      <div class="hud-label">Survival Time</div>
+      <div class="hud-value" id="hud-time">0.0s</div>
+    </div>
+
+    <div class="hud-section" style="align-items:center;">
+      <div class="hud-label">Clones Alive</div>
+      <div class="hud-value" id="hud-clones">0</div>
+    </div>
+
+    <div class="hud-section" style="align-items:center;">
+      <div class="hud-label">Defeated</div>
+      <div class="hud-value" id="hud-killed">0</div>
+    </div>
+
+    <div id="echo-bar-wrap">
+      <div class="hud-label">🔮 Next Echo In</div>
+      <div id="echo-bar-bg"><div id="echo-bar-fill"></div></div>
+    </div>
+  </div>
+
+  <div style="position:relative;">
+    <canvas id="canvas" width="820" height="480"></canvas>
+
+    <div id="overlay">
+      <div class="overlay-title">ECHO FIGHT</div>
+      <div class="overlay-sub">
+        Your past actions become your enemies.<br/>
+        Every 5 seconds, a clone spawns — replaying exactly what you did.<br/>
+        Survive as long as you can against yourself.
+      </div>
+      <div class="divider"></div>
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <div class="ctrl-keys">
+            <span class="key">A D</span>
+            <span style="color:#445566;font-size:0.62rem">or</span>
+            <span class="key">← →</span>
+          </div>
+          <span>Move</span>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-keys"><span class="key">W</span><span style="color:#445566;font-size:0.62rem">or</span><span class="key">↑</span><span style="color:#445566;font-size:0.62rem">or</span><span class="key">SPC</span></div>
+          <span>Jump</span>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-keys"><span class="key">ALT</span></div>
+          <span>Attack</span>
+        </div>
+        <div class="ctrl-row">
+          <div class="ctrl-keys"><span class="key">ESC</span></div>
+          <span>Pause</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <button class="btn" id="start-btn">▶ BEGIN</button>
+    </div>
+  </div>
+
+  <div id="controls-hint">
+    <div class="ctrl"><span class="key">A D / ← →</span><span>Move</span></div>
+    <div class="ctrl"><span class="key">W / ↑ / SPC</span><span>Jump</span></div>
+    <div class="ctrl"><span class="key">ALT</span><span>Attack</span></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  ECHO FIGHT  –  Core Engine  (clean rewrite)
+// ═══════════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+
+// Prevent Alt-key from opening browser menus
+window.addEventListener('keydown', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); });
+
+// ── Arena ──────────────────────────────────────────────────────
+const ARENA = {
+  x: 30, y: 30,
+  w: W - 60,
+  ground: H - 60,
+  left:  30,
+  right: W - 30,
+};
+
+// ── Platforms ─────────────────────────────────────────────────
+const PLATFORMS = [
+  { x: 160, y: ARENA.ground - 120, w: 140, h: 12 },
+  { x: 520, y: ARENA.ground - 120, w: 140, h: 12 },
+  { x: 337, y: ARENA.ground - 210, w: 146, h: 12 },
+];
+
+// ── Constants ─────────────────────────────────────────────────
+const GRAVITY            = 0.55;
+const JUMP_FORCE         = -13.5;
+const MOVE_SPEED         = 4.2;
+const CLONE_BASE_SPEED   = 3.6;
+
+const RECORD_FRAMES      = 5 * 60;   // 5 s × 60 fps
+const PLAYER_W           = 26;
+const PLAYER_H           = 36;
+const PLAYER_HP          = 100;
+const ATTACK_DMG         = 35;
+const CLONE_DMG          = 8;
+const ATTACK_RANGE       = 55;
+const ATTACK_DUR         = 18;
+const ATTACK_CD          = 28;
+const CLONE_ATTACK_RANGE = 52;
+const CLONE_ATTACK_CD    = 45;
+const CLONE_HP           = 60;
+
+// ── Boss Phase ────────────────────────────────────────────────
+const MERGE_THRESHOLD    = 4;
+const GIANT_SIZE_MULT    = 2.5;
+const GIANT_HP_MULT      = 1.2; // Extra health bonus for the boss
+const GIANT_SPEED_MULT   = 0.65;
+const GIANT_DMG_MULT     = 1.5;
+
+
+// ── Input map ─────────────────────────────────────────────────
+const keys = {};
+document.addEventListener('keydown', e => { keys[e.code] = true;  });
+document.addEventListener('keyup',   e => { keys[e.code] = false; });
+function pressing(...codes) { return codes.some(c => keys[c]); }
+function attackKey()  { return pressing('AltLeft', 'AltRight'); }
+function jumpKey()    { return pressing('ArrowUp', 'KeyW', 'Space'); }
+function leftKey()    { return pressing('ArrowLeft',  'KeyA'); }
+function rightKey()   { return pressing('ArrowRight', 'KeyD'); }
+
+// ── State ──────────────────────────────────────────────────────
+let player, clones, inputBuffer;
+let particles, floatingTexts;
+let shakeAmt, shakeX, shakeY;
+let gameRunning, gameOver;
+let nextEchoTimer, diffMult;
+let giantEcho = null;
+let isBossPhase = false;
+let spawnPaused = false;
+let shockwaves = [];
+let globalTimeScale = 1.0;
+let isTimeDistorted = false;
+let distortionTimer = 0;
+
+
+
+// ── Particles ─────────────────────────────────────────────────
+function spawnParticles(x, y, color, count = 8, speed = 3) {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 / count) * i + Math.random() * 0.6;
+    const s = speed * (0.5 + Math.random());
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * s,
+      vy: Math.sin(angle) * s - 1,
+      life: 1,
+      decay: 0.035 + Math.random() * 0.03,
+      size: 3 + Math.random() * 4,
+      color,
+    });
+  }
+}
+
+function updateParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x  += p.vx;
+    p.y  += p.vy;
+    p.vy += 0.15;
+    p.life -= p.decay;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life * 0.9;
+    ctx.fillStyle   = p.color;
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur  = 8;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── Screen Shake ──────────────────────────────────────────────
+function triggerShake(amt) { shakeAmt = Math.max(shakeAmt, amt); }
+
+function updateShake() {
+  if (shakeAmt > 0) {
+    shakeX  = (Math.random() - 0.5) * shakeAmt * 2;
+    shakeY  = (Math.random() - 0.5) * shakeAmt * 2;
+    shakeAmt *= 0.82;
+    if (shakeAmt < 0.3) shakeAmt = 0;
+  } else { shakeX = 0; shakeY = 0; }
+}
+
+// ── Floating Text ─────────────────────────────────────────────
+function addFloatText(x, y, text, color) {
+  floatingTexts.push({ x, y, text, color, life: 1, vy: -1.3 });
+}
+
+function updateFloatTexts() {
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const t = floatingTexts[i];
+    t.y  += t.vy;
+    t.life -= 0.022;
+    if (t.life <= 0) floatingTexts.splice(i, 1);
+  }
+}
+
+function drawFloatTexts() {
+  floatingTexts.forEach(t => {
+    ctx.save();
+    ctx.globalAlpha = t.life;
+    ctx.font        = 'bold 13px Orbitron, monospace';
+    ctx.fillStyle   = t.color;
+    ctx.shadowColor = t.color;
+    ctx.shadowBlur  = 10;
+    ctx.textAlign   = 'center';
+    ctx.fillText(t.text, t.x, t.y);
+    ctx.restore();
+  });
+}
+
+// ── Platform Collision ────────────────────────────────────────
+function applyPlatforms(entity) {
+  for (const p of PLATFORMS) {
+    const prevBottom = entity.y + PLAYER_H - entity.vy;
+    const curBottom  = entity.y + PLAYER_H;
+    const inX  = entity.x + PLAYER_W > p.x + 4 && entity.x < p.x + p.w - 4;
+    const crossed = prevBottom <= p.y + 2 && curBottom >= p.y;
+    if (inX && crossed && entity.vy >= 0) {
+      entity.y       = p.y - PLAYER_H;
+      entity.vy      = 0;
+      entity.onGround = true;
+    }
+  }
+}
+
+// ── Player factory ────────────────────────────────────────────
+function createPlayer() {
+  return {
+    x: W / 2 - PLAYER_W / 2,
+    y: ARENA.ground - PLAYER_H,
+    vx: 0, vy: 0,
+    onGround: false,
+    facing: 1,
+    hp: PLAYER_HP, maxHp: PLAYER_HP,
+    attackTimer: 0, attackCooldown: 0,
+    isAttacking: false,
+    invincible: 0,
+    squishX: 1, squishY: 1,
+    trail: [],
+  };
+}
+
+// ── Record one snapshot of the player ─────────────────────────
+function recordFrame() {
+  inputBuffer.push({
+    x: player.x, y: player.y,
+    vx: player.vx, vy: player.vy,
+    facing: player.facing,
+    onGround: player.onGround,
+    isAttacking: player.isAttacking,
+    attackTimer: player.attackTimer,
+    moveLeft:  leftKey(),
+    moveRight: rightKey(),
+    jumping:   jumpKey(),
+    attacking: attackKey(),
+  });
+  if (inputBuffer.length > RECORD_FRAMES) inputBuffer.shift();
+}
+
+// ── Spawn clone using recorded timeline ───────────────────────
+function spawnClone() {
+  if (inputBuffer.length < 15) return;
+  const timeline = [...inputBuffer];
+  const first    = timeline[0];
+  const clone = {
+    x: first.x, y: first.y,
+    vx: 0, vy: 0,
+    facing: first.facing,
+    onGround: false,
+    hp: CLONE_HP, maxHp: CLONE_HP,
+    frameIdx: 0,
+    timeline,
+    isAttacking: false,
+    attackTimer: 0,
+    attackCooldown: 0,
+    speedMult: diffMult,
+    alpha: 0,
+    trail: [],
+    flashTimer: 0,
+  };
+  clones.push(clone);
+  spawnParticles(clone.x + PLAYER_W / 2, clone.y + PLAYER_H / 2, '#cc44ff', 18, 5);
+}
+
+// ── Update one clone ──────────────────────────────────────────
+function updateClone(c) {
+  if (c.alpha < 1) c.alpha = Math.min(1, c.alpha + 0.04);
+  if (c.flashTimer > 0) c.flashTimer--;
+
+  const sp = c.speedMult;
+
+  if (c.frameIdx < c.timeline.length) {
+    // Replay recorded inputs
+    const snap = c.timeline[c.frameIdx];
+
+    if (snap.moveLeft)       { c.vx = -CLONE_BASE_SPEED * sp; c.facing = -1; }
+    else if (snap.moveRight) { c.vx =  CLONE_BASE_SPEED * sp; c.facing =  1; }
+    else                     { c.vx *= 0.78; }
+
+    if (snap.jumping && c.onGround) {
+      c.vy = JUMP_FORCE * Math.min(sp, 1.4) * 0.92;
+      c.onGround = false;
+    }
+
+    c.isAttacking = snap.isAttacking;
+    c.attackTimer = snap.attackTimer;
+    c.frameIdx++;
+  } else {
+    // Timeline done — walk toward player
+    const px = player.x + PLAYER_W / 2;
+    const cx = c.x + PLAYER_W / 2;
+    if (px > cx) { c.vx = CLONE_BASE_SPEED * sp * 0.7; c.facing =  1; }
+    else         { c.vx = -CLONE_BASE_SPEED * sp * 0.7; c.facing = -1; }
+  }
+
+  // Clone independently attacks player when close
+  if (c.attackCooldown <= 0) {
+    const px  = player.x + PLAYER_W / 2;
+    const cx  = c.x + PLAYER_W / 2;
+    const py  = player.y + PLAYER_H / 2;
+    const cy2 = c.y + PLAYER_H / 2;
+    if (Math.abs(px - cx) < CLONE_ATTACK_RANGE && Math.abs(py - cy2) < PLAYER_H + 12) {
+      c.isAttacking    = true;
+      c.attackTimer    = ATTACK_DUR;
+      c.attackCooldown = CLONE_ATTACK_CD;
+      if (player.invincible <= 0) {
+        player.hp     -= CLONE_DMG;
+        player.invincible = 50;
+        triggerShake(5);
+        addFloatText(player.x + PLAYER_W / 2, player.y - 10, `-${CLONE_DMG}`, '#ff4466');
+        spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ff3355', 10, 2.5);
+      }
+    }
+  }
+  if (c.attackCooldown > 0) c.attackCooldown--;
+  if (c.attackTimer > 0)    c.attackTimer--;    else c.isAttacking = false;
+
+  // Physics
+  c.vy += GRAVITY * globalTimeScale;
+  c.x  += c.vx * globalTimeScale;
+  c.y  += c.vy * globalTimeScale;
+
+
+
+  // Ground
+  if (c.y + PLAYER_H >= ARENA.ground) {
+    c.y = ARENA.ground - PLAYER_H;
+    c.vy = 0; c.onGround = true;
+  } else { c.onGround = false; }
+
+  // Platforms
+  applyPlatforms(c);
+
+  // Walls
+  if (c.x < ARENA.left)              { c.x = ARENA.left;              c.vx = 0; }
+  if (c.x + PLAYER_W > ARENA.right)  { c.x = ARENA.right - PLAYER_W;  c.vx = 0; }
+
+  // Trail
+  c.trail.push({ x: c.x, y: c.y });
+  if (c.trail.length > 8) c.trail.shift();
+}
+
+// ── Giant Echo Functions ──────────────────────────────────────
+function mergeClonesIntoGiant() {
+  if (clones.length < MERGE_THRESHOLD || isBossPhase) return;
+
+  isBossPhase = true;
+  spawnPaused = true;
+  triggerShake(15);
+  addFloatText(W / 2, H / 2 - 50, "GIANT ECHO FORMING", "#ff33ff");
+
+  let avgX = 0, avgY = 0, totalHP = 0;
+  let combinedTimeline = [];
+
+  clones.forEach(c => {
+    avgX += c.x;
+    avgY += c.y;
+    totalHP += c.hp;
+    combinedTimeline = combinedTimeline.concat(c.timeline);
+  });
+
+  avgX /= clones.length;
+  avgY /= clones.length;
+
+  giantEcho = {
+    x: avgX,
+    y: avgY,
+    vx: 0, vy: 0,
+    facing: 1,
+    onGround: false,
+    hp: totalHP * GIANT_HP_MULT,
+    maxHp: totalHP * GIANT_HP_MULT,
+    frameIdx: 0,
+    actions: combinedTimeline,
+    isAttacking: false,
+    attackTimer: 0,
+    attackCooldown: 0,
+    alpha: 0,
+    trail: [],
+    flashTimer: 0,
+    isGiant: true,
+    phase: 1,
+    shockwaveTimer: 480, // Start cooldown
+    isSlamming: false,
+    slamState: 0, // 0: idle, 1: jumping, 2: mid-air wait, 3: slamming
+    slamTimer: 0
+  };
+
+
+
+  // Visual effect: particles moving toward center
+  clones.forEach(c => {
+    spawnParticles(c.x + PLAYER_W/2, c.y + PLAYER_H/2, '#aa33ff', 15, 4);
+  });
+
+  clones = []; // Remove normal clones
+}
+
+function updateGiantEcho(g) {
+  if (g.alpha < 1) g.alpha = Math.min(1, g.alpha + 0.02);
+  if (g.flashTimer > 0) g.flashTimer--;
+
+  const hpPct = g.hp / g.maxHp;
+  if (hpPct < 0.25) g.phase = 3;
+  else if (hpPct < 0.75) g.phase = 2;
+
+  // Global phase effects
+  if (g.phase >= 3) isTimeDistorted = true;
+
+  // Phase 2+ Shockwave Timer
+  if (g.phase >= 2 && !g.isSlamming) {
+    g.shockwaveTimer -= 1 * globalTimeScale;
+    if (g.shockwaveTimer <= 0) {
+      g.isSlamming = true;
+      g.slamState = 1;
+      g.slamTimer = 0;
+    }
+  }
+
+  // Slam State Machine
+  if (g.isSlamming) {
+    if (g.slamState === 1) { // Jumping
+      g.vy = -18;
+      g.onGround = false;
+      g.slamState = 2;
+      addFloatText(g.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, g.y - 20, "PREPARING SLAM", "#ffaa00");
+    } else if (g.slamState === 2) { // Mid-air wait
+      if (g.vy >= 0) { // Peak of jump
+        g.vy = 0;
+        g.slamTimer += 1 * globalTimeScale;
+        if (g.slamTimer > 40) {
+          g.slamState = 3;
+          g.vy = 25; // Slam down!
+        }
+      }
+    } else if (g.slamState === 3) { // Slamming down
+      if (g.onGround) {
+        g.isSlamming = false;
+        g.shockwaveTimer = 400 + Math.random() * 200; // Reset cooldown
+        triggerShake(18);
+        spawnParticles(g.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, ARENA.ground, "#ffaa00", 30, 8);
+        spawnShockwave();
+        addFloatText(g.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, g.y - 20, "ECHO SHOCKWAVE!", "#ff4400");
+      }
+    }
+  }
+
+  // Replay logic (combined loop) - only when not slamming
+  if (!g.isSlamming && g.actions.length > 0) {
+    const snap = g.actions[g.frameIdx % g.actions.length];
+    
+    if (snap.moveLeft)       { g.vx = -CLONE_BASE_SPEED * GIANT_SPEED_MULT; g.facing = -1; }
+    else if (snap.moveRight) { g.vx =  CLONE_BASE_SPEED * GIANT_SPEED_MULT; g.facing =  1; }
+    else                     { g.vx *= 0.85; }
+
+    if (snap.jumping && g.onGround) {
+      g.vy = JUMP_FORCE * 0.95;
+      g.onGround = false;
+    }
+
+    g.frameIdx++;
+  }
+
+  // Large Boss independent attack
+  if (!g.isSlamming && g.attackCooldown <= 0) {
+    const dx = (player.x + PLAYER_W / 2) - (g.x + (PLAYER_W * GIANT_SIZE_MULT) / 2);
+    const dy = (player.y + PLAYER_H / 2) - (g.y + (PLAYER_H * GIANT_SIZE_MULT) / 2);
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist < CLONE_ATTACK_RANGE * GIANT_SIZE_MULT * 0.7) {
+      g.isAttacking = true;
+      g.attackTimer = ATTACK_DUR + 10;
+      g.attackCooldown = CLONE_ATTACK_CD + 20;
+      
+      if (player.invincible <= 0) {
+        const damage = Math.round(CLONE_DMG * GIANT_DMG_MULT);
+        player.hp -= damage;
+        player.invincible = 60;
+        triggerShake(8);
+        addFloatText(player.x + PLAYER_W / 2, player.y - 10, `-${damage}`, '#ff1144');
+        spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ff3355', 15, 3);
+      }
+    }
+  }
+
+  if (g.attackCooldown > 0) g.attackCooldown -= 1 * globalTimeScale;
+  if (g.attackTimer > 0)    g.attackTimer -= 1 * globalTimeScale; else g.isAttacking = false;
+
+  // Physics
+  g.vy += GRAVITY * globalTimeScale;
+  g.x  += g.vx * globalTimeScale;
+  g.y  += g.vy * globalTimeScale;
+
+  // Ground
+  const gh = PLAYER_H * GIANT_SIZE_MULT;
+  const gw = PLAYER_W * GIANT_SIZE_MULT;
+  if (g.y + gh >= ARENA.ground) {
+    g.y = ARENA.ground - gh;
+    g.vy = 0; g.onGround = true;
+  } else { g.onGround = false; }
+
+  // Walls
+  if (g.x < ARENA.left)      { g.x = ARENA.left;   g.vx = 0; }
+  if (g.x + gw > ARENA.right) { g.x = ARENA.right - gw; g.vx = 0; }
+
+  // Trail
+  g.trail.push({ x: g.x, y: g.y });
+  if (g.trail.length > 10) g.trail.shift();
+}
+
+// ── Shockwave Functions ──────────────────────────────────────
+function spawnShockwave() {
+  // Capture last 4 seconds of player path
+  const path = inputBuffer.slice(-240).map(s => ({ x: s.x, y: s.y }));
+  if (path.length < 10) return;
+
+  shockwaves.push({
+    path,
+    idx: 0,
+    alpha: 1,
+    size: 60,
+    color: '#ff6600'
+  });
+}
+
+function updateShockwaves() {
+  for (let i = shockwaves.length - 1; i >= 0; i--) {
+    const s = shockwaves[i];
+    s.idx += 3 * globalTimeScale; // Speed of shockwave progression
+
+    if (Math.floor(s.idx) < s.path.length) {
+      const pos = s.path[Math.floor(s.idx)];
+      // Collision check
+      const dx = (player.x + PLAYER_W / 2) - (pos.x + PLAYER_W / 2);
+      const dy = (player.y + PLAYER_H / 2) - (pos.y + PLAYER_H / 2);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < s.size && player.invincible <= 0) {
+        const damage = 45;
+        player.hp -= damage;
+        player.invincible = 50;
+        triggerShake(12);
+        addFloatText(player.x + PLAYER_W / 2, player.y - 20, "SHOCKWAVE HIT!", "#ff0000");
+        spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ff6600', 20, 5);
+      }
+
+      // Visual particles along path
+      if (Math.random() < 0.4) {
+        particles.push({
+          x: pos.x + PLAYER_W / 2 + (Math.random() - 0.5) * s.size,
+          y: pos.y + PLAYER_H / 2 + (Math.random() - 0.5) * s.size,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
+          life: 0.6,
+          decay: 0.05,
+          size: 4,
+          color: s.color
+        });
+      }
+    } else {
+      s.alpha -= 0.05;
+      if (s.alpha <= 0) shockwaves.splice(i, 1);
+    }
+  }
+}
+
+function drawShockwaves() {
+  shockwaves.forEach(s => {
+    if (Math.floor(s.idx) < s.path.length) {
+      const pos = s.path[Math.floor(s.idx)];
+      ctx.save();
+      ctx.globalAlpha = s.alpha * 0.4;
+      ctx.fillStyle = s.color;
+      ctx.shadowColor = s.color;
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(pos.x + PLAYER_W / 2, pos.y + PLAYER_H / 2, s.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  });
+}
+
+
+
+
+// ── Update player ─────────────────────────────────────────────
+function updatePlayer() {
+  const spMult = globalTimeScale;
+
+  if (leftKey())       { player.vx = -MOVE_SPEED * spMult; player.facing = -1; }
+  else if (rightKey()) { player.vx =  MOVE_SPEED * spMult; player.facing =  1; }
+  else                 { player.vx *= 0.75; }
+
+  if (jumpKey() && player.onGround) {
+    player.vy = JUMP_FORCE * Math.sqrt(spMult); // Adjust jump feel for slow motion
+    player.onGround = false;
+    player.squishY = 0.7; player.squishX = 1.3;
+    spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H, '#4488ff', 5, 2.5);
+  }
+
+
+
+
+  // Attack — Alt key
+  if (attackKey() && player.attackCooldown <= 0) {
+    player.isAttacking    = true;
+    player.attackTimer    = ATTACK_DUR;
+    player.attackCooldown = ATTACK_CD;
+    spawnParticles(
+      player.x + PLAYER_W / 2 + player.facing * 30,
+      player.y + PLAYER_H / 2,
+      '#55aaff', 6, 2
+    );
+
+    // Hit clones
+    clones.forEach(c => {
+      const ax = player.x + PLAYER_W / 2 + player.facing * (ATTACK_RANGE / 2);
+      const cx = c.x + PLAYER_W / 2;
+      const py = player.y + PLAYER_H / 2;
+      const cy = c.y + PLAYER_H / 2;
+      if (Math.abs(ax - cx) < ATTACK_RANGE && Math.abs(py - cy) < PLAYER_H + 10) {
+        c.hp -= ATTACK_DMG;
+        c.flashTimer = 10;
+        addFloatText(c.x + PLAYER_W / 2, c.y - 16, `-${ATTACK_DMG}`, '#44ddff');
+        spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#aa44ff', 12, 3.5);
+        triggerShake(3);
+      }
+    });
+
+    // Hit Giant Echo
+    if (isBossPhase && giantEcho) {
+      const s = GIANT_SIZE_MULT;
+      const ax = player.x + PLAYER_W / 2 + player.facing * (ATTACK_RANGE / 2);
+      const gx = giantEcho.x + (PLAYER_W * s) / 2;
+      const py = player.y + PLAYER_H / 2;
+      const gy = giantEcho.y + (PLAYER_H * s) / 2;
+      
+      if (Math.abs(ax - gx) < ATTACK_RANGE * s * 0.7 && Math.abs(py - gy) < (PLAYER_H * s) / 2 + 20) {
+        giantEcho.hp -= ATTACK_DMG;
+        giantEcho.flashTimer = 10;
+        addFloatText(giantEcho.x + (PLAYER_W * s) / 2, giantEcho.y - 20, `-${ATTACK_DMG}`, '#ff33ff');
+        spawnParticles(giantEcho.x + (PLAYER_W * s) / 2, giantEcho.y + (PLAYER_H * s) / 2, '#ff33ff', 15, 4);
+        triggerShake(5);
+      }
+    }
+  }
+
+
+  if (player.attackTimer > 0) player.attackTimer--;
+  else player.isAttacking = false;
+  if (player.attackCooldown > 0) player.attackCooldown--;
+  if (player.invincible   > 0) player.invincible--;
+
+  // Physics
+  player.vy += GRAVITY * spMult;
+  player.x  += player.vx; // vx already incorporates spMult for movement
+  player.y  += player.vy; // vy already incorporates GRAVITY contribution
+
+
+
+  // Ground
+  if (player.y + PLAYER_H >= ARENA.ground) {
+    if (player.vy > 3) { player.squishY = 0.75; player.squishX = 1.25; }
+    player.y = ARENA.ground - PLAYER_H;
+    player.vy = 0; player.onGround = true;
+  } else { player.onGround = false; }
+
+  // Platforms
+  applyPlatforms(player);
+
+  // Walls
+  if (player.x < ARENA.left)             { player.x = ARENA.left;              player.vx = 0; }
+  if (player.x + PLAYER_W > ARENA.right) { player.x = ARENA.right - PLAYER_W;  player.vx = 0; }
+
+  // Squish recovery
+  player.squishY += (1 - player.squishY) * 0.2;
+  player.squishX += (1 - player.squishX) * 0.2;
+
+  // Trail
+  player.trail.push({ x: player.x, y: player.y });
+  if (player.trail.length > 6) player.trail.shift();
+
+  // Clamp HP
+  player.hp = Math.max(0, Math.min(player.maxHp, player.hp));
+}
+
+// ── Spawn interval (scales with time) ─────────────────────────
+function spawnInterval() {
+  return Math.max(2000, 5000 - (survivalTime / 120) * 3000);
+}
+
+// ── Draw arena background ─────────────────────────────────────
+function drawArena() {
+  // BG
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#060c1a');
+  bg.addColorStop(1, '#080616');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid
+  ctx.save();
+  ctx.strokeStyle = 'rgba(50,70,140,0.11)';
+  ctx.lineWidth = 1;
+  for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 60) {
+    ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.ground); ctx.stroke();
+  }
+  for (let gy = ARENA.y; gy <= ARENA.ground; gy += 60) {
+    ctx.beginPath(); ctx.moveTo(ARENA.x, gy); ctx.lineTo(ARENA.x + ARENA.w, gy); ctx.stroke();
+  }
+  ctx.restore();
+
+  // Ground glow
+  const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
+  gGrad.addColorStop(0, 'rgba(80,120,255,0.55)');
+  gGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = gGrad;
+  ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
+
+  ctx.save();
+  ctx.shadowColor = '#4488ff';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = 'rgba(100,150,255,0.9)';
+  ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
+  ctx.restore();
+
+  // Border
+  ctx.save();
+  ctx.strokeStyle = 'rgba(80,120,255,0.22)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.ground - ARENA.y);
+  ctx.restore();
+
+  // Ambient blobs
+  const t = Date.now() / 1000;
+  ctx.save();
+  ctx.globalAlpha = 0.04 + 0.015 * Math.sin(t * 0.7);
+  const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 220);
+  b1.addColorStop(0, '#5566ff'); b1.addColorStop(1, 'transparent');
+  ctx.fillStyle = b1; ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 0.033 + 0.015 * Math.sin(t * 0.9 + 1.2);
+  const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 180);
+  b2.addColorStop(0, '#aa44ff'); b2.addColorStop(1, 'transparent');
+  ctx.fillStyle = b2; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+
+  // Platforms
+  PLATFORMS.forEach(p => {
+    ctx.save();
+    ctx.shadowColor = 'rgba(80,130,255,0.5)';
+    ctx.shadowBlur  = 10;
+    ctx.fillStyle   = 'rgba(70,110,230,0.18)';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.fillStyle = 'rgba(100,150,255,0.85)';
+    ctx.fillRect(p.x, p.y, p.w, 2);
+    // underside glow
+    const pg = ctx.createLinearGradient(p.x, p.y + p.h, p.x, p.y + p.h + 18);
+    pg.addColorStop(0, 'rgba(80,130,255,0.25)');
+    pg.addColorStop(1, 'transparent');
+    ctx.fillStyle = pg;
+    ctx.fillRect(p.x, p.y + p.h, p.w, 18);
+    ctx.restore();
+  });
+}
+
+// ── Draw a character (player or clone) ───────────────────────
+function drawCharacter(ent, isPlayer) {
+  const trail = ent.trail;
+
+  // Trail
+  trail.forEach((t, i) => {
+    const a = (i / trail.length) * 0.22 * ent.alpha;
+    const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle   = isPlayer ? '#3366ff' : (ent.isGiant ? '#ff33ff' : '#aa33ff');
+    ctx.beginPath();
+    ctx.roundRect(t.x, t.y, PLAYER_W * s, PLAYER_H * s, 5 * s);
+    ctx.fill();
+    ctx.restore();
+  });
+
+
+  const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
+  const cx = ent.x + (PLAYER_W * s) / 2;
+  const cy = ent.y + (PLAYER_H * s) / 2;
+  const hw = (PLAYER_W * s) / 2;
+  const hh = (PLAYER_H * s) / 2;
+
+  ctx.save();
+  ctx.globalAlpha = ent.alpha ?? 1;
+
+  // Invincible flicker for player
+  if (isPlayer && ent.invincible > 0 && Math.floor(ent.invincible / 4) % 2 === 0) {
+    ctx.globalAlpha = 0.28;
+  }
+
+  // Squish transform
+  ctx.translate(cx, cy);
+  ctx.scale(ent.squishX || 1, ent.squishY || 1);
+  ctx.translate(-cx, -cy);
+
+
+  // Flash white on clone hit
+  if (!isPlayer && ent.flashTimer > 0) ctx.filter = 'brightness(3)';
+
+  if (isPlayer) {
+    ctx.shadowColor = '#4488ff';
+    ctx.shadowBlur  = 18;
+    const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
+    g.addColorStop(0, '#5599ff');
+    g.addColorStop(1, '#2244cc');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
+    ctx.fill();
+    // Highlight
+    ctx.fillStyle = 'rgba(180,215,255,0.22)';
+    ctx.beginPath();
+    ctx.roundRect(cx - hw + 3 * s, cy - hh + 3 * s, (PLAYER_W - 6) * s, (PLAYER_H / 2 - 2) * s, 5 * s);
+    ctx.fill();
+    // Eye
+    ctx.shadowColor = '#aaddff'; ctx.shadowBlur = 6;
+    ctx.fillStyle   = '#aaddff';
+    const ex = cx + ent.facing * 4 * s;
+    ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000910';
+    ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
+
+  } else {
+    // Boss Visual Glow Effect
+    if (ent.isGiant) {
+      ctx.shadowColor = '#ff33ff';
+      ctx.shadowBlur  = 25;
+      ctx.strokeStyle = '#ffbbff';
+      ctx.lineWidth   = 2;
+      ctx.strokeRect(cx - hw - 2, cy - hh - 2, PLAYER_W * s + 4, PLAYER_H * s + 4);
+    } else {
+      ctx.shadowColor = '#cc44ff';
+      ctx.shadowBlur  = 16;
+    }
+    
+    const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
+    g.addColorStop(0, ent.isGiant ? 'rgba(255,50,150,0.9)' : 'rgba(210,80,255,0.88)');
+    g.addColorStop(1, ent.isGiant ? 'rgba(150,20,100,0.9)' : 'rgba(130,30,200,0.88)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
+    ctx.fill();
+    // Scanlines
+    ctx.fillStyle = 'rgba(10,0,25,0.12)';
+    for (let sl = 0; sl < PLAYER_H * s; sl += 4 * s)
+      ctx.fillRect(cx - hw, cy - hh + sl, PLAYER_W * s, 2 * s);
+    // Red/Pink eye
+    ctx.shadowColor = ent.isGiant ? '#ff00ff' : '#ff3333'; ctx.shadowBlur = 8 * s;
+    ctx.fillStyle   = ent.isGiant ? '#ff88ff' : '#ff6666';
+    const ex = cx + ent.facing * 4 * s;
+    ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3.2 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = ent.isGiant ? '#aa00aa' : '#ff0000';
+    ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
+  }
+
+
+  // Attack slash
+  if (ent.isAttacking && ent.attackTimer > 0) {
+    const prog  = ent.attackTimer / ATTACK_DUR;
+    const atkX  = cx + ent.facing * (hw + 6 * s);
+    const atkLen = ATTACK_RANGE * s * prog;
+
+    ctx.save();
+    ctx.globalAlpha = prog * 0.9;
+    ctx.strokeStyle = isPlayer ? '#88ccff' : '#ff88cc';
+    ctx.shadowColor = isPlayer ? '#4488ff' : '#cc44ff';
+    ctx.shadowBlur  = 14;
+    ctx.lineWidth   = 3;
+    ctx.beginPath();
+    ctx.moveTo(atkX, cy);
+    ctx.lineTo(atkX + ent.facing * atkLen, cy);
+    ctx.stroke();
+    ctx.globalAlpha = prog * 0.45;
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.arc(atkX, cy, atkLen * 0.55, -Math.PI / 2.8, Math.PI / 2.8);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+// ── HP bar above character ────────────────────────────────────
+function drawHpBar(ent, fillColor, glowColor) {
+  const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
+  const bw = (PLAYER_W + 10) * s;
+  const bh = 5 * s;
+  const bx = ent.x - 5 * s;
+  const by = ent.y - 12 * s;
+  const fw = Math.max(0, (ent.hp / ent.maxHp) * bw);
+
+
+  ctx.save();
+  ctx.globalAlpha = ent.alpha ?? 1;
+  ctx.fillStyle = 'rgba(10,8,20,0.7)';
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 2); ctx.fill();
+  if (fw > 0) {
+    ctx.shadowColor = glowColor; ctx.shadowBlur = 8;
+    ctx.fillStyle   = fillColor;
+    ctx.beginPath(); ctx.roundRect(bx, by, fw, bh, 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ── HUD update ────────────────────────────────────────────────
+function updateHUD() {
+  const pct = player.hp / player.maxHp * 100;
+  const fill = document.getElementById('health-bar-fill');
+  fill.style.width = pct + '%';
+  fill.style.background = pct < 30
+    ? 'linear-gradient(90deg,#ff1111,#ff5500)'
+    : pct < 60
+      ? 'linear-gradient(90deg,#ff6600,#ffaa00)'
+      : 'linear-gradient(90deg,#ff3355,#ff6644)';
+
+  document.getElementById('hud-time').textContent   = survivalTime.toFixed(1) + 's';
+  document.getElementById('hud-clones').textContent = clones.length;
+  document.getElementById('hud-killed').textContent = clonesKilled;
+
+  const echoPct = (1 - nextEchoTimer / spawnInterval()) * 100;
+  document.getElementById('echo-bar-fill').style.width = Math.min(100, echoPct) + '%';
+}
+
+// ── Game-Over overlay ────────────────────────────────────────
+function showGameOver() {
+  const overlay = document.getElementById('overlay');
+  overlay.innerHTML = `
+    <div class="overlay-title">GAME OVER</div>
+    <div class="overlay-sub">Your echoes caught up with you.<br/><em>The past always returns.</em></div>
+    <div class="stat-row">
+      <div class="stat-box">
+        <span class="stat-value">${survivalTime.toFixed(1)}s</span>
+        <span class="stat-label">⏱ Survived</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-value">${clonesKilled}</span>
+        <span class="stat-label">💀 Echoes Defeated</span>
+      </div>
+    </div>
+    <button class="btn" id="restart-btn">↺ PLAY AGAIN</button>
+  `;
+  overlay.classList.remove('hidden');
+  document.getElementById('restart-btn').addEventListener('click', () => {
+    overlay.classList.add('hidden');
+    startGame();
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────
+function startGame() {
+  player       = createPlayer();
+  clones       = [];
+  inputBuffer  = [];
+  particles    = [];
+  floatingTexts= [];
+  shockwaves   = [];
+  shakeAmt     = 0; shakeX = 0; shakeY = 0;
+  clonesKilled = 0;
+  survivalTime = 0;
+  diffMult     = 1;
+  nextEchoTimer = 5000;
+  startTime    = performance.now();
+  gameOver     = false;
+  gameRunning  = true;
+  globalTimeScale = 1.0;
+  isTimeDistorted = false;
+  distortionTimer = 0;
+}
+
+
+
+// ── Main Loop ─────────────────────────────────────────────────
+let lastTime = 0;
+
+function gameLoop(ts) {
+  const dt = Math.min(ts - lastTime, 33);
+  lastTime  = ts;
+
+  updateShake();
+
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+
+  if (!gameOver && gameRunning) {
+    survivalTime  = (ts - startTime) / 1000;
+    diffMult      = 1 + survivalTime / 30;
+
+    recordFrame();
+    updatePlayer();
+
+    nextEchoTimer -= dt;
+    if (nextEchoTimer <= 0 && !spawnPaused) {
+      spawnClone();
+      nextEchoTimer = spawnInterval();
+    }
+
+    // Check for merge
+    if (!isBossPhase && clones.length >= MERGE_THRESHOLD) {
+      mergeClonesIntoGiant();
+    }
+
+    // Update / cull clones
+    if (!isBossPhase) {
+      for (let i = clones.length - 1; i >= 0; i--) {
+        updateClone(clones[i]);
+        if (clones[i].hp <= 0) {
+          const c = clones[i];
+          spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#cc44ff', 22, 5);
+          addFloatText(c.x + PLAYER_W / 2, c.y - 22, 'ECHO BANISHED', '#dd88ff');
+          clones.splice(i, 1);
+          clonesKilled++;
+          triggerShake(4);
+        }
+      }
+    } else if (giantEcho) {
+      updateGiantEcho(giantEcho);
+      if (giantEcho.hp <= 0) {
+        // Giant Echo Defeated
+        spawnParticles(giantEcho.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, giantEcho.y + (PLAYER_H * GIANT_SIZE_MULT) / 2, '#ff33ff', 40, 8);
+        addFloatText(giantEcho.x + (PLAYER_W * GIANT_SIZE_MULT) / 2, giantEcho.y - 40, 'GIANT DESTROYED', '#ff55ff');
+        
+        giantEcho = null;
+        isBossPhase = false;
+        spawnPaused = false;
+        clonesKilled += 5; // Bonus for boss
+        triggerShake(12);
+        
+        // Resume with faster spawning
+        nextEchoTimer = spawnInterval() * 0.6; 
+      }
+    }
+
+    // Update Shockwaves
+    updateShockwaves();
+
+    // Time Distortion Logic
+    if (isTimeDistorted) {
+      distortionTimer += 0.015;
+      // Cycle: Normal (1.0) -> Slow (0.4) -> Fast (1.6) -> Normal (1.0)
+      const cycle = Math.sin(distortionTimer); // -1 to 1
+      globalTimeScale = 1.0 + cycle * 0.6;
+    } else {
+      globalTimeScale = 1.0;
+    }
+
+    // Player death
+    if (player.hp <= 0) {
+      gameOver = true;
+      gameRunning = false;
+      triggerShake(14);
+      spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#4488ff', 30, 7);
+      setTimeout(showGameOver, 1300);
+    }
+
+    updateParticles();
+    updateFloatTexts();
+    updateHUD();
+  }
+
+
+  // ── Draw ──
+  drawArena();
+
+  clones.forEach(c => {
+    drawCharacter(c, false);
+    drawHpBar(c, '#cc44ff', '#9922cc');
+  });
+
+  if (isBossPhase && giantEcho) {
+    drawCharacter(giantEcho, false);
+    drawHpBar(giantEcho, '#ff33ff', '#cc00ff');
+  }
+
+
+  if (!gameOver) {
+    drawCharacter(player, true);
+    drawHpBar(player, '#4488ff', '#2244dd');
+  }
+
+  drawParticles();
+  drawFloatTexts();
+  drawShockwaves();
+
+  // Time Distortion UI Overlay
+  if (isTimeDistorted) {
+    const pulse = Math.abs(Math.sin(distortionTimer * 2)) * 0.1;
+    ctx.save();
+    ctx.fillStyle = globalTimeScale < 1 
+      ? `rgba(0, 100, 255, ${0.05 + pulse})` // Blueish for slow
+      : `rgba(255, 50, 0, ${0.05 + pulse})`;  // Redish for fast
+    ctx.fillRect(0, 0, W, H);
+    
+    ctx.font = 'bold 12px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.textAlign = 'center';
+    ctx.fillText(`TIME SCALE: ${globalTimeScale.toFixed(2)}x`, W / 2, H - 20);
+    ctx.restore();
+  }
+
+  // Echo warning pulse
+  if (nextEchoTimer < 1000 && !gameOver && inputBuffer.length >= 15) {
+    const pulse = Math.abs(Math.sin(Date.now() / 110));
+    ctx.save();
+    ctx.globalAlpha = pulse * 0.22;
+    ctx.fillStyle   = '#cc44ff';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = pulse * 0.85;
+    ctx.font        = 'bold 14px Orbitron, monospace';
+    ctx.fillStyle   = '#dd88ff';
+    ctx.textAlign   = 'center';
+    ctx.shadowColor = '#aa44ff';
+    ctx.shadowBlur  = 14;
+    ctx.fillText('⚡ ECHO SPAWNING...', W / 2, 56);
+    ctx.restore();
+  }
+
+  // Wave / difficulty badge
+  ctx.save();
+  ctx.font      = '600 11px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(160,110,255,0.5)';
+  ctx.textAlign = 'right';
+  ctx.fillText(`WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
+  ctx.restore();
+
+  ctx.restore(); // end shake
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ── Boot ──────────────────────────────────────────────────────
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('overlay').classList.add('hidden');
+  startGame();
+  requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+});
+</script>
+</body>
+</html>
