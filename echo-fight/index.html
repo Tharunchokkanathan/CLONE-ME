@@ -537,6 +537,7 @@
       transition: opacity 0.4s ease, transform 0.4s ease;
     }
     .interface-hidden {
+      display: none !important;
       opacity: 0 !important;
       pointer-events: none;
       transform: translateY(-20px);
@@ -2542,6 +2543,7 @@ window.addEventListener('load', () => {
   // 2. NEW GAME
   document.getElementById('new-game-btn').addEventListener('click', () => {
     showMenu('none');
+    scaleCanvas(); // Recalculate canvas size now that HUD occupies vertical space
     startGame();
     requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
   });
