@@ -1008,11 +1008,11 @@ const GIANT_DMG_MULT     = 1.5;
 
 const GRAVITY_RADIUS     = 180;
 const GRAVITY_DURATION   = 180; // 3 seconds
-const GRAVITY_COOLDOWN   = 110; // ~1.8 seconds
-const THUNDER_COOLDOWN   = 720; // 12 seconds (Time Freeze)
+const GRAVITY_COOLDOWN   = 290; // Duration + ~1.8 seconds
 const FREEZE_DURATION    = 180; // 3 seconds
-const FLAME_COOLDOWN     = 110; // ~1.8 seconds
+const THUNDER_COOLDOWN   = 110; // ~1.8 seconds
 const FLAME_DURATION     = 300;  // 5 seconds of fire
+const FLAME_COOLDOWN     = 110; // ~1.8 seconds
 const FLAME_RANGE        = 240;
 
 
@@ -1641,8 +1641,8 @@ function updatePlayer() {
   if (player.dashCooldown > 0) player.dashCooldown -= spMult;
 
   // Flame Thrower Logic (Channeled)
-  if (player.flameCooldown > 0) player.flameCooldown -= spMult;
-  if (flameKey() && (player.flameCooldown || 0) <= 0) {
+  if (player.flameCooldown > 0 && !player.isFlaming) player.flameCooldown -= spMult;
+  if (flameKey() && (player.flameCooldown || 0) <= 0 && !player.isFlaming) {
     player.isFlaming = true;
     player.flameTimer = FLAME_DURATION;
     player.flameCooldown = FLAME_COOLDOWN;
@@ -1651,7 +1651,7 @@ function updatePlayer() {
 
   if (player.isFlaming) {
     player.flameTimer -= spMult;
-    if (player.flameTimer <= 0) {
+    if (player.flameTimer <= 0 || !flameKey()) {
       player.isFlaming = false;
     } else {
       if (Math.random() < 0.3 && SFX.playFire) SFX.playFire();
@@ -1660,8 +1660,8 @@ function updatePlayer() {
   }
 
   // Time Freeze Activation (Replaces Thunder)
-  if (player.thunderCooldown > 0) player.thunderCooldown -= spMult;
-  if (thunderKey() && (player.thunderCooldown || 0) <= 0) {
+  if (player.thunderCooldown > 0 && (player.freezeTimer || 0) <= 0) player.thunderCooldown -= spMult;
+  if (thunderKey() && (player.thunderCooldown || 0) <= 0 && (player.freezeTimer || 0) <= 0) {
     player.freezeTimer = FREEZE_DURATION;
     player.thunderCooldown = THUNDER_COOLDOWN;
     SFX.playFreeze();
@@ -1671,13 +1671,13 @@ function updatePlayer() {
   if (player.freezeTimer > 0) player.freezeTimer -= spMult;
 
   // Activation check
+  if (player.gravityCooldown > 0) player.gravityCooldown -= spMult;
   if (gravityKey() && (player.gravityCooldown || 0) <= 0) {
     player.gravityCooldown = GRAVITY_COOLDOWN;
     spawnGravitySpiral(mouseX, mouseY);
     triggerShake(10);
     addFloatText(player.x + PLAYER_W/2, player.y - 40, "ANTI-GRAVITY ACTIVATED!", "#00ff66");
   }
-  if (player.gravityCooldown > 0) player.gravityCooldown -= spMult;
 
   // Nova buildup
   player.novaEnergy = Math.min(player.maxNovaEnergy, player.novaEnergy + 0.05 * spMult);
@@ -2931,12 +2931,7 @@ function gameLoop(ts) {
     drawHpBar(c, '#8e7c9d', '#462633');
   });
 
-  if (isBossPhase && giantEcho) {
-    drawCharacter(giantEcho, false);
-    drawHpBar(giantEcho, '#c48d9e', '#8e7c9d');
-  }
-
-
+  // Legacy giantEcho block removed to fix ReferenceError crash
   if (!gameOver) {
     drawCharacter(player, true);
     drawHpBar(player, '#90a955', '#4f772d');
