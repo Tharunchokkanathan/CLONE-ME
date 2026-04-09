@@ -557,30 +557,7 @@
       <div id="echo-bar-bg"><div id="echo-bar-fill"></div></div>
     </div>
 
-    <div id="nova-bar-wrap">
-      <div class="hud-label">🔥 Nova Energy</div>
-      <div id="nova-bar-bg"><div id="nova-bar-fill"></div></div>
-    </div>
 
-    <div id="pistol-bar-wrap">
-      <div class="hud-label">🎯 Pistol Reload</div>
-      <div id="pistol-bar-bg"><div id="pistol-bar-fill"></div></div>
-    </div>
-
-    <div id="gravity-bar-wrap">
-      <div class="hud-label">🌌 Gravity Collapse</div>
-      <div id="gravity-bar-bg"><div id="gravity-bar-fill"></div></div>
-    </div>
-
-    <div id="thunder-bar-wrap">
-      <div class="hud-label">⚡ Thunder Strike</div>
-      <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
-    </div>
-
-    <div id="flame-bar-wrap">
-      <div class="hud-label">🔥 Flame Thrower</div>
-      <div id="flame-bar-bg"><div id="flame-bar-fill"></div></div>
-    </div>
   </div>
 
   <div style="position:relative;">
@@ -590,63 +567,19 @@
       <!-- MAIN MENU -->
       <div id="main-menu" class="menu-view">
         <div class="overlay-title">CLONE ME</div>
-        <div class="divider"></div>
         <div class="btn-stack">
           <button class="menu-btn" id="new-game-btn">New Game</button>
-          <button class="menu-btn" id="load-game-btn">Load Game</button>
-          <button class="menu-btn" id="settings-btn">Settings</button>
           <button class="menu-btn quit" id="quit-btn">Quit</button>
         </div>
       </div>
 
-      <!-- SETTINGS MENU -->
-      <div id="settings-menu" class="menu-view hidden">
-        <div class="overlay-title" style="font-size: 1.5rem;">SETTINGS</div>
-        <div class="settings-grid">
-          <div class="setting-item">
-            <span class="setting-label">Neon Intensity</span>
-            <input type="range" class="setting-control" id="neon-range" min="0" max="100" value="70">
-          </div>
-          <div class="setting-item">
-            <span class="setting-label">Particle Density</span>
-            <select class="setting-control" id="particle-select">
-              <option value="low">Low (Performance)</option>
-              <option value="med" selected>Medium</option>
-              <option value="high">High (Ultra)</option>
-            </select>
-          </div>
-        </div>
+      <!-- DISCONNECT SCREEN (QUIT) -->
+      <div id="quit-menu" class="menu-view hidden">
+        <div class="overlay-title">SYSTEM SHUTDOWN</div>
+        <div class="overlay-sub">Mission Terminated. Echoes neutralized.</div>
         <div class="divider"></div>
-        <div class="controls-grid" style="margin-top: 10px;">
-          <div class="ctrl-row">
-            <div class="ctrl-keys"><span class="key">A D</span> <span class="key">← →</span></div>
-            <span>Move</span>
-          </div>
-          <div class="ctrl-row">
-            <div class="ctrl-keys"><span class="key">W</span> <span class="key">SPC</span></div>
-            <span>Jump</span>
-          </div>
-        </div>
-        <button class="btn" id="settings-back-btn">BACK</button>
-      </div>
-
-      <!-- LOAD GAME MENU -->
-      <div id="load-menu" class="menu-view hidden">
-        <div class="overlay-title" style="font-size: 1.5rem;">LAST SESSION</div>
-        <div id="load-content" class="stat-row">
-          <!-- Populated by JS -->
-          <div class="stat-box">
-             <span class="stat-value" id="last-time">--</span>
-             <span class="stat-label">Last Time</span>
-          </div>
-          <div class="stat-box">
-             <span class="stat-value" id="last-kills">--</span>
-             <span class="stat-label">Last Kills</span>
-          </div>
-        </div>
-        <div class="divider"></div>
-        <div id="load-status" class="overlay-sub" style="color: #666;">No saved data found.</div>
-        <button class="btn" id="load-back-btn">BACK</button>
+        <div class="stat-row" id="final-stats"></div>
+        <button class="btn" onclick="location.reload()">REBOOT SYSTEM</button>
       </div>
 
       <!-- DISCONNECT SCREEN (QUIT) -->
@@ -667,17 +600,7 @@
     </div>
   </div>
 
-  <div id="controls-hint">
-    <div class="ctrl"><span class="key">A D / ← →</span><span>Move</span></div>
-    <div class="ctrl"><span class="key">W / ↑ / SPC</span><span>Jump (Double)</span></div>
-    <div class="ctrl"><span class="key">ALT</span><span>Attack</span></div>
-    <div class="ctrl"><span class="key">SHIFT</span><span>Dash</span></div>
-    <div class="ctrl"><span class="key">E</span><span>Nova</span></div>
-    <div class="ctrl"><span class="key">P</span><span>Pistol</span></div>
-    <div class="ctrl"><span class="key">G</span><span>Gravity</span></div>
-    <div class="ctrl"><span class="key">T</span><span>Thunder</span></div>
-    <div class="ctrl"><span class="key">F</span><span>Flame</span></div>
-  </div>
+
 </div>
 
 <script>
@@ -2128,24 +2051,7 @@ function updateHUD() {
   const echoPct = (1 - nextEchoTimer / spawnInterval()) * 100;
   document.getElementById('echo-bar-fill').style.width = Math.min(100, echoPct) + '%';
   
-  const novaPct = (player.novaEnergy / player.maxNovaEnergy) * 100;
-  document.getElementById('nova-bar-fill').style.width = Math.min(100, novaPct) + '%';
-  document.getElementById('nova-bar-fill').style.boxShadow = novaPct >= 100 ? '0 0 15px #ffffff' : 'none';
 
-  const pistolPct = Math.max(0, (1 - player.pistolCooldown / 480) * 100);
-  document.getElementById('pistol-bar-fill').style.width = Math.min(100, pistolPct) + '%';
-  document.getElementById('pistol-bar-fill').style.background = pistolPct >= 100 
-    ? 'linear-gradient(90deg, #00ffff, #ffffff)' 
-    : 'linear-gradient(90deg, #0066ff, #00ccff)';
-
-  const gravityPct = Math.max(0, (1 - (player.gravityCooldown || 0) / GRAVITY_COOLDOWN) * 100);
-  document.getElementById('gravity-bar-fill').style.width = Math.min(100, gravityPct) + '%';
-
-  const thunderPct = Math.max(0, (1 - (player.thunderCooldown || 0) / THUNDER_COOLDOWN) * 100);
-  document.getElementById('thunder-bar-fill').style.width = Math.min(100, thunderPct) + '%';
-
-  const flamePct = Math.max(0, (1 - (player.flameCooldown || 0) / FLAME_COOLDOWN) * 100);
-  document.getElementById('flame-bar-fill').style.width = Math.min(100, flamePct) + '%';
 }
 
 // ── Navigation Manager ──────────────────────────────────────
@@ -2492,15 +2398,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!lastTime) requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
   });
 
-  document.getElementById('load-game-btn').addEventListener('click', () => {
-    loadSession();
-    showMenu('load-menu');
-  });
-
-  document.getElementById('settings-btn').addEventListener('click', () => {
-    showMenu('settings-menu');
-  });
-
   document.getElementById('quit-btn').addEventListener('click', () => {
     showMenu('quit-menu');
     const final = document.getElementById('final-stats');
@@ -2512,12 +2409,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="stat-box"><span class="stat-value">${data.kills}</span><span class="stat-label">Max Echoes</span></div>
       `;
     }
-  });
-
-  // Back Buttons
-  document.getElementById('settings-back-btn').addEventListener('click', () => showMenu('main-menu'));
-  document.getElementById('load-back-btn').addEventListener('click', () => showMenu('main-menu'));
-
   });
 
   // Initial setup: Show main menu and hide game interface
