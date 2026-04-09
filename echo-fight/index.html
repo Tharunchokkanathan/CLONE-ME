@@ -207,6 +207,33 @@
       box-shadow: 0 0 12px rgba(0,255,102,0.7);
     }
 
+    #thunder-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      flex: 1;
+      max-width: 160px;
+    }
+
+    #thunder-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,0,0.08);
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,0,0.15);
+      overflow: hidden;
+    }
+
+    #thunder-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffff33, #ffffff);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      width: 0%;
+      box-shadow: 0 0 12px rgba(255,255,0,0.7);
+    }
+
     canvas {
       display: block;
       border-radius: 14px;
@@ -394,6 +421,11 @@
       <div class="hud-label">🌌 Gravity Collapse</div>
       <div id="gravity-bar-bg"><div id="gravity-bar-fill"></div></div>
     </div>
+
+    <div id="thunder-bar-wrap">
+      <div class="hud-label">⚡ Thunder Strike</div>
+      <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
+    </div>
   </div>
 
   <div style="position:relative;">
@@ -441,6 +473,10 @@
           <span>Gravity Collapse</span>
         </div>
         <div class="ctrl-row">
+          <div class="ctrl-keys"><span class="key">T</span></div>
+          <span>Thunder Strike (80% HP)</span>
+        </div>
+        <div class="ctrl-row">
           <div class="ctrl-keys"><span class="key">ESC</span></div>
           <span>Pause</span>
         </div>
@@ -458,6 +494,7 @@
     <div class="ctrl"><span class="key">E</span><span>Nova</span></div>
     <div class="ctrl"><span class="key">P</span><span>Pistol</span></div>
     <div class="ctrl"><span class="key">G</span><span>Gravity</span></div>
+    <div class="ctrl"><span class="key">T</span><span>Thunder</span></div>
   </div>
 </div>
 
@@ -520,6 +557,9 @@ const GRAVITY_RADIUS     = 180;
 const GRAVITY_DURATION   = 180; // 3 seconds
 const GRAVITY_COOLDOWN   = 720; // 12 seconds
 
+const THUNDER_COOLDOWN   = 1080; // 18 seconds
+const THUNDER_RANGE      = 500;
+
 
 
 // ── Input map ─────────────────────────────────────────────────
@@ -541,6 +581,7 @@ function dashKey()    { return pressing('ShiftLeft', 'ShiftRight'); }
 function novaKey()    { return pressing('KeyE'); }
 function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
 function gravityKey() { return pressing('KeyG'); }
+function thunderKey() { return pressing('KeyT'); }
 
 // ── State ──────────────────────────────────────────────────────
 let player, clones, inputBuffer;
@@ -554,6 +595,7 @@ let isBossPhase = false;
 let spawnPaused = false;
 let shockwaves = [];
 let gravitySpirals = [];
+let lightnings = [];
 let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
@@ -1113,6 +1155,12 @@ function updatePlayer() {
   }
   if (player.dashCooldown > 0) player.dashCooldown -= spMult;
 
+  // Thunder Strike Activation
+  if (player.thunderCooldown > 0) player.thunderCooldown -= spMult;
+  if (thunderKey() && (player.thunderCooldown || 0) <= 0) {
+    executeThunderStrike();
+  }
+
   // Activation check
   if (gravityKey() && (player.gravityCooldown || 0) <= 0) {
     player.gravityCooldown = GRAVITY_COOLDOWN;
@@ -1632,6 +1680,102 @@ function drawGravitySpirals() {
   });
 }
 
+// ── Thunder Strike Logic ───────────────────────────────────
+function executeThunderStrike() {
+  let target = null;
+  let minDist = THUNDER_RANGE;
+
+  const potentialTargets = [...clones];
+  if (isBossPhase && giantEcho) potentialTargets.push(giantEcho);
+
+  potentialTargets.forEach(c => {
+    const d = Math.sqrt(Math.pow(player.x - c.x, 2) + Math.pow(player.y - c.y, 2));
+    if (d < minDist) { minDist = d; target = c; }
+  });
+
+  if (target) {
+    player.thunderCooldown = THUNDER_COOLDOWN;
+    
+    // Damage: 80% Current HP
+    const dmg = Math.floor(target.hp * 0.8);
+    target.hp -= dmg;
+    target.flashTimer = 25;
+    
+    // Create Lightning visual
+    const tx = target.x + (target.isGiant ? (PLAYER_W*GIANT_SIZE_MULT)/2 : PLAYER_W/2);
+    const ty = target.y + (target.isGiant ? (PLAYER_H*GIANT_SIZE_MULT)/2 : PLAYER_H/2);
+    
+    lightnings.push({
+      segments: generateLightningPath({x: tx, y: -50}, {x: tx, y: ty}),
+      life: 12,
+      maxLife: 12,
+      tx, ty
+    });
+
+    triggerShake(18);
+    spawnParticles(tx, ty, '#ffff33', 30, 7);
+    spawnParticles(tx, ty, '#ffffff', 15, 4);
+    addFloatText(tx, target.y - 30, `-${dmg} THUNDER`, '#ffff00');
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "JUDGEMENT!", "#ffff33");
+  } else {
+    // Miss / Out of range
+    player.thunderCooldown = 60; // 1s penalty
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "NO TARGET", "#777777");
+  }
+}
+
+function generateLightningPath(start, end) {
+  const segments = [];
+  let cur = { ...start };
+  const steps = 12;
+  const dx = (end.x - start.x) / steps;
+  const dy = (end.y - start.y) / steps;
+
+  for (let i = 0; i < steps; i++) {
+    const next = {
+      x: cur.x + dx + (Math.random() - 0.5) * 45,
+      y: cur.y + dy + (Math.random() - 0.5) * 10
+    };
+    if (i === steps - 1) { next.x = end.x; next.y = end.y; }
+    segments.push({ x1: cur.x, y1: cur.y, x2: next.x, y2: next.y });
+    cur = next;
+  }
+  return segments;
+}
+
+function updateLightnings() {
+  const ts = globalTimeScale;
+  for (let i = lightnings.length - 1; i >= 0; i--) {
+    lightnings[i].life -= ts;
+    if (lightnings[i].life <= 0) lightnings.splice(i, 1);
+  }
+}
+
+function drawLightnings() {
+  lightnings.forEach(l => {
+    const alpha = l.life / l.maxLife;
+    ctx.save();
+    ctx.shadowBlur = 20 * alpha;
+    ctx.shadowColor = '#00ccff';
+    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.lineWidth = (2 + Math.random() * 3) * alpha;
+
+    ctx.beginPath();
+    l.segments.forEach(seg => {
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(seg.x2, seg.y2);
+    });
+    ctx.stroke();
+
+    // Inner core
+    ctx.strokeStyle = `rgba(255, 255, 150, ${alpha * 0.8})`;
+    ctx.lineWidth = 1 * alpha;
+    ctx.stroke();
+    
+    ctx.restore();
+  });
+}
+
 // ── HUD update ────────────────────────────────────────────────
 function updateHUD() {
   const pct = player.hp / player.maxHp * 100;
@@ -1662,6 +1806,9 @@ function updateHUD() {
 
   const gravityPct = Math.max(0, (1 - (player.gravityCooldown || 0) / GRAVITY_COOLDOWN) * 100);
   document.getElementById('gravity-bar-fill').style.width = Math.min(100, gravityPct) + '%';
+
+  const thunderPct = Math.max(0, (1 - (player.thunderCooldown || 0) / THUNDER_COOLDOWN) * 100);
+  document.getElementById('thunder-bar-fill').style.width = Math.min(100, thunderPct) + '%';
 }
 
 // ── Game-Over overlay ────────────────────────────────────────
@@ -1699,6 +1846,7 @@ function startGame() {
   shockwaves   = [];
   droppedWeapons = [];
   gravitySpirals = [];
+  lightnings = [];
   shakeAmt     = 0; shakeX = 0; shakeY = 0;
   clonesKilled = 0;
   survivalTime = 0;
@@ -1835,6 +1983,7 @@ function gameLoop(ts) {
     }
 
     updateGravitySpirals();
+    updateLightnings();
     updateParticles();
     updateFloatTexts();
     updateHUD();
@@ -1844,6 +1993,7 @@ function gameLoop(ts) {
   // ── Draw ──
   drawArena();
   drawGravitySpirals();
+  drawLightnings();
 
   clones.forEach(c => {
     drawCharacter(c, false);
