@@ -234,6 +234,33 @@
       box-shadow: 0 0 12px rgba(255,255,0,0.7);
     }
 
+    #flame-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      flex: 1;
+      max-width: 160px;
+    }
+
+    #flame-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,102,0,0.08);
+      border-radius: 5px;
+      border: 1px solid rgba(255,102,0,0.15);
+      overflow: hidden;
+    }
+
+    #flame-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6600, #ff0000);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      width: 0%;
+      box-shadow: 0 0 15px rgba(255,102,0,0.8);
+    }
+
     canvas {
       display: block;
       border-radius: 14px;
@@ -426,6 +453,11 @@
       <div class="hud-label">⚡ Thunder Strike</div>
       <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
     </div>
+
+    <div id="flame-bar-wrap">
+      <div class="hud-label">🔥 Flame Thrower</div>
+      <div id="flame-bar-bg"><div id="flame-bar-fill"></div></div>
+    </div>
   </div>
 
   <div style="position:relative;">
@@ -477,6 +509,10 @@
           <span>Thunder Strike (80% HP)</span>
         </div>
         <div class="ctrl-row">
+          <div class="ctrl-keys"><span class="key">F</span></div>
+          <span>Flame Thrower (60% HP)</span>
+        </div>
+        <div class="ctrl-row">
           <div class="ctrl-keys"><span class="key">ESC</span></div>
           <span>Pause</span>
         </div>
@@ -495,6 +531,7 @@
     <div class="ctrl"><span class="key">P</span><span>Pistol</span></div>
     <div class="ctrl"><span class="key">G</span><span>Gravity</span></div>
     <div class="ctrl"><span class="key">T</span><span>Thunder</span></div>
+    <div class="ctrl"><span class="key">F</span><span>Flame</span></div>
   </div>
 </div>
 
@@ -560,6 +597,10 @@ const GRAVITY_COOLDOWN   = 720; // 12 seconds
 const THUNDER_COOLDOWN   = 1080; // 18 seconds
 const THUNDER_RANGE      = 500;
 
+const FLAME_COOLDOWN     = 900;  // 15 seconds
+const FLAME_DURATION     = 100;  // 1.6 seconds of fire
+const FLAME_RANGE        = 220;
+
 
 
 // ── Input map ─────────────────────────────────────────────────
@@ -582,6 +623,7 @@ function novaKey()    { return pressing('KeyE'); }
 function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
 function gravityKey() { return pressing('KeyG'); }
 function thunderKey() { return pressing('KeyT'); }
+function flameKey()   { return pressing('KeyF'); }
 
 // ── State ──────────────────────────────────────────────────────
 let player, clones, inputBuffer;
@@ -597,6 +639,7 @@ let shockwaves = [];
 let gravitySpirals = [];
 let lightnings = [];
 let screenFlash = 0;
+let fireParticles = [];
 let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
@@ -1155,6 +1198,24 @@ function updatePlayer() {
     }
   }
   if (player.dashCooldown > 0) player.dashCooldown -= spMult;
+
+  // Flame Thrower Logic (Channeled)
+  if (player.flameCooldown > 0) player.flameCooldown -= spMult;
+  if (flameKey() && (player.flameCooldown || 0) <= 0) {
+    player.isFlaming = true;
+    player.flameTimer = FLAME_DURATION;
+    player.flameCooldown = FLAME_COOLDOWN;
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "BURN!", "#ff6600");
+  }
+
+  if (player.isFlaming) {
+    player.flameTimer -= spMult;
+    if (player.flameTimer <= 0 || !flameKey()) {
+      player.isFlaming = false;
+    } else {
+      updateFlameLogic(spMult);
+    }
+  }
 
   // Thunder Strike Activation
   if (player.thunderCooldown > 0) player.thunderCooldown -= spMult;
@@ -1796,6 +1857,117 @@ function drawLightnings() {
   });
 }
 
+  });
+}
+
+// ── Flame Thrower Logic ────────────────────────────────────
+function updateFlameLogic(spMult) {
+  // Spawn particles
+  const fx = player.x + PLAYER_W/2 + player.facing * 15;
+  const fy = player.y + PLAYER_H/2;
+  
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.random() - 0.5) * 0.4;
+    const speed = 6 + Math.random() * 5;
+    const vx = Math.cos(angle) * speed * player.facing;
+    const vy = Math.sin(angle) * speed - (1 + Math.random() * 2);
+    spawnFireParticle(fx, fy, vx, vy);
+  }
+
+  // Detect and Damage
+  const flameRect = {
+    x: player.facing === 1 ? player.x + PLAYER_W : player.x - FLAME_RANGE,
+    y: player.y - 20,
+    w: FLAME_RANGE,
+    h: PLAYER_H + 40
+  };
+
+  const targets = [...clones];
+  if (isBossPhase && giantEcho) targets.push(giantEcho);
+
+  targets.forEach(ent => {
+    const ex = ent.x + (ent.isGiant ? (PLAYER_W*GIANT_SIZE_MULT)/2 : PLAYER_W/2);
+    const ey = ent.y + (ent.isGiant ? (PLAYER_H*GIANT_SIZE_MULT)/2 : PLAYER_H/2);
+    
+    // Simple box check for flame stream
+    const inX = ex > flameRect.x && ex < flameRect.x + flameRect.w;
+    const inY = ey > flameRect.y && ey < flameRect.y + flameRect.h;
+
+    if (inX && inY) {
+      const dmg = (ent.maxHp * 0.6) / FLAME_DURATION;
+      ent.hp -= dmg * spMult;
+      ent.flashTimer = 5;
+      if (Math.random() < 0.2) {
+        spawnParticles(ex, ey, '#ff3300', 2, 2);
+      }
+    }
+  });
+
+  if (Math.random() < 0.1) triggerShake(1.5);
+}
+
+function spawnFireParticle(x, y, vx, vy) {
+  fireParticles.push({
+    x, y, vx, vy,
+    life: 1.0,
+    decay: 0.02 + Math.random() * 0.02,
+    size: 4 + Math.random() * 8,
+    angle: Math.random() * Math.PI * 2,
+    rotateSpeed: (Math.random() - 0.5) * 0.2
+  });
+}
+
+function updateFireParticles() {
+  const ts = globalTimeScale;
+  for (let i = fireParticles.length - 1; i >= 0; i--) {
+    const p = fireParticles[i];
+    p.x += p.vx * ts;
+    p.y += p.vy * ts;
+    p.vx *= 0.96;
+    p.vy *= 0.96;
+    p.vy -= 0.1 * ts; // Heat drift
+    p.life -= p.decay * ts;
+    p.size += 0.4 * ts; // Smoke expand
+    p.angle += p.rotateSpeed * ts;
+    if (p.life <= 0) fireParticles.splice(i, 1);
+  }
+}
+
+function drawFireParticles() {
+  fireParticles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = Math.min(1.0, p.life * 1.5);
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.angle);
+    
+    // Color lifecycle: White -> Yellow -> Orange -> Red -> Grey/Black (Smoke)
+    let color;
+    if (p.life > 0.8) {
+      color = '#ffffff'; // White hot core
+      ctx.globalCompositeOperation = 'lighter';
+    } else if (p.life > 0.6) {
+      color = '#ffff33'; // Yellow
+      ctx.globalCompositeOperation = 'lighter';
+    } else if (p.life > 0.4) {
+      color = '#ff6600'; // Orange
+      ctx.globalCompositeOperation = 'lighter';
+    } else if (p.life > 0.2) {
+      color = '#ff0000'; // Red
+      ctx.globalCompositeOperation = 'source-over';
+    } else {
+      color = `rgba(40, 40, 40, ${p.life * 3})`; // Grey Smoke
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    
+    ctx.fillStyle = color;
+    const s = p.size * p.life;
+    ctx.fillRect(-s/2, -s/2, s, s);
+    
+    ctx.restore();
+  });
+  ctx.globalCompositeOperation = 'source-over';
+}
+
 // ── HUD update ────────────────────────────────────────────────
 function updateHUD() {
   const pct = player.hp / player.maxHp * 100;
@@ -1829,6 +2001,9 @@ function updateHUD() {
 
   const thunderPct = Math.max(0, (1 - (player.thunderCooldown || 0) / THUNDER_COOLDOWN) * 100);
   document.getElementById('thunder-bar-fill').style.width = Math.min(100, thunderPct) + '%';
+
+  const flamePct = Math.max(0, (1 - (player.flameCooldown || 0) / FLAME_COOLDOWN) * 100);
+  document.getElementById('flame-bar-fill').style.width = Math.min(100, flamePct) + '%';
 }
 
 // ── Game-Over overlay ────────────────────────────────────────
@@ -1867,6 +2042,7 @@ function startGame() {
   droppedWeapons = [];
   gravitySpirals = [];
   lightnings = [];
+  fireParticles = [];
   shakeAmt     = 0; shakeX = 0; shakeY = 0;
   clonesKilled = 0;
   survivalTime = 0;
@@ -2004,6 +2180,7 @@ function gameLoop(ts) {
 
     updateGravitySpirals();
     updateLightnings();
+    updateFireParticles();
     if (screenFlash > 0) screenFlash -= 1 * globalTimeScale;
     updateParticles();
     updateFloatTexts();
@@ -2015,6 +2192,7 @@ function gameLoop(ts) {
   drawArena();
   drawGravitySpirals();
   drawLightnings();
+  drawFireParticles();
 
   if (screenFlash > 0) {
     ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash / 8 * 0.45})`;
