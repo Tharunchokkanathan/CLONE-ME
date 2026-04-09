@@ -401,6 +401,129 @@
       0%, 100% { filter: drop-shadow(0 0 8px #8e7c9d88); }
       50%       { filter: drop-shadow(0 0 22px #c48d9ecc); }
     }
+
+    /* --- New Menu Styles --- */
+    .menu-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      width: 100%;
+      height: 100%;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .menu-view.hidden {
+      display: none;
+      opacity: 0;
+      transform: scale(0.95);
+      pointer-events: none;
+    }
+
+    .btn-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 260px;
+    }
+
+    .menu-btn {
+      position: relative;
+      padding: 14px 20px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: rgba(10, 10, 15, 0.7);
+      border: 1px solid rgba(255, 102, 178, 0.3);
+      border-radius: 8px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .menu-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,102,178,0.2), transparent);
+      transition: 0.5s;
+    }
+
+    .menu-btn:hover {
+      background: rgba(255, 102, 178, 0.15);
+      border-color: #ff66b2;
+      box-shadow: 0 0 20px rgba(255, 102, 178, 0.4);
+      transform: translateX(8px);
+      letter-spacing: 0.22em;
+    }
+
+    .menu-btn:hover::before {
+      left: 100%;
+    }
+
+    .menu-btn.quit:hover {
+      border-color: #ff3131;
+      box-shadow: 0 0 20px rgba(255, 49, 49, 0.4);
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      width: 400px;
+      margin-top: 10px;
+    }
+
+    .setting-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .setting-label {
+      font-size: 0.65rem;
+      color: #ff66b2;
+      text-transform: uppercase;
+    }
+
+    .setting-control {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 5px;
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+    }
+
+    .save-indicator {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+      color: #00ff41;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    /* Clean state management */
+    #title, #hud, #controls-hint {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .interface-hidden {
+      opacity: 0 !important;
+      pointer-events: none;
+      transform: translateY(-20px);
+    }
+    #controls-hint.interface-hidden {
+      transform: translateY(20px);
+    }
   </style>
 </head>
 <body>
@@ -464,61 +587,83 @@
     <canvas id="canvas" width="820" height="480"></canvas>
 
     <div id="overlay">
-      <div class="overlay-title">CLONE ME</div>
-      <div class="overlay-sub">
-        Your past actions become your enemies.<br/>
-        Every 5 seconds, a clone spawns — replaying exactly what you did.<br/>
-        Survive as long as you can against yourself.
+      <!-- MAIN MENU -->
+      <div id="main-menu" class="menu-view">
+        <div class="overlay-title">CLONE ME</div>
+        <div class="divider"></div>
+        <div class="btn-stack">
+          <button class="menu-btn" id="new-game-btn">New Game</button>
+          <button class="menu-btn" id="load-game-btn">Load Game</button>
+          <button class="menu-btn" id="settings-btn">Settings</button>
+          <button class="menu-btn quit" id="quit-btn">Quit</button>
+        </div>
       </div>
-      <div class="divider"></div>
-      <div class="controls-grid">
-        <div class="ctrl-row">
-          <div class="ctrl-keys">
-            <span class="key">A D</span>
-            <span style="color:#445566;font-size:0.62rem">or</span>
-            <span class="key">← →</span>
+
+      <!-- SETTINGS MENU -->
+      <div id="settings-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size: 1.5rem;">SETTINGS</div>
+        <div class="settings-grid">
+          <div class="setting-item">
+            <span class="setting-label">Neon Intensity</span>
+            <input type="range" class="setting-control" id="neon-range" min="0" max="100" value="70">
           </div>
-          <span>Move</span>
+          <div class="setting-item">
+            <span class="setting-label">Particle Density</span>
+            <select class="setting-control" id="particle-select">
+              <option value="low">Low (Performance)</option>
+              <option value="med" selected>Medium</option>
+              <option value="high">High (Ultra)</option>
+            </select>
+          </div>
         </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">W</span><span style="color:#445566;font-size:0.62rem">or</span><span class="key">↑</span><span style="color:#445566;font-size:0.62rem">or</span><span class="key">SPC</span></div>
-          <span>Jump</span>
+        <div class="divider"></div>
+        <div class="controls-grid" style="margin-top: 10px;">
+          <div class="ctrl-row">
+            <div class="ctrl-keys"><span class="key">A D</span> <span class="key">← →</span></div>
+            <span>Move</span>
+          </div>
+          <div class="ctrl-row">
+            <div class="ctrl-keys"><span class="key">W</span> <span class="key">SPC</span></div>
+            <span>Jump</span>
+          </div>
         </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">ALT</span></div>
-          <span>Attack</span>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">SHIFT</span></div>
-          <span>Hellfire Dash</span>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">E</span></div>
-          <span>Crimson Nova</span>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">P</span></div>
-          <span>Pistol (50% DMG)</span>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">G</span></div>
-          <span>Gravity Collapse</span>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">T</span></div>
-          <span>Thunder Strike (80% HP)</span>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">F</span></div>
-          <span>Flame Thrower (60% HP)</span>
-        </div>
-        <div class="ctrl-row">
-          <div class="ctrl-keys"><span class="key">ESC</span></div>
-          <span>Pause</span>
-        </div>
+        <button class="btn" id="settings-back-btn">BACK</button>
       </div>
-      <div class="divider"></div>
-      <button class="btn" id="start-btn">▶ BEGIN</button>
+
+      <!-- LOAD GAME MENU -->
+      <div id="load-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size: 1.5rem;">LAST SESSION</div>
+        <div id="load-content" class="stat-row">
+          <!-- Populated by JS -->
+          <div class="stat-box">
+             <span class="stat-value" id="last-time">--</span>
+             <span class="stat-label">Last Time</span>
+          </div>
+          <div class="stat-box">
+             <span class="stat-value" id="last-kills">--</span>
+             <span class="stat-label">Last Kills</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div id="load-status" class="overlay-sub" style="color: #666;">No saved data found.</div>
+        <button class="btn" id="load-back-btn">BACK</button>
+      </div>
+
+      <!-- DISCONNECT SCREEN (QUIT) -->
+      <div id="quit-menu" class="menu-view hidden">
+        <div class="overlay-title">SYSTEM SHUTDOWN</div>
+        <div class="overlay-sub">Mission Terminated. Echoes neutralized.</div>
+        <div class="divider"></div>
+        <div class="stat-row" id="final-stats"></div>
+        <button class="btn" onclick="location.reload()">REBOOT SYSTEM</button>
+      </div>
+
+      <!-- GAME OVER (Dynamic Content) -->
+      <div id="game-over-view" class="menu-view hidden">
+        <!-- InnerHTML handled by showGameOver() -->
+      </div>
+
+      <div id="save-msg" class="save-indicator">SESSION STORED</div>
     </div>
   </div>
 
@@ -2003,10 +2148,70 @@ function updateHUD() {
   document.getElementById('flame-bar-fill').style.width = Math.min(100, flamePct) + '%';
 }
 
+// ── Navigation Manager ──────────────────────────────────────
+function showMenu(viewId) {
+  const views = ['main-menu', 'settings-menu', 'load-menu', 'quit-menu', 'game-over-view'];
+  const isMenuVisible = viewId !== 'none';
+  
+  // Toggle UI elements
+  const uiElements = [document.getElementById('title'), document.getElementById('hud'), document.getElementById('controls-hint')];
+  uiElements.forEach(el => {
+    if (isMenuVisible) el.classList.add('interface-hidden');
+    else el.classList.remove('interface-hidden');
+  });
+
+  views.forEach(v => {
+    const el = document.getElementById(v);
+    if (v === viewId) {
+      el.classList.remove('hidden');
+      el.style.opacity = '1';
+    } else {
+      el.classList.add('hidden');
+      el.style.opacity = '0';
+    }
+  });
+}
+
+// ── Save/Load Manager ────────────────────────────────────────
+function saveSession() {
+  const data = {
+    time: survivalTime,
+    kills: clonesKilled,
+    timestamp: Date.now()
+  };
+  localStorage.setItem('echo_fight_save', JSON.stringify(data));
+  
+  const msg = document.getElementById('save-msg');
+  msg.style.opacity = '1';
+  setTimeout(() => msg.style.opacity = '0', 2000);
+}
+
+function loadSession() {
+  const raw = localStorage.getItem('echo_fight_save');
+  const status = document.getElementById('load-status');
+  const content = document.getElementById('load-content');
+  
+  if (raw) {
+    const data = JSON.parse(raw);
+    document.getElementById('last-time').textContent = data.time.toFixed(1) + 's';
+    document.getElementById('last-kills').textContent = data.kills;
+    status.textContent = "Data retrieved from local storage.";
+    status.style.color = "#00ff41";
+    content.style.opacity = "1";
+    return data;
+  } else {
+    status.textContent = "No saved data found.";
+    status.style.color = "#666";
+    content.style.opacity = "0.3";
+    return null;
+  }
+}
+
 // ── Game-Over overlay ────────────────────────────────────────
 function showGameOver() {
-  const overlay = document.getElementById('overlay');
-  overlay.innerHTML = `
+  saveSession();
+  const view = document.getElementById('game-over-view');
+  view.innerHTML = `
     <div class="overlay-title">GAME OVER</div>
     <div class="overlay-sub">Your echoes caught up with you.<br/><em>The past always returns.</em></div>
     <div class="stat-row">
@@ -2019,13 +2224,13 @@ function showGameOver() {
         <span class="stat-label">💀 Echoes Defeated</span>
       </div>
     </div>
-    <button class="btn" id="restart-btn">↺ PLAY AGAIN</button>
+    <div class="btn-stack" style="margin-top:20px;">
+      <button class="menu-btn" onclick="startGame(); showMenu('none'); document.getElementById('overlay').classList.add('hidden');">↺ QUICK RESTART</button>
+      <button class="menu-btn" onclick="showMenu('main-menu')">Main Menu</button>
+    </div>
   `;
-  overlay.classList.remove('hidden');
-  document.getElementById('restart-btn').addEventListener('click', () => {
-    overlay.classList.add('hidden');
-    startGame();
-  });
+  showMenu('game-over-view');
+  document.getElementById('overlay').classList.remove('hidden');
 }
 
 // ── Init ──────────────────────────────────────────────────────
@@ -2277,11 +2482,46 @@ function gameLoop(ts) {
   requestAnimationFrame(gameLoop);
 }
 
-// ── Boot ──────────────────────────────────────────────────────
-document.getElementById('start-btn').addEventListener('click', () => {
-  document.getElementById('overlay').classList.add('hidden');
-  startGame();
-  requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+// ── Boot & Menu Bindings ─────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Navigation
+  document.getElementById('new-game-btn').addEventListener('click', () => {
+    document.getElementById('overlay').classList.add('hidden');
+    showMenu('none'); // Hide menus and show HUD
+    startGame();
+    if (!lastTime) requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+  });
+
+  document.getElementById('load-game-btn').addEventListener('click', () => {
+    loadSession();
+    showMenu('load-menu');
+  });
+
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    showMenu('settings-menu');
+  });
+
+  document.getElementById('quit-btn').addEventListener('click', () => {
+    showMenu('quit-menu');
+    const final = document.getElementById('final-stats');
+    const raw = localStorage.getItem('echo_fight_save');
+    if (raw) {
+      const data = JSON.parse(raw);
+      final.innerHTML = `
+        <div class="stat-box"><span class="stat-value">${data.time.toFixed(1)}s</span><span class="stat-label">Survival Record</span></div>
+        <div class="stat-box"><span class="stat-value">${data.kills}</span><span class="stat-label">Max Echoes</span></div>
+      `;
+    }
+  });
+
+  // Back Buttons
+  document.getElementById('settings-back-btn').addEventListener('click', () => showMenu('main-menu'));
+  document.getElementById('load-back-btn').addEventListener('click', () => showMenu('main-menu'));
+
+  });
+
+  // Initial setup: Show main menu and hide game interface
+  showMenu('main-menu');
 });
 </script>
 </body>
