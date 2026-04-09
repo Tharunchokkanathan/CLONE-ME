@@ -11,8 +11,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #050810;
-      color: #e0e8ff;
+      background: #0a0202;
+      background: radial-gradient(circle at center, #1f0808 0%, #050000 100%);
+      color: #ffeaea;
       font-family: 'Inter', sans-serif;
       display: flex;
       flex-direction: column;
@@ -36,11 +37,11 @@
       font-size: 1.8rem;
       font-weight: 900;
       letter-spacing: 0.12em;
-      background: linear-gradient(90deg, #4488ff, #aa55ff, #ff4488);
+      background: linear-gradient(90deg, #ff2a00, #ff8800, #ff0044);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 0 18px #6644ffaa);
+      filter: drop-shadow(0 0 18px #ff4400aa);
     }
 
     #hud {
@@ -49,8 +50,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 6px 14px;
-      background: rgba(20,24,50,0.85);
-      border: 1px solid rgba(80,120,255,0.25);
+      background: rgba(30,5,5,0.85);
+      border: 1px solid rgba(255,60,60,0.25);
       border-radius: 10px;
       backdrop-filter: blur(8px);
     }
@@ -61,14 +62,14 @@
       font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: #6688bb;
+      color: #bb6666;
     }
 
     .hud-value {
       font-family: 'Orbitron', monospace;
       font-size: 1.05rem;
       font-weight: 700;
-      color: #aaccff;
+      color: #ffcccc;
     }
 
     #health-bar-wrap {
@@ -83,15 +84,15 @@
     #health-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,80,80,0.18);
+      background: rgba(255,40,40,0.18);
       border-radius: 5px;
-      border: 1px solid rgba(255,80,80,0.3);
+      border: 1px solid rgba(255,60,60,0.3);
       overflow: hidden;
     }
 
     #health-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #ff3355, #ff6644);
+      background: linear-gradient(90deg, #ff0033, #ff4400);
       border-radius: 5px;
       transition: width 0.15s ease, background 0.3s;
       width: 100%;
@@ -109,15 +110,15 @@
     #echo-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(160,80,255,0.18);
+      background: rgba(255,120,40,0.18);
       border-radius: 5px;
-      border: 1px solid rgba(160,80,255,0.3);
+      border: 1px solid rgba(255,140,60,0.3);
       overflow: hidden;
     }
 
     #echo-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #8833ff, #cc44ff);
+      background: linear-gradient(90deg, #ff6600, #ffcc00);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
@@ -126,30 +127,30 @@
     canvas {
       display: block;
       border-radius: 14px;
-      border: 1.5px solid rgba(80,120,255,0.3);
+      border: 1.5px solid rgba(255,60,60,0.3);
       box-shadow:
-        0 0 40px rgba(60,80,200,0.25),
-        0 0 80px rgba(100,60,200,0.12),
-        inset 0 0 60px rgba(0,0,0,0.6);
+        0 0 40px rgba(220,40,40,0.25),
+        0 0 80px rgba(255,80,40,0.12),
+        inset 0 0 60px rgba(0,0,0,0.8);
     }
 
     #controls-hint {
       display: flex;
       gap: 20px;
       font-size: 0.65rem;
-      color: #445577;
+      color: #774444;
       letter-spacing: 0.08em;
     }
 
     .ctrl { display: flex; align-items: center; gap: 5px; }
     .key {
-      background: rgba(80,100,180,0.2);
-      border: 1px solid rgba(80,120,255,0.3);
+      background: rgba(180,40,40,0.2);
+      border: 1px solid rgba(255,60,60,0.3);
       border-radius: 4px;
       padding: 1px 6px;
       font-family: 'Orbitron', monospace;
       font-size: 0.6rem;
-      color: #7799cc;
+      color: #ff9999;
     }
 
     #overlay {
@@ -161,7 +162,7 @@
       justify-content: center;
       gap: 18px;
       border-radius: 14px;
-      background: rgba(5,8,18,0.9);
+      background: rgba(10,2,2,0.92);
       backdrop-filter: blur(6px);
       z-index: 10;
     }
@@ -173,7 +174,7 @@
       font-size: 2.2rem;
       font-weight: 900;
       text-align: center;
-      background: linear-gradient(90deg, #4488ff, #aa55ff, #ff4488);
+      background: linear-gradient(90deg, #ff2a00, #ff8800, #ff0044);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -182,7 +183,7 @@
 
     .overlay-sub {
       font-size: 0.8rem;
-      color: #6688ab;
+      color: #aa7777;
       text-align: center;
       max-width: 440px;
       line-height: 1.7;
@@ -196,8 +197,8 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      background: rgba(30,40,80,0.5);
-      border: 1px solid rgba(80,120,255,0.2);
+      background: rgba(60,10,10,0.5);
+      border: 1px solid rgba(255,60,60,0.2);
       border-radius: 10px;
       padding: 12px 24px;
     }
@@ -206,14 +207,14 @@
       font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      color: #556688;
+      color: #aa5555;
     }
 
     .stat-value {
       font-family: 'Orbitron', monospace;
       font-size: 1.5rem;
       font-weight: 700;
-      color: #aaccff;
+      color: #ffcccc;
     }
 
     .btn {
@@ -225,15 +226,15 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      background: linear-gradient(135deg, #3355cc, #6633cc);
-      color: #e0e8ff;
-      box-shadow: 0 0 20px rgba(60,80,200,0.4);
+      background: linear-gradient(135deg, #cc2200, #880000);
+      color: #ffeaea;
+      box-shadow: 0 0 20px rgba(220,40,40,0.4);
       transition: all 0.2s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 28px rgba(100,60,255,0.6);
+      box-shadow: 0 4px 28px rgba(255,60,40,0.6);
     }
 
     .controls-grid {
@@ -247,7 +248,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #7799bb;
+      color: #bb8888;
     }
 
     .ctrl-keys { display: flex; gap: 3px; align-items: center; }
@@ -255,12 +256,12 @@
     .divider {
       width: 90%;
       height: 1px;
-      background: rgba(80,120,255,0.15);
+      background: rgba(255,60,60,0.15);
     }
 
     @keyframes pulse-glow {
-      0%, 100% { filter: drop-shadow(0 0 8px #6644ff88); }
-      50%       { filter: drop-shadow(0 0 22px #aa44ffcc); }
+      0%, 100% { filter: drop-shadow(0 0 8px #ff440088); }
+      50%       { filter: drop-shadow(0 0 22px #ff2200cc); }
     }
   </style>
 </head>
