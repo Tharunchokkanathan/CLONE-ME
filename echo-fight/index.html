@@ -596,6 +596,7 @@ let spawnPaused = false;
 let shockwaves = [];
 let gravitySpirals = [];
 let lightnings = [];
+let screenFlash = 0;
 let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
@@ -1712,10 +1713,11 @@ function executeThunderStrike() {
       tx, ty
     });
 
-    triggerShake(18);
-    spawnParticles(tx, ty, '#ffff33', 30, 7);
-    spawnParticles(tx, ty, '#ffffff', 15, 4);
-    addFloatText(tx, target.y - 30, `-${dmg} THUNDER`, '#ffff00');
+    triggerShake(45);
+    screenFlash = 8; // Flash for 8 frames
+    spawnParticles(tx, ty, '#ffff33', 45, 9);
+    spawnParticles(tx, ty, '#ffffff', 20, 5);
+    addFloatText(tx, target.y - 30, `-${dmg} HEAVENLY THUNDER`, '#ffff00');
     addFloatText(player.x + PLAYER_W/2, player.y - 50, "JUDGEMENT!", "#ffff33");
   } else {
     // Miss / Out of range
@@ -1740,6 +1742,18 @@ function generateLightningPath(start, end) {
     segments.push({ x1: cur.x, y1: cur.y, x2: next.x, y2: next.y });
     cur = next;
   }
+
+  // Branching logic
+  if (Math.random() < 0.6) {
+    const bStart = segments[Math.floor(segments.length * 0.4)];
+    let bCur = { x: bStart.x2, y: bStart.y2 };
+    for (let j = 0; j < 5; j++) {
+       const bNext = { x: bCur.x + (Math.random() - 0.5) * 60, y: bCur.y + 20 + Math.random() * 20 };
+       segments.push({ x1: bCur.x, y1: bCur.y, x2: bNext.x, y2: bNext.y, isBranch: true });
+       bCur = bNext;
+    }
+  }
+
   return segments;
 }
 
@@ -1755,23 +1769,18 @@ function drawLightnings() {
   lightnings.forEach(l => {
     const alpha = l.life / l.maxLife;
     ctx.save();
-    ctx.shadowBlur = 20 * alpha;
-    ctx.shadowColor = '#00ccff';
-    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-    ctx.lineWidth = (2 + Math.random() * 3) * alpha;
-
-    ctx.beginPath();
+    ctx.shadowBlur = 30 * alpha;
+    ctx.shadowColor = '#00ffff';
+    
     l.segments.forEach(seg => {
+      ctx.strokeStyle = seg.isBranch ? `rgba(180, 240, 255, ${alpha * 0.6})` : `rgba(255, 255, 255, ${alpha})`;
+      ctx.lineWidth = (seg.isBranch ? 1.5 : (3 + Math.random() * 4)) * alpha;
+      ctx.beginPath();
       ctx.moveTo(seg.x1, seg.y1);
       ctx.lineTo(seg.x2, seg.y2);
+      ctx.stroke();
     });
-    ctx.stroke();
 
-    // Inner core
-    ctx.strokeStyle = `rgba(255, 255, 150, ${alpha * 0.8})`;
-    ctx.lineWidth = 1 * alpha;
-    ctx.stroke();
-    
     ctx.restore();
   });
 }
@@ -1984,6 +1993,7 @@ function gameLoop(ts) {
 
     updateGravitySpirals();
     updateLightnings();
+    if (screenFlash > 0) screenFlash -= 1 * globalTimeScale;
     updateParticles();
     updateFloatTexts();
     updateHUD();
@@ -1994,6 +2004,11 @@ function gameLoop(ts) {
   drawArena();
   drawGravitySpirals();
   drawLightnings();
+
+  if (screenFlash > 0) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash / 8 * 0.45})`;
+    ctx.fillRect(0, 0, W, H);
+  }
 
   clones.forEach(c => {
     drawCharacter(c, false);
