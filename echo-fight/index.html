@@ -557,8 +557,8 @@ function updateShake() {
   if (shakeAmt > 0) {
     shakeX  = (Math.random() - 0.5) * shakeAmt * 2;
     shakeY  = (Math.random() - 0.5) * shakeAmt * 2;
-    shakeAmt *= 0.82;
-    if (shakeAmt < 0.3) shakeAmt = 0;
+    shakeAmt *= 0.88; // Slightly slower decay for smoother settle
+    if (shakeAmt < 0.2) shakeAmt = 0;
   } else { shakeX = 0; shakeY = 0; }
 }
 
@@ -571,6 +571,7 @@ function updateFloatTexts() {
   for (let i = floatingTexts.length - 1; i >= 0; i--) {
     const t = floatingTexts[i];
     t.y  += t.vy;
+    t.vy *= 0.96; // Ease out vertical speed
     t.life -= 0.022;
     if (t.life <= 0) floatingTexts.splice(i, 1);
   }
@@ -1199,13 +1200,13 @@ function updatePlayer() {
   if (player.x < ARENA.left)             { player.x = ARENA.left;              player.vx = 0; }
   if (player.x + PLAYER_W > ARENA.right) { player.x = ARENA.right - PLAYER_W;  player.vx = 0; }
 
-  // Squish recovery
-  player.squishY += (1 - player.squishY) * 0.2;
-  player.squishX += (1 - player.squishX) * 0.2;
+  // Squish recovery (Smooth Lerping)
+  player.squishY += (1 - player.squishY) * 0.22;
+  player.squishX += (1 - player.squishX) * 0.22;
 
   // Trail
   player.trail.push({ x: player.x, y: player.y });
-  if (player.trail.length > 6) player.trail.shift();
+  if (player.trail.length > 12) player.trail.shift();
 
   // Clamp HP
   player.hp = Math.max(0, Math.min(player.maxHp, player.hp));
@@ -1299,10 +1300,10 @@ function drawCharacter(ent, isPlayer) {
     const a = (i / trail.length) * 0.22 * ent.alpha;
     const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
     ctx.save();
-    ctx.globalAlpha = a;
-    ctx.fillStyle   = isPlayer ? '#1b4d3e' : (ent.color || '#444444');
+    ctx.globalAlpha = a * 1.5;
+    ctx.fillStyle   = isPlayer ? '#00ff41' : (ent.color || '#ffffff');
     ctx.beginPath();
-    ctx.roundRect(t.x, t.y, PLAYER_W * s, PLAYER_H * s, 5 * s);
+    ctx.roundRect(t.x, t.y, PLAYER_W * s, PLAYER_H * s, 6 * s);
     ctx.fill();
     ctx.restore();
   });
@@ -1322,8 +1323,10 @@ function drawCharacter(ent, isPlayer) {
     ctx.globalAlpha = 0.28;
   }
 
-  // Squish transform
+  // Squish & Rotation transform
+  const angle = (ent.vx || 0) * 0.04; // Procedural tilt
   ctx.translate(cx, cy);
+  ctx.rotate(angle);
   ctx.scale(ent.squishX || 1, ent.squishY || 1);
   ctx.translate(-cx, -cy);
 
