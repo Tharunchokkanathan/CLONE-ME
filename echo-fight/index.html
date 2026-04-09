@@ -668,8 +668,8 @@
       </div>
     </div>
 
-    <!-- Legacy Overlay (will be hidden by 3D layer) -->
-    <div id="overlay" class="hidden">
+    <!-- 2D Overlay Menu (always shows first, 3D is enhancement) -->
+    <div id="overlay">
       <!-- MAIN MENU -->
       <div id="main-menu" class="menu-view">
         <div class="overlay-title">CLONE ME</div>
@@ -680,6 +680,65 @@
           <button class="menu-btn quit" id="quit-btn">Quit</button>
         </div>
       </div>
+
+      <!-- SETTINGS MENU -->
+      <div id="settings-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size:1.4rem">OPTIONS</div>
+        <div class="settings-grid">
+          <div class="setting-item">
+            <label class="setting-label">Music Volume <span id="val-music">80</span>%</label>
+            <input type="range" id="set-music" min="0" max="100" value="80" class="setting-control">
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">Sensitivity <span id="val-sense">50</span>%</label>
+            <input type="range" id="set-sense" min="0" max="100" value="50" class="setting-control">
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">Vibration <span id="val-vibe">70</span>%</label>
+            <input type="range" id="set-vibe" min="0" max="100" value="70" class="setting-control">
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">Target FPS</label>
+            <div style="display:flex;gap:10px">
+              <button id="fps-60" class="btn" style="flex:1;padding:8px">60 FPS</button>
+              <button id="fps-90" class="btn" style="flex:1;padding:8px">90 FPS</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn" id="settings-back-btn" style="margin-top:16px">BACK</button>
+      </div>
+
+      <!-- LOAD GAME MENU -->
+      <div id="load-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size:1.4rem">TIMELINE</div>
+        <div id="load-content" class="stat-row">
+          <div class="stat-box">
+            <span class="stat-value" id="last-time">--</span>
+            <span class="stat-label">Last Survived</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-value" id="last-kills">--</span>
+            <span class="stat-label">Echoes Defeated</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div id="load-status" class="overlay-sub" style="color:#666">Scanning timeline...</div>
+        <button class="btn" id="load-back-btn" style="margin-top:16px">BACK</button>
+      </div>
+
+      <!-- QUIT SCREEN -->
+      <div id="quit-menu" class="menu-view hidden">
+        <div class="overlay-title">SYSTEM SHUTDOWN</div>
+        <div class="overlay-sub">Echoes neutralized. Timeline closed.</div>
+        <div class="divider"></div>
+        <div class="stat-row" id="final-stats"></div>
+        <button class="btn" onclick="location.reload()" style="margin-top:16px">REBOOT SYSTEM</button>
+      </div>
+
+      <!-- GAME OVER -->
+      <div id="game-over-view" class="menu-view hidden"></div>
+
+      <div id="save-msg" class="save-indicator">SESSION STORED</div>
     </div>
   </div>
 
@@ -2863,15 +2922,65 @@ function gameLoop(ts) {
 }
 
 // ── Boot & Menu Bindings ─────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  // Initialize Zero-G 3D Menu
-  Menu3D.init();
-  
-  // Initialize Persistent Settings
+window.addEventListener('load', () => {
+
+  // ── Step 1: Show 2D menu immediately (guaranteed) ──
+  showMenu('main-menu');
+
+  // ── Step 2: Wire up all menu buttons ──
+  document.getElementById('new-game-btn').addEventListener('click', () => {
+    document.getElementById('overlay').classList.add('hidden');
+    document.getElementById('menu-3d-container').classList.add('hidden');
+    document.getElementById('cinematic-bg').classList.remove('visible');
+    [document.getElementById('title'), document.getElementById('hud'), document.getElementById('controls-hint')]
+      .forEach(el => el && el.classList.remove('interface-hidden'));
+    startGame();
+    requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+  });
+
+  document.getElementById('load-game-btn').addEventListener('click', () => {
+    loadSession();
+    showMenu('load-menu');
+  });
+
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    showMenu('settings-menu');
+  });
+
+  document.getElementById('settings-back-btn').addEventListener('click', () => {
+    showMenu('main-menu');
+  });
+
+  document.getElementById('load-back-btn').addEventListener('click', () => {
+    showMenu('main-menu');
+  });
+
+  document.getElementById('quit-btn').addEventListener('click', () => {
+    showMenu('quit-menu');
+    const final = document.getElementById('final-stats');
+    const raw = localStorage.getItem('echo_fight_save');
+    if (raw) {
+      const data = JSON.parse(raw);
+      final.innerHTML = `
+        <div class="stat-box"><span class="stat-value">${data.time.toFixed(1)}s</span><span class="stat-label">Survival Record</span></div>
+        <div class="stat-box"><span class="stat-value">${data.kills}</span><span class="stat-label">Max Echoes</span></div>
+      `;
+    }
+  });
+
+  // Settings sliders
   Settings.init();
 
-  // Start the menu experience
-  showMenu('main-menu');
+  // ── Step 3: Try to load 3D Menu (enhancement only) ──
+  try {
+    if (typeof THREE !== 'undefined') {
+      Menu3D.init();
+    } else {
+      console.warn('Three.js not available – staying with 2D menu.');
+    }
+  } catch(e) {
+    console.warn('Menu3D init failed – 2D menu is active.', e);
+  }
 });
 </script>
 </body>
