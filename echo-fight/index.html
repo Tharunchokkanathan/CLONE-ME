@@ -36,11 +36,11 @@
       font-size: 1.8rem;
       font-weight: 900;
       letter-spacing: 0.12em;
-      background: linear-gradient(90deg, #00ff41, #00ffcc, #ffffff);
+      background: linear-gradient(90deg, #00ff41, #ff66b2, #00ccff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 0 15px #00ff41aa);
+      filter: drop-shadow(0 0 15px #00ff4199);
     }
 
     #hud {
@@ -49,8 +49,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 6px 14px;
-      background: rgba(0,0,0,0.85);
-      border: 1px solid rgba(79,119,45,0.4);
+      background: rgba(10,10,15,0.85);
+      border: 1px solid rgba(255,102,178,0.25);
       border-radius: 10px;
       backdrop-filter: blur(8px);
     }
@@ -61,8 +61,8 @@
       font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: #00ff41;
-      opacity: 0.9;
+      color: #ff66b2;
+      opacity: 0.95;
     }
 
     .hud-value {
@@ -84,19 +84,19 @@
     #health-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,49,49,0.1);
       border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,102,178,0.2);
       overflow: hidden;
     }
 
     #health-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #00ff41, #ffffff);
+      background: linear-gradient(90deg, #ff66b2, #ff3131);
       border-radius: 5px;
       transition: width 0.15s ease, background 0.3s;
       width: 100%;
-      box-shadow: 0 0 10px #00ff41;
+      box-shadow: 0 0 10px rgba(255,102,178,0.6);
     }
 
     #echo-bar-wrap {
@@ -111,19 +111,19 @@
     #echo-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,0,255,0.08);
       border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,0,255,0.15);
       overflow: hidden;
     }
 
     #echo-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #00ccff, #00ffcc);
+      background: linear-gradient(90deg, #ff00ff, #ff66b2);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
-      box-shadow: 0 0 10px #00ccff;
+      box-shadow: 0 0 10px #ff00ff;
     }
 
     #nova-bar-wrap {
@@ -138,19 +138,19 @@
     #nova-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,51,0.08);
       border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,51,0.15);
       overflow: hidden;
     }
 
     #nova-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #f1c40f, #ffffff);
+      background: linear-gradient(90deg, #ffff33, #ffffff);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
-      box-shadow: 0 0 10px #f1c40f;
+      box-shadow: 0 0 10px rgba(255,255,51,0.7);
     }
 
     #pistol-bar-wrap {
@@ -165,26 +165,27 @@
     #pistol-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(0,204,255,0.08);
       border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(0,204,255,0.15);
       overflow: hidden;
     }
 
     #pistol-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #ffffff, #e91e63);
+      background: linear-gradient(90deg, #0066ff, #00ffff);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
+      box-shadow: 0 0 10px #00ccff;
     }
 
     canvas {
       display: block;
       border-radius: 14px;
-      border: 2px solid #103310;
+      border: 2px solid #1a1a1a;
       box-shadow:
-        0 0 30px rgba(79,119,45,0.2),
+        0 0 30px rgba(255,102,178,0.15),
         inset 0 0 80px rgba(0,0,0,0.9);
     }
 
@@ -192,15 +193,15 @@
       display: flex;
       gap: 20px;
       font-size: 0.65rem;
-      color: #00ff41;
+      color: #ff66b2;
       letter-spacing: 0.08em;
-      opacity: 0.9;
+      opacity: 0.95;
     }
 
     .ctrl { display: flex; align-items: center; gap: 5px; }
     .key {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,102,178,0.08);
+      border: 1px solid rgba(255,102,178,0.25);
       border-radius: 4px;
       padding: 1px 6px;
       font-family: 'Orbitron', monospace;
@@ -217,7 +218,7 @@
       justify-content: center;
       gap: 18px;
       border-radius: 14px;
-      background: rgba(0,0,0,0.95);
+      background: rgba(5,5,10,0.96);
       backdrop-filter: blur(12px);
       z-index: 10;
     }
@@ -229,7 +230,7 @@
       font-size: 2.2rem;
       font-weight: 900;
       text-align: center;
-      background: linear-gradient(90deg, #4f772d, #ffffff, #4f772d);
+      background: linear-gradient(90deg, #00ff41, #ff66b2, #00ccff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -237,7 +238,7 @@
 
     .overlay-sub {
       font-size: 0.8rem;
-      color: #90a955;
+      color: #ff66b2;
       text-align: center;
       max-width: 440px;
       line-height: 1.7;
@@ -251,8 +252,8 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(79,119,45,0.3);
+      background: rgba(255,102,178,0.03);
+      border: 1px solid rgba(255,102,178,0.2);
       border-radius: 10px;
       padding: 12px 24px;
     }
@@ -261,7 +262,7 @@
       font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      color: #90a955;
+      color: #ff66b2;
     }
 
     .stat-value {
@@ -277,19 +278,19 @@
       font-size: 0.85rem;
       font-weight: 700;
       letter-spacing: 0.1em;
-      border: 1px solid #4f772d;
+      border: 1px solid #ff66b2;
       border-radius: 8px;
       cursor: pointer;
       background: #000000;
       color: #ffffff;
-      box-shadow: 0 0 15px rgba(79,119,45,0.3);
+      box-shadow: 0 0 15px rgba(255,102,178,0.3);
       transition: all 0.2s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      background: #103310;
-      box-shadow: 0 4px 25px rgba(79,119,45,0.5);
+      background: rgba(255,102,178,0.1);
+      box-shadow: 0 4px 25px rgba(255,102,178,0.4);
     }
 
     .controls-grid {
@@ -304,7 +305,7 @@
       align-items: center;
       gap: 8px;
       color: #ffffff;
-      opacity: 0.7;
+      opacity: 0.8;
     }
 
     .ctrl-keys { display: flex; gap: 3px; align-items: center; }
@@ -312,7 +313,7 @@
     .divider {
       width: 90%;
       height: 1px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,102,178,0.15);
     }
 
     @keyframes pulse-glow {
@@ -653,7 +654,8 @@ function spawnClone() {
   if (inputBuffer.length < 15) return;
   const timeline = [...inputBuffer];
   const first    = timeline[0];
-  const cloneColors = ['#ff00ff', '#ffff00', '#00ffff', '#ff3300', '#ff0066', '#ffffff'];
+  const cloneColors = ['#ff00ff', '#ff66b2', '#ff3131', '#ffff33', '#00ccff'];
+
 
   const clone = {
     x: first.x, y: first.y,
@@ -718,11 +720,10 @@ function updateClone(c) {
       c.attackTimer    = ATTACK_DUR;
       c.attackCooldown = CLONE_ATTACK_CD;
       if (player.invincible <= 0) {
-        player.hp     -= CLONE_DMG;
         player.invincible = 50;
         triggerShake(5);
-        addFloatText(player.x + PLAYER_W / 2, player.y - 10, `-${CLONE_DMG}`, '#ff4466');
-        spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ff3355', 10, 2.5);
+        addFloatText(player.x + PLAYER_W / 2, player.y - 10, `-${CLONE_DMG}`, '#ff3131');
+        spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, c.color || '#ff66b2', 10, 2.5);
       }
     }
   }
@@ -1109,8 +1110,8 @@ function updatePlayer() {
           c.hp -= currentDmg;
           player.novaEnergy = Math.min(player.maxNovaEnergy, player.novaEnergy + currentDmg * 0.15);
           c.flashTimer = 10;
-          addFloatText(c.x + PLAYER_W / 2, c.y - 16, `-${currentDmg}`, isPower ? '#ffff00' : '#44ddff');
-          spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, isPower ? '#ffaaaa' : '#aa44ff', 12, 3.5);
+          addFloatText(c.x + PLAYER_W / 2, c.y - 16, `-${currentDmg}`, isPower ? '#ffff33' : '#00ccff');
+          spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, c.color || '#ffffff', 12, 3.5);
           triggerShake(isPower ? 6 : 3);
         }
       });
@@ -1221,14 +1222,14 @@ function spawnInterval() {
 function drawArena() {
   // BG
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#1a161f');
-  bg.addColorStop(1, '#050505');
+  bg.addColorStop(0, '#0a0a0f');
+  bg.addColorStop(1, '#000000');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // Grid
   ctx.save();
-  ctx.strokeStyle = 'rgba(142,124,157,0.11)';
+  ctx.strokeStyle = 'rgba(255,102,178,0.06)';
   ctx.lineWidth = 1;
   for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 60) {
     ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.ground); ctx.stroke();
@@ -1240,53 +1241,40 @@ function drawArena() {
 
   // Ground glow
   const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
-  gGrad.addColorStop(0, 'rgba(79,119,45,0.45)');
+  gGrad.addColorStop(0, 'rgba(0,196,255,0.22)');
   gGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = gGrad;
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
 
   ctx.save();
-  ctx.shadowColor = '#90a955';
-  ctx.shadowBlur = 14;
-  ctx.fillStyle = 'rgba(144,169,85,0.9)';
+  ctx.shadowColor = '#00ff41';
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = 'rgba(0,255,65,0.7)';
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
   ctx.restore();
 
-  // Border
-  ctx.save();
-  ctx.strokeStyle = 'rgba(142,124,157,0.22)';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.ground - ARENA.y);
-  ctx.restore();
-
-  // Ambient blobs
+  // Ambient blobs (Prism light)
   const t = Date.now() / 1000;
   ctx.save();
-  ctx.globalAlpha = 0.04 + 0.015 * Math.sin(t * 0.7);
-  const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 220);
-  b1.addColorStop(0, '#8e7c9d'); b1.addColorStop(1, 'transparent');
+  ctx.globalAlpha = 0.05 + 0.02 * Math.sin(t * 0.6);
+  const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 250);
+  b1.addColorStop(0, '#ff66b2'); b1.addColorStop(1, 'transparent');
   ctx.fillStyle = b1; ctx.fillRect(0, 0, W, H);
-  ctx.globalAlpha = 0.033 + 0.015 * Math.sin(t * 0.9 + 1.2);
-  const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 180);
-  b2.addColorStop(0, '#c48d9e'); b2.addColorStop(1, 'transparent');
+  ctx.globalAlpha = 0.04 + 0.02 * Math.sin(t * 0.8 + 1.5);
+  const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 220);
+  b2.addColorStop(0, '#0066ff'); b2.addColorStop(1, 'transparent');
   ctx.fillStyle = b2; ctx.fillRect(0, 0, W, H);
   ctx.restore();
 
   // Platforms
   PLATFORMS.forEach(p => {
     ctx.save();
-    ctx.shadowColor = 'rgba(142,124,157,0.5)';
+    ctx.shadowColor = 'rgba(255,102,178,0.4)';
     ctx.shadowBlur  = 10;
-    ctx.fillStyle   = 'rgba(46,38,51,0.18)';
+    ctx.fillStyle   = 'rgba(15,15,20,0.8)';
     ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = 'rgba(196,141,158,0.85)';
+    ctx.fillStyle = 'rgba(255,102,178,0.9)';
     ctx.fillRect(p.x, p.y, p.w, 2);
-    // underside glow
-    const pg = ctx.createLinearGradient(p.x, p.y + p.h, p.x, p.y + p.h + 18);
-    pg.addColorStop(0, 'rgba(142,124,157,0.25)');
-    pg.addColorStop(1, 'transparent');
-    ctx.fillStyle = pg;
-    ctx.fillRect(p.x, p.y + p.h, p.w, 18);
     ctx.restore();
   });
 }
@@ -1468,8 +1456,8 @@ function updateHUD() {
   const pistolPct = Math.max(0, (1 - player.pistolCooldown / 480) * 100);
   document.getElementById('pistol-bar-fill').style.width = Math.min(100, pistolPct) + '%';
   document.getElementById('pistol-bar-fill').style.background = pistolPct >= 100 
-    ? 'linear-gradient(90deg, #f2eaf7, #ffffff)' 
-    : 'linear-gradient(90deg, #7a3f91, #c59dd9)';
+    ? 'linear-gradient(90deg, #00ffff, #ffffff)' 
+    : 'linear-gradient(90deg, #0066ff, #00ccff)';
 }
 
 // ── Game-Over overlay ────────────────────────────────────────
