@@ -157,6 +157,27 @@
       width: 0%;
       box-shadow: 0 0 10px rgba(255,255,51,0.7);
     }
+    
+    #shield-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    #shield-bar-bg {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    #shield-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ffff, #ffffff);
+      border-radius: 4px;
+      transition: width 0.05s linear;
+      width: 100%;
+      box-shadow: 0 0 10px rgba(0,255,255,0.7);
+    }
 
     #pistol-bar-wrap {
       display: flex;
@@ -698,6 +719,11 @@
       <div id="nova-bar-bg"><div id="nova-bar-fill"></div></div>
     </div>
     
+    <div id="shield-bar-wrap">
+      <div class="hud-label"><span>🛡️ Kinetic Shield</span></div>
+      <div id="shield-bar-bg"><div id="shield-bar-fill"></div></div>
+    </div>
+    
     <div id="pistol-bar-wrap">
       <div class="hud-label"><span>🔫 Pistol</span> <span id="timer-pistol" class="cooldown-timer">READY</span></div>
       <div id="pistol-bar-bg"><div id="pistol-bar-fill"></div></div>
@@ -1039,6 +1065,7 @@ function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
 function gravityKey() { return pressing('KeyG'); }
 function thunderKey() { return pressing('KeyT'); }
 function flameKey()   { return pressing('KeyF'); }
+function shieldKey()  { return pressing('CapsLock', 'KeyC', 'c', 'C'); }
 
 // ── State ──────────────────────────────────────────────────────
 let player, clones, inputBuffer;
@@ -1058,6 +1085,8 @@ let gravitySpirals = [];
 let lightnings = [];
 let screenFlash = 0;
 let fireParticles = [];
+let bossOrbs = [];
+let laserBeams = [];
 let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
@@ -1177,12 +1206,32 @@ function createPlayer() {
     dashCooldown: 0,
     isDashing: false,
     dashTimer: 0,
-    novaEnergy: 0,
-    maxNovaEnergy: 100,
+    novaEnergy: 0, maxNovaEnergy: 100,
+    shieldEnergy: 100, maxShield: 100, isShielded: false,
     pistolCooldown: 0,
     thunderCooldown: 0,
     freezeTimer: 0,
   };
+}
+
+// ── Damage Player ────────────────────────────────────────────
+function damagePlayer(amount, sourceX) {
+  if (player.invincible > 0) return;
+  if (player.isShielded && player.shieldEnergy > 0) {
+    player.shieldEnergy = Math.max(0, player.shieldEnergy - 25);
+    player.invincible = 20;
+    spawnParticles(player.x + PLAYER_W/2, player.y + PLAYER_H/2, '#00ffff', 12, 3);
+    addFloatText(player.x + PLAYER_W/2, player.y - 15, "BLOCKED", "#00ffff");
+    triggerShake(4);
+    // Pushback 
+    player.vx = sourceX > player.x ? -5 : 5;
+  } else {
+    player.hp -= amount;
+    player.invincible = 60;
+    triggerShake(10);
+    spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ff3355', 15, 3);
+    addFloatText(player.x + PLAYER_W / 2, player.y - 10, `-${amount}`, '#ff1144');
+  }
 }
 
 // ── Record one snapshot of the player ─────────────────────────
@@ -1283,10 +1332,7 @@ function updateClone(c) {
       c.attackTimer    = ATTACK_DUR;
       c.attackCooldown = CLONE_ATTACK_CD;
       if (player.invincible <= 0) {
-        player.invincible = 50;
-        triggerShake(5);
-        addFloatText(player.x + PLAYER_W / 2, player.y - 10, `-${CLONE_DMG}`, '#ff3131');
-        spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, c.color || '#ff66b2', 10, 2.5);
+        damagePlayer(CLONE_DMG, cx);
       }
     }
   }
@@ -1349,7 +1395,6 @@ function mergeClonesIntoGiant() {
   
   clones.forEach(c => spawnParticles(c.x + PLAYER_W/2, c.y + PLAYER_H/2, '#aa33ff', 10, 3));
   clones = [];
-  
   addFloatText(W/2, H/2 - 50, isSuperior ? "SUPERIOR GIANT FORMING" : "GIANT ECHO FORMING", isSuperior ? "#ffd700" : "#ff33ff");
 }
 
@@ -1362,6 +1407,59 @@ function updateGiantEcho(g) {
   else if (hpPct < 0.75) g.phase = 2;
 
   const s = g.sizeMult || GIANT_SIZE_MULT;
+
+  // Boss Special Abilities by Level
+  if (currentLevel >= 3) {
+    g.fireTrailTimer = (g.fireTrailTimer || 0) - 1 * globalTimeScale;
+    if (g.fireTrailTimer <= 0 && Math.abs(g.vx) > 0.5 && !g.isSlamming) {
+      g.fireTrailTimer = 18;
+      spawnFireParticle(g.x + (PLAYER_W*s)/2, ARENA.ground - 10, 0, -2);
+    }
+  }
+
+  if (currentLevel >= 4) {
+    g.orbTimer = (g.orbTimer || 300) - 1 * globalTimeScale;
+    if (g.orbTimer <= 0 && !g.isSlamming) {
+      g.orbTimer = 350 + Math.random() * 200;
+      bossOrbs.push({
+        x: g.x + (PLAYER_W*s)/2, y: g.y + (PLAYER_H*s)/2,
+        vx: 0, vy: 0, speed: 2.5, life: 600, radius: 15
+      });
+      triggerShake(5);
+      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 40, "SEEKER ORB!", "#ff00ff");
+    }
+  }
+
+  if (currentLevel >= 5) {
+    g.blinkTimer = (g.blinkTimer || 450) - 1 * globalTimeScale;
+    if (g.blinkTimer <= 0 && !g.isSlamming) {
+      g.blinkTimer = 450 + Math.random() * 200;
+      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s)/2, '#ffffff', 30, 8); // Poof
+      g.x = Math.max(50, Math.min(W - (PLAYER_W*s) - 50, player.x + PLAYER_W/2 - (PLAYER_W*s)/2));
+      g.y = player.y - 150;
+      g.vy = 5;
+      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s)/2, '#00ffff', 30, 8); // Reappear
+      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 20, "BLINK STRIKE", "#00ffff");
+      g.isSlamming = true; g.slamState = 2; // Immediate slam mid-air drop
+    }
+  }
+
+  if (currentLevel >= 6) {
+    g.laserTimer = (g.laserTimer || 600) - 1 * globalTimeScale;
+    if (g.laserTimer <= 0 && !g.isSlamming) {
+      g.laserTimer = 450 + Math.random() * 150;
+      g.vx = 0; // stop moving
+      const dir = player.x > g.x ? 1 : -1;
+      laserBeams.push({
+        x: g.x + (PLAYER_W*s)/2, y: g.y + (PLAYER_H*s)/2 - 30,
+        angle: dir === 1 ? -Math.PI/8 : Math.PI + Math.PI/8,
+        sweepSpeed: dir === 1 ? 0.015 : -0.015,
+        life: 150, width: 22
+      });
+      triggerShake(20);
+      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 60, "OMEGA LASER", "#ff0000");
+    }
+  }
 
   // Slam State Machine
   if (g.isSlamming) {
@@ -1411,10 +1509,7 @@ function updateGiantEcho(g) {
         
         if (player.invincible <= 0) {
           const damage = Math.round(CLONE_DMG * (g.isSuperior ? 3.5 : 1.8));
-          player.hp -= damage;
-          player.invincible = 60;
-          triggerShake(10);
-          addFloatText(player.x, player.y - 20, `-${damage}`, '#ff1144');
+          damagePlayer(damage, gx);
         }
       }
     }
@@ -1474,12 +1569,7 @@ function updateShockwaves() {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < s.size && player.invincible <= 0) {
-        const damage = 45;
-        player.hp -= damage;
-        player.invincible = 50;
-        triggerShake(12);
-        addFloatText(player.x + PLAYER_W / 2, player.y - 20, "SHOCKWAVE HIT!", "#ff0000");
-        spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ff6600', 20, 5);
+        damagePlayer(45, pos.x);
       }
 
       // Visual particles along path
@@ -1554,6 +1644,8 @@ function spawnLevelBosses() {
   triggerShake(20);
   
   activeBosses = [];
+  bossOrbs = [];
+  laserBeams = [];
   
   const createBoss = (x, y, isSuperior = false) => {
     const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
@@ -1591,10 +1683,21 @@ function spawnLevelBosses() {
 function updatePlayer() {
   const spMult = globalTimeScale;
 
-  const flamingMult = (player.isFlaming ? 0.75 : 1.0);
+  // Kinetic Shield Logic
+  if (shieldKey() && player.shieldEnergy > 0) {
+    player.isShielded = true;
+    player.shieldEnergy -= 0.6 * spMult; // Drain
+    if (player.shieldEnergy < 0) player.shieldEnergy = 0;
+  } else {
+    player.isShielded = false;
+    player.shieldEnergy = Math.min(player.maxShield, player.shieldEnergy + 0.18 * spMult); // Regen
+  }
 
-  if (leftKey())       { player.vx = -MOVE_SPEED * spMult * flamingMult; player.facing = -1; }
-  else if (rightKey()) { player.vx =  MOVE_SPEED * spMult * flamingMult; player.facing =  1; }
+  const flamingMult = (player.isFlaming ? 0.75 : 1.0);
+  const shieldMult = (player.isShielded ? 0.35 : 1.0);
+
+  if (leftKey())       { player.vx = -MOVE_SPEED * spMult * flamingMult * shieldMult; player.facing = -1; }
+  else if (rightKey()) { player.vx =  MOVE_SPEED * spMult * flamingMult * shieldMult; player.facing =  1; }
   else                 { player.vx *= 0.75; }
 
   // Jump logic
@@ -2009,6 +2112,19 @@ function drawArena() {
 // ── Draw a character (player or clone) ───────────────────────
 function drawCharacter(ent, isPlayer) {
   const trail = ent.trail;
+
+  if (ent.isShielded) {
+    ctx.save();
+    const grad = ctx.createRadialGradient(ent.x + PLAYER_W/2, ent.y + PLAYER_H/2, 10, ent.x + PLAYER_W/2, ent.y + PLAYER_H/2, 35);
+    grad.addColorStop(0, 'rgba(0, 255, 255, 0.1)');
+    grad.addColorStop(0.8, 'rgba(0, 255, 255, 0.5)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ent.x + PLAYER_W/2, ent.y + PLAYER_H/2, 35, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
 
   // Trail
   trail.forEach((t, i) => {
@@ -2530,6 +2646,94 @@ function drawFireParticles() {
   ctx.globalCompositeOperation = 'source-over';
 }
 
+// ── Boss Powers Updates ──────────────────────────────────────────
+function updateBossProjectiles() {
+  const ts = globalTimeScale;
+  
+  // Orbs
+  for(let i=bossOrbs.length-1; i>=0; i--) {
+     let o = bossOrbs[i];
+     o.life -= ts;
+     if (o.life <= 0) { bossOrbs.splice(i,1); continue; }
+     
+     if (player) {
+       const dx = (player.x + PLAYER_W/2) - o.x;
+       const dy = (player.y + PLAYER_H/2) - o.y;
+       const dist = Math.sqrt(dx*dx + dy*dy);
+       o.vx += (dx/dist) * 0.08 * ts;
+       o.vy += (dy/dist) * 0.08 * ts;
+     }
+     
+     const speed = Math.sqrt(o.vx*o.vx + o.vy*o.vy);
+     if (speed > o.speed) { o.vx = (o.vx/speed)*o.speed; o.vy = (o.vy/speed)*o.speed; }
+     
+     o.x += o.vx * ts;
+     o.y += o.vy * ts;
+     
+     if (player) {
+       const pDist = Math.sqrt(Math.pow(o.x - (player.x + PLAYER_W/2), 2) + Math.pow(o.y - (player.y + PLAYER_H/2), 2));
+       if (pDist < o.radius + PLAYER_W/2) {
+         damagePlayer(35, o.x);
+         bossOrbs.splice(i,1);
+         spawnParticles(o.x, o.y, '#ff00ff', 20, 4);
+       }
+     }
+  }
+
+  // Lasers
+  for(let i=laserBeams.length-1; i>=0; i--) {
+    let l = laserBeams[i];
+    l.life -= ts;
+    if (l.life <= 0) { laserBeams.splice(i,1); continue; }
+    
+    l.angle += l.sweepSpeed * ts;
+    
+    if (player) {
+      const px = player.x + PLAYER_W/2;
+      const py = player.y + PLAYER_H/2;
+      const nx = Math.cos(l.angle);
+      const ny = Math.sin(l.angle);
+      
+      const distToLine = Math.abs((px - l.x)*(-ny) + (py - l.y)*nx);
+      const dot = (px - l.x)*nx + (py - l.y)*ny;
+      
+      if (dot > 0 && distToLine < l.width/2 + PLAYER_W/2 + 5) {
+         damagePlayer(15, l.x);
+      }
+    }
+  }
+}
+
+// ── Boss Powers Renders ──────────────────────────────────────────
+function drawBossProjectiles() {
+  bossOrbs.forEach(o => {
+     ctx.save();
+     ctx.shadowColor = '#ff00ff';
+     ctx.shadowBlur = 15;
+     ctx.fillStyle = '#ffaa00';
+     ctx.beginPath();
+     ctx.arc(o.x, o.y, o.radius, 0, Math.PI*2);
+     ctx.fill();
+     ctx.restore();
+  });
+  
+  laserBeams.forEach(l => {
+     ctx.save();
+     ctx.globalAlpha = Math.min(1, l.life/20);
+     ctx.translate(l.x, l.y);
+     ctx.rotate(l.angle);
+     
+     ctx.shadowColor = '#ff0000';
+     ctx.shadowBlur = 20;
+     ctx.fillStyle = '#ffffff';
+     ctx.fillRect(0, -l.width/2, W*2, l.width);
+     
+     ctx.fillStyle = 'rgba(255,0,0,0.5)';
+     ctx.fillRect(0, -l.width, W*2, l.width*2);
+     ctx.restore();
+  });
+}
+
 // ── HUD update ────────────────────────────────────────────────
 function updateHUD() {
   const pct = player.hp / player.maxHp * 100;
@@ -2547,6 +2751,11 @@ function updateHUD() {
 
   const echoPct = (1 - nextEchoTimer / spawnInterval()) * 100;
   document.getElementById('echo-bar-fill').style.width = Math.min(100, echoPct) + '%';
+  
+  const shieldFill = document.getElementById('shield-bar-fill');
+  if (shieldFill && player) {
+    shieldFill.style.width = (player.shieldEnergy / player.maxShield * 100) + '%';
+  }
   
   // Level display update
   const timeLabel = document.getElementById('hud-time');
@@ -2694,6 +2903,8 @@ function startGame(savedData = null) {
   gravitySpirals = [];
   lightnings = [];
   fireParticles = [];
+  bossOrbs = [];
+  laserBeams = [];
   shakeAmt     = 0; shakeX = 0; shakeY = 0;
   
   if (savedData) {
@@ -2908,6 +3119,7 @@ function gameLoop(ts) {
     updateGravitySpirals();
     updateLightnings();
     updateFireParticles();
+    updateBossProjectiles();
     if (screenFlash > 0) screenFlash -= 1 * globalTimeScale;
     updateParticles();
     updateFloatTexts();
@@ -2920,6 +3132,7 @@ function gameLoop(ts) {
   drawGravitySpirals();
   drawLightnings();
   drawFireParticles();
+  drawBossProjectiles();
 
   if (screenFlash > 0) {
     ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash / 8 * 0.45})`;
