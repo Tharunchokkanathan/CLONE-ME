@@ -1024,14 +1024,14 @@ function spawnInterval() {
 function drawArena() {
   // BG
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#060c1a');
-  bg.addColorStop(1, '#080616');
+  bg.addColorStop(0, '#1a0505');
+  bg.addColorStop(1, '#050202');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // Grid
   ctx.save();
-  ctx.strokeStyle = 'rgba(50,70,140,0.11)';
+  ctx.strokeStyle = 'rgba(140,50,50,0.11)';
   ctx.lineWidth = 1;
   for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 60) {
     ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.ground); ctx.stroke();
@@ -1043,21 +1043,21 @@ function drawArena() {
 
   // Ground glow
   const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
-  gGrad.addColorStop(0, 'rgba(80,120,255,0.55)');
+  gGrad.addColorStop(0, 'rgba(255,80,80,0.55)');
   gGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = gGrad;
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
 
   ctx.save();
-  ctx.shadowColor = '#4488ff';
+  ctx.shadowColor = '#ff4444';
   ctx.shadowBlur = 14;
-  ctx.fillStyle = 'rgba(100,150,255,0.9)';
+  ctx.fillStyle = 'rgba(255,100,100,0.9)';
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
   ctx.restore();
 
   // Border
   ctx.save();
-  ctx.strokeStyle = 'rgba(80,120,255,0.22)';
+  ctx.strokeStyle = 'rgba(255,80,80,0.22)';
   ctx.lineWidth = 1.5;
   ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.ground - ARENA.y);
   ctx.restore();
@@ -1067,26 +1067,26 @@ function drawArena() {
   ctx.save();
   ctx.globalAlpha = 0.04 + 0.015 * Math.sin(t * 0.7);
   const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 220);
-  b1.addColorStop(0, '#5566ff'); b1.addColorStop(1, 'transparent');
+  b1.addColorStop(0, '#ff5555'); b1.addColorStop(1, 'transparent');
   ctx.fillStyle = b1; ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 0.033 + 0.015 * Math.sin(t * 0.9 + 1.2);
   const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 180);
-  b2.addColorStop(0, '#aa44ff'); b2.addColorStop(1, 'transparent');
+  b2.addColorStop(0, '#ff8822'); b2.addColorStop(1, 'transparent');
   ctx.fillStyle = b2; ctx.fillRect(0, 0, W, H);
   ctx.restore();
 
   // Platforms
   PLATFORMS.forEach(p => {
     ctx.save();
-    ctx.shadowColor = 'rgba(80,130,255,0.5)';
+    ctx.shadowColor = 'rgba(255,80,80,0.5)';
     ctx.shadowBlur  = 10;
-    ctx.fillStyle   = 'rgba(70,110,230,0.18)';
+    ctx.fillStyle   = 'rgba(230,70,70,0.18)';
     ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = 'rgba(100,150,255,0.85)';
+    ctx.fillStyle = 'rgba(255,100,100,0.85)';
     ctx.fillRect(p.x, p.y, p.w, 2);
     // underside glow
     const pg = ctx.createLinearGradient(p.x, p.y + p.h, p.x, p.y + p.h + 18);
-    pg.addColorStop(0, 'rgba(80,130,255,0.25)');
+    pg.addColorStop(0, 'rgba(255,80,80,0.25)');
     pg.addColorStop(1, 'transparent');
     ctx.fillStyle = pg;
     ctx.fillRect(p.x, p.y + p.h, p.w, 18);
@@ -1104,7 +1104,7 @@ function drawCharacter(ent, isPlayer) {
     const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.fillStyle   = isPlayer ? '#3366ff' : (ent.isGiant ? '#ff33ff' : '#aa33ff');
+    ctx.fillStyle   = isPlayer ? '#ff5533' : (ent.isGiant ? '#ffaa00' : '#ff8800');
     ctx.beginPath();
     ctx.roundRect(t.x, t.y, PLAYER_W * s, PLAYER_H * s, 5 * s);
     ctx.fill();
@@ -1136,58 +1136,58 @@ function drawCharacter(ent, isPlayer) {
   if (!isPlayer && ent.flashTimer > 0) ctx.filter = 'brightness(3)';
 
   if (isPlayer) {
-    ctx.shadowColor = '#4488ff';
+    ctx.shadowColor = '#ff4444';
     ctx.shadowBlur  = 18;
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, '#5599ff');
-    g.addColorStop(1, '#2244cc');
+    g.addColorStop(0, '#ff5555');
+    g.addColorStop(1, '#cc2222');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Highlight
-    ctx.fillStyle = 'rgba(180,215,255,0.22)';
+    ctx.fillStyle = 'rgba(255,180,180,0.22)';
     ctx.beginPath();
     ctx.roundRect(cx - hw + 3 * s, cy - hh + 3 * s, (PLAYER_W - 6) * s, (PLAYER_H / 2 - 2) * s, 5 * s);
     ctx.fill();
     // Eye
-    ctx.shadowColor = '#aaddff'; ctx.shadowBlur = 6;
-    ctx.fillStyle   = '#aaddff';
+    ctx.shadowColor = '#ffaadd'; ctx.shadowBlur = 6;
+    ctx.fillStyle   = '#ffaadd';
     const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#000910';
+    ctx.fillStyle = '#100000';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
 
   } else {
     // Boss Visual Glow Effect
     if (ent.isGiant) {
-      ctx.shadowColor = '#ff33ff';
+      ctx.shadowColor = '#ffaa00';
       ctx.shadowBlur  = 25;
-      ctx.strokeStyle = '#ffbbff';
+      ctx.strokeStyle = '#ffcc88';
       ctx.lineWidth   = 2;
       ctx.strokeRect(cx - hw - 2, cy - hh - 2, PLAYER_W * s + 4, PLAYER_H * s + 4);
     } else {
-      ctx.shadowColor = '#cc44ff';
+      ctx.shadowColor = '#ff8800';
       ctx.shadowBlur  = 16;
     }
     
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, ent.isGiant ? 'rgba(255,50,150,0.9)' : 'rgba(210,80,255,0.88)');
-    g.addColorStop(1, ent.isGiant ? 'rgba(150,20,100,0.9)' : 'rgba(130,30,200,0.88)');
+    g.addColorStop(0, ent.isGiant ? 'rgba(255,150,50,0.9)' : 'rgba(255,120,40,0.88)');
+    g.addColorStop(1, ent.isGiant ? 'rgba(200,100,20,0.9)' : 'rgba(200,80,30,0.88)');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Scanlines
-    ctx.fillStyle = 'rgba(10,0,25,0.12)';
+    ctx.fillStyle = 'rgba(25,0,0,0.12)';
     for (let sl = 0; sl < PLAYER_H * s; sl += 4 * s)
       ctx.fillRect(cx - hw, cy - hh + sl, PLAYER_W * s, 2 * s);
     // Red/Pink eye
-    ctx.shadowColor = ent.isGiant ? '#ff00ff' : '#ff3333'; ctx.shadowBlur = 8 * s;
-    ctx.fillStyle   = ent.isGiant ? '#ff88ff' : '#ff6666';
+    ctx.shadowColor = ent.isGiant ? '#ffff00' : '#ffff33'; ctx.shadowBlur = 8 * s;
+    ctx.fillStyle   = ent.isGiant ? '#ffff88' : '#ffff66';
     const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3.2 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = ent.isGiant ? '#aa00aa' : '#ff0000';
+    ctx.fillStyle = ent.isGiant ? '#ff0000' : '#880000';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
   }
 
@@ -1202,8 +1202,8 @@ function drawCharacter(ent, isPlayer) {
 
     ctx.save();
     ctx.globalAlpha = prog * (isPower ? 1.0 : 0.9);
-    ctx.strokeStyle = isPlayer ? (isPower ? '#ffff00' : '#88ccff') : '#ff88cc';
-    ctx.shadowColor = isPlayer ? (isPower ? '#ffaa00' : '#4488ff') : '#cc44ff';
+    ctx.strokeStyle = isPlayer ? (isPower ? '#ffff00' : '#ff8888') : '#ffaa44';
+    ctx.shadowColor = isPlayer ? (isPower ? '#ffaa00' : '#ff4444') : '#ff8800';
     ctx.shadowBlur  = isPower ? 20 : 14;
     ctx.lineWidth   = isPower ? 5 : 3;
     ctx.beginPath();
@@ -1442,18 +1442,18 @@ function gameLoop(ts) {
 
   clones.forEach(c => {
     drawCharacter(c, false);
-    drawHpBar(c, '#cc44ff', '#9922cc');
+    drawHpBar(c, '#ff8800', '#cc5500');
   });
 
   if (isBossPhase && giantEcho) {
     drawCharacter(giantEcho, false);
-    drawHpBar(giantEcho, '#ff33ff', '#cc00ff');
+    drawHpBar(giantEcho, '#ffaa00', '#cc8800');
   }
 
 
   if (!gameOver) {
     drawCharacter(player, true);
-    drawHpBar(player, '#4488ff', '#2244dd');
+    drawHpBar(player, '#ff4444', '#dd2222');
   }
 
   drawParticles();
@@ -1496,13 +1496,13 @@ function gameLoop(ts) {
     const pulse = Math.abs(Math.sin(Date.now() / 110));
     ctx.save();
     ctx.globalAlpha = pulse * 0.22;
-    ctx.fillStyle   = '#cc44ff';
+    ctx.fillStyle   = '#ff6600';
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = pulse * 0.85;
     ctx.font        = 'bold 14px Orbitron, monospace';
-    ctx.fillStyle   = '#dd88ff';
+    ctx.fillStyle   = '#ff8822';
     ctx.textAlign   = 'center';
-    ctx.shadowColor = '#aa44ff';
+    ctx.shadowColor = '#ff5500';
     ctx.shadowBlur  = 14;
     ctx.fillText('⚡ ECHO SPAWNING...', W / 2, 56);
     ctx.restore();
@@ -1511,7 +1511,7 @@ function gameLoop(ts) {
   // Wave / difficulty badge
   ctx.save();
   ctx.font      = '600 11px Inter, sans-serif';
-  ctx.fillStyle = 'rgba(160,110,255,0.5)';
+  ctx.fillStyle = 'rgba(255,110,110,0.5)';
   ctx.textAlign = 'right';
   ctx.fillText(`WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
   ctx.restore();
