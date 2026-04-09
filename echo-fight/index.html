@@ -43,9 +43,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 20px;
+      gap: 15px;
+      padding: 8px 15px;
       background: rgba(10,10,15,0.88);
-      border-bottom: 1px solid rgba(255,102,178,0.2);
+      border-bottom: 2px solid rgba(255,102,178,0.3);
       backdrop-filter: blur(10px);
       flex-shrink: 0;
     }
@@ -58,6 +59,15 @@
       letter-spacing: 0.15em;
       color: #ff66b2;
       opacity: 0.95;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .cooldown-timer {
+      font-weight: 900;
+      color: #00ff41;
+      text-shadow: 0 0 5px rgba(0,255,65,0.5);
     }
 
     .hud-value {
@@ -248,6 +258,54 @@
     }
 
     #flame-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6600, #ffaa00);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      width: 0%;
+      box-shadow: 0 0 12px rgba(255,102,0,0.7);
+    }
+
+    /* --- Legend Box --- */
+    #controls-legend {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px;
+      background: rgba(10,10,15,0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,102,178,0.25);
+      border-radius: 12px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.6);
+      transition: opacity 0.3s;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #ffffff;
+      opacity: 0.85;
+    }
+    .legend-key {
+      display: inline-block;
+      min-width: 24px;
+      padding: 3px 6px;
+      background: rgba(255,102,178,0.15);
+      border: 1px solid rgba(255,102,178,0.5);
+      color: #ff66b2;
+      border-radius: 4px;
+      text-align: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+    }
+    
+    .interface-hidden { display: none !important; }
       height: 100%;
       background: linear-gradient(90deg, #ff6600, #ff0000);
       border-radius: 5px;
@@ -630,11 +688,47 @@
     </div>
 
     <div id="echo-bar-wrap">
-      <div class="hud-label">🔮 Next Echo In</div>
+      <div class="hud-label"><span>🔮 Next Echo In</span></div>
       <div id="echo-bar-bg"><div id="echo-bar-fill"></div></div>
     </div>
 
+    <!-- Power Bars -->
+    <div id="nova-bar-wrap">
+      <div class="hud-label"><span>⚛ Nova</span> <span id="timer-nova" class="cooldown-timer">READY</span></div>
+      <div id="nova-bar-bg"><div id="nova-bar-fill"></div></div>
+    </div>
+    
+    <div id="pistol-bar-wrap">
+      <div class="hud-label"><span>🔫 Pistol</span> <span id="timer-pistol" class="cooldown-timer">READY</span></div>
+      <div id="pistol-bar-bg"><div id="pistol-bar-fill"></div></div>
+    </div>
+    
+    <div id="gravity-bar-wrap">
+      <div class="hud-label"><span>🌀 Tornado</span> <span id="timer-gravity" class="cooldown-timer">READY</span></div>
+      <div id="gravity-bar-bg"><div id="gravity-bar-fill"></div></div>
+    </div>
+    
+    <div id="thunder-bar-wrap">
+      <div class="hud-label"><span>⚡ Thunder</span> <span id="timer-thunder" class="cooldown-timer">READY</span></div>
+      <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
+    </div>
+    
+    <div id="flame-bar-wrap">
+      <div class="hud-label"><span>🔥 Flame</span> <span id="timer-flame" class="cooldown-timer">READY</span></div>
+      <div id="flame-bar-bg"><div id="flame-bar-fill"></div></div>
+    </div>
 
+  </div>
+
+  <!-- Key Legend Box -->
+  <div id="controls-legend" class="interface-hidden">
+    <div class="legend-item"><span class="legend-key">F</span> Flame Thrower</div>
+    <div class="legend-item"><span class="legend-key">T</span> Thunder Strike</div>
+    <div class="legend-item"><span class="legend-key">G</span> Anti-Gravity (Tornado)</div>
+    <div class="legend-item"><span class="legend-key">E</span> Crimson Nova</div>
+    <div class="legend-item"><span class="legend-key">P</span> Precision Pistol</div>
+    <div class="legend-item"><span class="legend-key">SHIFT</span> Dash / Dodge</div>
+    <div class="legend-item" style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; opacity:0.6; font-size:0.6rem;">ALT: Attack | SPACE: Jump</div>
   </div>
 
   <div id="canvas-wrap">
@@ -2406,7 +2500,34 @@ function updateHUD() {
   const echoPct = (1 - nextEchoTimer / spawnInterval()) * 100;
   document.getElementById('echo-bar-fill').style.width = Math.min(100, echoPct) + '%';
   
+  // Power Bar Updates
+  const updateBar = (id, timerId, current, max, isEnergy = false) => {
+    const bar = document.getElementById(id);
+    const label = document.getElementById(timerId);
+    if (!bar || !label) return;
+    
+    const p = isEnergy ? (current / max) * 100 : (1 - current / max) * 100;
+    bar.style.width = Math.max(0, Math.min(100, p)) + '%';
+    
+    if (isEnergy) {
+       label.textContent = current >= max ? 'READY' : Math.floor(current) + '%';
+       label.style.color = current >= max ? '#ffff33' : '#aaa';
+    } else {
+       if (current <= 0) {
+         label.textContent = 'READY';
+         label.style.color = '#00ff41';
+       } else {
+         label.textContent = (current / 60).toFixed(1) + 's';
+         label.style.color = '#ff4400';
+       }
+    }
+  };
 
+  updateBar('nova-bar-fill',     'timer-nova',    player.novaEnergy, player.maxNovaEnergy, true);
+  updateBar('pistol-bar-fill',   'timer-pistol',  player.pistolCooldown, 480);
+  updateBar('gravity-bar-fill',  'timer-gravity', player.gravityCooldown, 110);
+  updateBar('thunder-bar-fill',  'timer-thunder', player.thunderCooldown, 110);
+  updateBar('flame-bar-fill',    'timer-flame',    player.flameCooldown, 110);
 }
 
 // ── Navigation Manager ──────────────────────────────────────
@@ -2420,7 +2541,12 @@ function showMenu(viewId) {
     else overlay.classList.add('hidden');
   }
 
-  const uiElements = [document.getElementById('title'), document.getElementById('hud'), document.getElementById('controls-hint')];
+  const uiElements = [
+    document.getElementById('title'), 
+    document.getElementById('hud'), 
+    document.getElementById('controls-hint'),
+    document.getElementById('controls-legend')
+  ];
   uiElements.forEach(el => {
     if (!el) return;
     if (isMenuVisible) el.classList.add('interface-hidden');
