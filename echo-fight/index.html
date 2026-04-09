@@ -11,9 +11,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #0a0202;
-      background: radial-gradient(circle at center, #1f0808 0%, #050000 100%);
-      color: #ffeaea;
+      background: #0d0414;
+      background: radial-gradient(circle at center, #2b0d3e 0%, #0d0414 100%);
+      color: #f2eaf7;
       font-family: 'Inter', sans-serif;
       display: flex;
       flex-direction: column;
@@ -37,11 +37,11 @@
       font-size: 1.8rem;
       font-weight: 900;
       letter-spacing: 0.12em;
-      background: linear-gradient(90deg, #ff2a00, #ff8800, #ff0044);
+      background: linear-gradient(90deg, #c59dd9, #7a3f91, #f2eaf7);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 0 18px #ff4400aa);
+      filter: drop-shadow(0 0 18px #7a3f91aa);
     }
 
     #hud {
@@ -50,8 +50,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 6px 14px;
-      background: rgba(30,5,5,0.85);
-      border: 1px solid rgba(255,60,60,0.25);
+      background: rgba(43,13,62,0.85);
+      border: 1px solid rgba(197,157,217,0.25);
       border-radius: 10px;
       backdrop-filter: blur(8px);
     }
@@ -62,14 +62,14 @@
       font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: #bb6666;
+      color: #c59dd9;
     }
 
     .hud-value {
       font-family: 'Orbitron', monospace;
       font-size: 1.05rem;
       font-weight: 700;
-      color: #ffcccc;
+      color: #f2eaf7;
     }
 
     #health-bar-wrap {
@@ -84,18 +84,19 @@
     #health-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,40,40,0.18);
+      background: rgba(122,63,145,0.18);
       border-radius: 5px;
-      border: 1px solid rgba(255,60,60,0.3);
+      border: 1px solid rgba(122,63,145,0.3);
       overflow: hidden;
     }
 
     #health-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #ff0033, #ff4400);
+      background: linear-gradient(90deg, #7a3f91, #c59dd9);
       border-radius: 5px;
       transition: width 0.15s ease, background 0.3s;
       width: 100%;
+      box-shadow: 0 0 8px #7a3f91;
     }
 
     #echo-bar-wrap {
@@ -110,18 +111,19 @@
     #echo-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,120,40,0.18);
+      background: rgba(197,157,217,0.18);
       border-radius: 5px;
-      border: 1px solid rgba(255,140,60,0.3);
+      border: 1px solid rgba(197,157,217,0.3);
       overflow: hidden;
     }
 
     #echo-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #ff6600, #ffcc00);
+      background: linear-gradient(90deg, #c59dd9, #f2eaf7);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
+      box-shadow: 0 0 8px #c59dd9;
     }
 
     #nova-bar-wrap {
@@ -136,28 +138,28 @@
     #nova-bar-bg {
       width: 100%;
       height: 10px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(242,234,247,0.1);
       border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(242,234,247,0.2);
       overflow: hidden;
     }
 
     #nova-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #ffffff, #ffaa00);
+      background: linear-gradient(90deg, #f2eaf7, #ffffff);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
-      box-shadow: 0 0 10px #ffffff;
+      box-shadow: 0 0 10px #f2eaf7;
     }
 
     canvas {
       display: block;
       border-radius: 14px;
-      border: 1.5px solid rgba(255,60,60,0.3);
+      border: 1.5px solid rgba(122,63,145,0.3);
       box-shadow:
-        0 0 40px rgba(220,40,40,0.25),
-        0 0 80px rgba(255,80,40,0.12),
+        0 0 40px rgba(43,13,62,0.4),
+        0 0 80px rgba(122,63,145,0.15),
         inset 0 0 60px rgba(0,0,0,0.8);
     }
 
@@ -165,19 +167,20 @@
       display: flex;
       gap: 20px;
       font-size: 0.65rem;
-      color: #774444;
+      color: #c59dd9;
       letter-spacing: 0.08em;
+      opacity: 0.7;
     }
 
     .ctrl { display: flex; align-items: center; gap: 5px; }
     .key {
-      background: rgba(180,40,40,0.2);
-      border: 1px solid rgba(255,60,60,0.3);
+      background: rgba(122,63,145,0.2);
+      border: 1px solid rgba(197,157,217,0.3);
       border-radius: 4px;
       padding: 1px 6px;
       font-family: 'Orbitron', monospace;
       font-size: 0.6rem;
-      color: #ff9999;
+      color: #f2eaf7;
     }
 
     #overlay {
@@ -189,8 +192,8 @@
       justify-content: center;
       gap: 18px;
       border-radius: 14px;
-      background: rgba(10,2,2,0.92);
-      backdrop-filter: blur(6px);
+      background: rgba(13,4,20,0.92);
+      backdrop-filter: blur(8px);
       z-index: 10;
     }
 
@@ -201,7 +204,7 @@
       font-size: 2.2rem;
       font-weight: 900;
       text-align: center;
-      background: linear-gradient(90deg, #ff2a00, #ff8800, #ff0044);
+      background: linear-gradient(90deg, #c59dd9, #7a3f91, #f2eaf7);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -210,11 +213,12 @@
 
     .overlay-sub {
       font-size: 0.8rem;
-      color: #aa7777;
+      color: #c59dd9;
       text-align: center;
       max-width: 440px;
       line-height: 1.7;
       letter-spacing: 0.05em;
+      opacity: 0.9;
     }
 
     .stat-row { display: flex; gap: 40px; }
@@ -224,8 +228,8 @@
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      background: rgba(60,10,10,0.5);
-      border: 1px solid rgba(255,60,60,0.2);
+      background: rgba(43,13,62,0.5);
+      border: 1px solid rgba(122,63,145,0.2);
       border-radius: 10px;
       padding: 12px 24px;
     }
@@ -234,14 +238,14 @@
       font-size: 0.58rem;
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      color: #aa5555;
+      color: #c59dd9;
     }
 
     .stat-value {
       font-family: 'Orbitron', monospace;
       font-size: 1.5rem;
       font-weight: 700;
-      color: #ffcccc;
+      color: #f2eaf7;
     }
 
     .btn {
@@ -253,15 +257,15 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      background: linear-gradient(135deg, #cc2200, #880000);
-      color: #ffeaea;
-      box-shadow: 0 0 20px rgba(220,40,40,0.4);
+      background: linear-gradient(135deg, #7a3f91, #2b0d3e);
+      color: #f2eaf7;
+      box-shadow: 0 0 20px rgba(122,63,145,0.4);
       transition: all 0.2s ease;
     }
 
     .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 28px rgba(255,60,40,0.6);
+      box-shadow: 0 4px 28px rgba(197,157,217,0.5);
     }
 
     .controls-grid {
@@ -275,7 +279,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #bb8888;
+      color: #c59dd9;
     }
 
     .ctrl-keys { display: flex; gap: 3px; align-items: center; }
@@ -283,12 +287,12 @@
     .divider {
       width: 90%;
       height: 1px;
-      background: rgba(255,60,60,0.15);
+      background: rgba(122,63,145,0.2);
     }
 
     @keyframes pulse-glow {
-      0%, 100% { filter: drop-shadow(0 0 8px #ff440088); }
-      50%       { filter: drop-shadow(0 0 22px #ff2200cc); }
+      0%, 100% { filter: drop-shadow(0 0 8px #7a3f9188); }
+      50%       { filter: drop-shadow(0 0 22px #c59dd9cc); }
     }
   </style>
 </head>
@@ -1141,14 +1145,14 @@ function spawnInterval() {
 function drawArena() {
   // BG
   const bg = ctx.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#1a0505');
-  bg.addColorStop(1, '#050202');
+  bg.addColorStop(0, '#1a0d24');
+  bg.addColorStop(1, '#0d0414');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
   // Grid
   ctx.save();
-  ctx.strokeStyle = 'rgba(140,50,50,0.11)';
+  ctx.strokeStyle = 'rgba(122,63,145,0.11)';
   ctx.lineWidth = 1;
   for (let gx = ARENA.x; gx <= ARENA.x + ARENA.w; gx += 60) {
     ctx.beginPath(); ctx.moveTo(gx, ARENA.y); ctx.lineTo(gx, ARENA.ground); ctx.stroke();
@@ -1160,21 +1164,21 @@ function drawArena() {
 
   // Ground glow
   const gGrad = ctx.createLinearGradient(0, ARENA.ground - 4, 0, ARENA.ground + 28);
-  gGrad.addColorStop(0, 'rgba(255,80,80,0.55)');
+  gGrad.addColorStop(0, 'rgba(197,157,217,0.45)');
   gGrad.addColorStop(1, 'transparent');
   ctx.fillStyle = gGrad;
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 28);
 
   ctx.save();
-  ctx.shadowColor = '#ff4444';
+  ctx.shadowColor = '#c59dd9';
   ctx.shadowBlur = 14;
-  ctx.fillStyle = 'rgba(255,100,100,0.9)';
+  ctx.fillStyle = 'rgba(242,234,247,0.9)';
   ctx.fillRect(ARENA.left, ARENA.ground - 3, ARENA.w, 3);
   ctx.restore();
 
   // Border
   ctx.save();
-  ctx.strokeStyle = 'rgba(255,80,80,0.22)';
+  ctx.strokeStyle = 'rgba(122,63,145,0.22)';
   ctx.lineWidth = 1.5;
   ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.ground - ARENA.y);
   ctx.restore();
@@ -1184,26 +1188,26 @@ function drawArena() {
   ctx.save();
   ctx.globalAlpha = 0.04 + 0.015 * Math.sin(t * 0.7);
   const b1 = ctx.createRadialGradient(260, 270, 0, 260, 270, 220);
-  b1.addColorStop(0, '#ff5555'); b1.addColorStop(1, 'transparent');
+  b1.addColorStop(0, '#7a3f91'); b1.addColorStop(1, 'transparent');
   ctx.fillStyle = b1; ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 0.033 + 0.015 * Math.sin(t * 0.9 + 1.2);
   const b2 = ctx.createRadialGradient(570, 190, 0, 570, 190, 180);
-  b2.addColorStop(0, '#ff8822'); b2.addColorStop(1, 'transparent');
+  b2.addColorStop(0, '#c59dd9'); b2.addColorStop(1, 'transparent');
   ctx.fillStyle = b2; ctx.fillRect(0, 0, W, H);
   ctx.restore();
 
   // Platforms
   PLATFORMS.forEach(p => {
     ctx.save();
-    ctx.shadowColor = 'rgba(255,80,80,0.5)';
+    ctx.shadowColor = 'rgba(122,63,145,0.5)';
     ctx.shadowBlur  = 10;
-    ctx.fillStyle   = 'rgba(230,70,70,0.18)';
+    ctx.fillStyle   = 'rgba(122,63,145,0.18)';
     ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = 'rgba(255,100,100,0.85)';
+    ctx.fillStyle = 'rgba(197,157,217,0.85)';
     ctx.fillRect(p.x, p.y, p.w, 2);
     // underside glow
     const pg = ctx.createLinearGradient(p.x, p.y + p.h, p.x, p.y + p.h + 18);
-    pg.addColorStop(0, 'rgba(255,80,80,0.25)');
+    pg.addColorStop(0, 'rgba(122,63,145,0.25)');
     pg.addColorStop(1, 'transparent');
     ctx.fillStyle = pg;
     ctx.fillRect(p.x, p.y + p.h, p.w, 18);
@@ -1221,7 +1225,7 @@ function drawCharacter(ent, isPlayer) {
     const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.fillStyle   = isPlayer ? '#ff5533' : (ent.isGiant ? '#ffaa00' : '#ff8800');
+    ctx.fillStyle   = isPlayer ? '#f2eaf7' : (ent.isGiant ? '#c59dd9' : '#7a3f91');
     ctx.beginPath();
     ctx.roundRect(t.x, t.y, PLAYER_W * s, PLAYER_H * s, 5 * s);
     ctx.fill();
@@ -1253,58 +1257,58 @@ function drawCharacter(ent, isPlayer) {
   if (!isPlayer && ent.flashTimer > 0) ctx.filter = 'brightness(3)';
 
   if (isPlayer) {
-    ctx.shadowColor = '#ff4444';
+    ctx.shadowColor = '#c59dd9';
     ctx.shadowBlur  = 18;
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, '#ff5555');
-    g.addColorStop(1, '#cc2222');
+    g.addColorStop(0, '#f2eaf7');
+    g.addColorStop(1, '#c59dd9');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Highlight
-    ctx.fillStyle = 'rgba(255,180,180,0.22)';
+    ctx.fillStyle = 'rgba(242,234,247,0.22)';
     ctx.beginPath();
     ctx.roundRect(cx - hw + 3 * s, cy - hh + 3 * s, (PLAYER_W - 6) * s, (PLAYER_H / 2 - 2) * s, 5 * s);
     ctx.fill();
     // Eye
-    ctx.shadowColor = '#ffaadd'; ctx.shadowBlur = 6;
-    ctx.fillStyle   = '#ffaadd';
+    ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 6;
+    ctx.fillStyle   = '#ffffff';
     const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#100000';
+    ctx.fillStyle = '#2b0d3e';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
 
   } else {
     // Boss Visual Glow Effect
     if (ent.isGiant) {
-      ctx.shadowColor = '#ffaa00';
+      ctx.shadowColor = '#c59dd9';
       ctx.shadowBlur  = 25;
-      ctx.strokeStyle = '#ffcc88';
+      ctx.strokeStyle = '#f2eaf7';
       ctx.lineWidth   = 2;
       ctx.strokeRect(cx - hw - 2, cy - hh - 2, PLAYER_W * s + 4, PLAYER_H * s + 4);
     } else {
-      ctx.shadowColor = '#ff8800';
+      ctx.shadowColor = '#7a3f91';
       ctx.shadowBlur  = 16;
     }
     
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, ent.isGiant ? 'rgba(255,150,50,0.9)' : 'rgba(255,120,40,0.88)');
-    g.addColorStop(1, ent.isGiant ? 'rgba(200,100,20,0.9)' : 'rgba(200,80,30,0.88)');
+    g.addColorStop(0, ent.isGiant ? 'rgba(197,157,217,0.9)' : 'rgba(122,63,145,0.88)');
+    g.addColorStop(1, ent.isGiant ? 'rgba(43,13,62,0.9)' : 'rgba(43,13,62,0.88)');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Scanlines
-    ctx.fillStyle = 'rgba(25,0,0,0.12)';
+    ctx.fillStyle = 'rgba(13,4,20,0.12)';
     for (let sl = 0; sl < PLAYER_H * s; sl += 4 * s)
       ctx.fillRect(cx - hw, cy - hh + sl, PLAYER_W * s, 2 * s);
     // Red/Pink eye
-    ctx.shadowColor = ent.isGiant ? '#ffff00' : '#ffff33'; ctx.shadowBlur = 8 * s;
-    ctx.fillStyle   = ent.isGiant ? '#ffff88' : '#ffff66';
+    ctx.shadowColor = ent.isGiant ? '#f2eaf7' : '#c59dd9'; ctx.shadowBlur = 8 * s;
+    ctx.fillStyle   = ent.isGiant ? '#c59dd9' : '#7a3f91';
     const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3.2 * s, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = ent.isGiant ? '#ff0000' : '#880000';
+    ctx.fillStyle = ent.isGiant ? '#7a3f91' : '#2b0d3e';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
   }
 
@@ -1319,8 +1323,8 @@ function drawCharacter(ent, isPlayer) {
 
     ctx.save();
     ctx.globalAlpha = prog * (isPower ? 1.0 : 0.9);
-    ctx.strokeStyle = isPlayer ? (isPower ? '#ffff00' : '#ff8888') : '#ffaa44';
-    ctx.shadowColor = isPlayer ? (isPower ? '#ffaa00' : '#ff4444') : '#ff8800';
+    ctx.strokeStyle = isPlayer ? (isPower ? '#ffffff' : '#f2eaf7') : '#c59dd9';
+    ctx.shadowColor = isPlayer ? (isPower ? '#f2eaf7' : '#c59dd9') : '#7a3f91';
     ctx.shadowBlur  = isPower ? 20 : 14;
     ctx.lineWidth   = isPower ? 5 : 3;
     ctx.beginPath();
@@ -1563,18 +1567,18 @@ function gameLoop(ts) {
 
   clones.forEach(c => {
     drawCharacter(c, false);
-    drawHpBar(c, '#ff8800', '#cc5500');
+    drawHpBar(c, '#7a3f91', '#2b0d3e');
   });
 
   if (isBossPhase && giantEcho) {
     drawCharacter(giantEcho, false);
-    drawHpBar(giantEcho, '#ffaa00', '#cc8800');
+    drawHpBar(giantEcho, '#c59dd9', '#7a3f91');
   }
 
 
   if (!gameOver) {
     drawCharacter(player, true);
-    drawHpBar(player, '#ff4444', '#dd2222');
+    drawHpBar(player, '#f2eaf7', '#c59dd9');
   }
 
   drawParticles();
@@ -1617,13 +1621,13 @@ function gameLoop(ts) {
     const pulse = Math.abs(Math.sin(Date.now() / 110));
     ctx.save();
     ctx.globalAlpha = pulse * 0.22;
-    ctx.fillStyle   = '#ff6600';
+    ctx.fillStyle   = '#7a3f91';
     ctx.fillRect(0, 0, W, H);
     ctx.globalAlpha = pulse * 0.85;
     ctx.font        = 'bold 14px Orbitron, monospace';
-    ctx.fillStyle   = '#ff8822';
+    ctx.fillStyle   = '#f2eaf7';
     ctx.textAlign   = 'center';
-    ctx.shadowColor = '#ff5500';
+    ctx.shadowColor = '#c59dd9';
     ctx.shadowBlur  = 14;
     ctx.fillText('⚡ ECHO SPAWNING...', W / 2, 56);
     ctx.restore();
@@ -1632,7 +1636,7 @@ function gameLoop(ts) {
   // Wave / difficulty badge
   ctx.save();
   ctx.font      = '600 11px Inter, sans-serif';
-  ctx.fillStyle = 'rgba(255,110,110,0.5)';
+  ctx.fillStyle = 'rgba(197,157,217,0.5)';
   ctx.textAlign = 'right';
   ctx.fillText(`WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
   ctx.restore();
