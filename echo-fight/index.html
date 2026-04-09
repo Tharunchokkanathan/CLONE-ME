@@ -2527,6 +2527,11 @@ function showMenu(viewId) {
   const views = ['main-menu', 'settings-menu', 'load-menu', 'quit-menu', 'game-over-view'];
   const isMenuVisible = viewId !== 'none';
   
+  // Toggle 3D Zero-G Layer
+  if (typeof Menu3D !== 'undefined') {
+    Menu3D.setVisible(isMenuVisible);
+  }
+
   // Toggle UI elements
   const uiElements = [document.getElementById('title'), document.getElementById('hud'), document.getElementById('controls-hint')];
   uiElements.forEach(el => {
@@ -2536,6 +2541,7 @@ function showMenu(viewId) {
 
   views.forEach(v => {
     const el = document.getElementById(v);
+    if (!el) return;
     if (v === viewId) {
       el.classList.remove('hidden');
       el.style.opacity = '1';
@@ -2863,6 +2869,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize Persistent Settings
   Settings.init();
+
+  // Start the menu experience
+  showMenu('main-menu');
 });
 </script>
 </body>
