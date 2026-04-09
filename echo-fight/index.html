@@ -569,8 +569,59 @@
         <div class="overlay-title">CLONE ME</div>
         <div class="btn-stack">
           <button class="menu-btn" id="new-game-btn">New Game</button>
+          <button class="menu-btn" id="load-game-btn">Load Game</button>
+          <button class="menu-btn" id="settings-btn">Settings</button>
           <button class="menu-btn quit" id="quit-btn">Quit</button>
         </div>
+      </div>
+
+      <!-- SETTINGS MENU -->
+      <div id="settings-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size: 1.5rem;">SETTINGS</div>
+        <div class="settings-grid">
+          <div class="setting-item">
+            <span class="setting-label">Neon Intensity</span>
+            <input type="range" class="setting-control" id="neon-range" min="0" max="100" value="70">
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">Particle Density</span>
+            <select class="setting-control" id="particle-select">
+              <option value="low">Low (Performance)</option>
+              <option value="med" selected>Medium</option>
+              <option value="high">High (Ultra)</option>
+            </select>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="controls-grid" style="margin-top: 10px;">
+          <div class="ctrl-row">
+            <div class="ctrl-keys"><span class="key">A D</span> <span class="key">← →</span></div>
+            <span>Move</span>
+          </div>
+          <div class="ctrl-row">
+            <div class="ctrl-keys"><span class="key">W</span> <span class="key">SPC</span></div>
+            <span>Jump</span>
+          </div>
+        </div>
+        <button class="btn" id="settings-back-btn">BACK</button>
+      </div>
+
+      <!-- LOAD GAME MENU -->
+      <div id="load-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size: 1.5rem;">LAST SESSION</div>
+        <div id="load-content" class="stat-row">
+          <div class="stat-box">
+             <span class="stat-value" id="last-time">--</span>
+             <span class="stat-label">Last Time</span>
+          </div>
+          <div class="stat-box">
+             <span class="stat-value" id="last-kills">--</span>
+             <span class="stat-label">Last Kills</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div id="load-status" class="overlay-sub" style="color: #666;">No saved data found.</div>
+        <button class="btn" id="load-back-btn">BACK</button>
       </div>
 
       <!-- DISCONNECT SCREEN (QUIT) -->
@@ -2398,6 +2449,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!lastTime) requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
   });
 
+  document.getElementById('load-game-btn').addEventListener('click', () => {
+    loadSession();
+    showMenu('load-menu');
+  });
+
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    showMenu('settings-menu');
+  });
+
   document.getElementById('quit-btn').addEventListener('click', () => {
     showMenu('quit-menu');
     const final = document.getElementById('final-stats');
@@ -2410,6 +2470,18 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
   });
+
+  // Back Buttons
+  document.getElementById('settings-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
+  document.getElementById('load-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
+
+  // Settings Logic
+  if (document.getElementById('neon-range')) {
+    document.getElementById('neon-range').addEventListener('input', (e) => {
+      const val = e.target.value / 100;
+      document.getElementById('title').style.filter = `drop-shadow(0 0 ${15 * val}px #00ff4199)`;
+    });
+  }
 
   // Initial setup: Show main menu and hide game interface
   showMenu('main-menu');
