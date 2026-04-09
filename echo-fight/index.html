@@ -736,19 +736,26 @@ const H = canvas.height;  // 480
 
 // ── Fullscreen canvas scaling ──────────────────────────────────
 function scaleCanvas() {
-  const hudH    = document.getElementById('hud').offsetHeight;
-  const hintH   = document.getElementById('controls-hint').offsetHeight;
+  const hudEl   = document.getElementById('hud');
+  const hintEl  = document.getElementById('controls-hint');
+  const hudH    = hudEl ? hudEl.offsetHeight : 0;
+  const hintH   = hintEl ? hintEl.offsetHeight : 0;
   const availW  = window.innerWidth;
   const availH  = window.innerHeight - hudH - hintH;
   const scale   = Math.min(availW / W, availH / H);
-  canvas.style.width  = (W * scale) + 'px';
-  canvas.style.height = (H * scale) + 'px';
-  // Sync overlay to exact rendered canvas size
+  
+  const canv = document.getElementById('canvas');
+  if (canv) {
+    canv.style.width  = (W * scale) + 'px';
+    canv.style.height = (H * scale) + 'px';
+    canv._scale = scale;
+  }
+  
   const overlay = document.getElementById('overlay');
-  overlay.style.width  = (W * scale) + 'px';
-  overlay.style.height = (H * scale) + 'px';
-  // Keep mouse coords correct
-  canvas._scale = scale;
+  if (overlay) {
+    overlay.style.width  = (W * scale) + 'px';
+    overlay.style.height = (H * scale) + 'px';
+  }
 }
 scaleCanvas();
 window.addEventListener('resize', scaleCanvas);
@@ -2294,11 +2301,11 @@ function showMenu(viewId) {
   const isMenuVisible = viewId !== 'none';
   const overlay = document.getElementById('overlay');
 
-  // Show/hide overlay
-  if (isMenuVisible) overlay.classList.remove('hidden');
-  else overlay.classList.add('hidden');
+  if (overlay) {
+    if (isMenuVisible) overlay.classList.remove('hidden');
+    else overlay.classList.add('hidden');
+  }
 
-  // Toggle HUD visibility
   const uiElements = [document.getElementById('title'), document.getElementById('hud'), document.getElementById('controls-hint')];
   uiElements.forEach(el => {
     if (!el) return;
@@ -2306,12 +2313,19 @@ function showMenu(viewId) {
     else el.classList.remove('interface-hidden');
   });
 
-  // Switch active sub-view
   views.forEach(v => {
     const el = document.getElementById(v);
     if (!el) return;
-    if (v === viewId) { el.classList.remove('hidden'); el.style.opacity = '1'; }
-    else             { el.classList.add('hidden');    el.style.opacity = '0'; }
+    if (v === viewId) { 
+      el.classList.remove('hidden'); 
+      el.style.display = 'flex'; // Ensure it's not display:none
+      el.style.opacity = '1'; 
+    }
+    else { 
+      el.classList.add('hidden'); 
+      el.style.display = 'none'; // Safer toggle
+      el.style.opacity = '0'; 
+    }
   });
 }
 
@@ -2643,7 +2657,7 @@ function gameLoop(ts) {
 }
 
 // ── Boot ──────────────────────────────────────────────────────
-window.addEventListener('load', () => {
+(function initGame() {
 
   // 1. Show menu immediately - no dependencies
   showMenu('main-menu');
@@ -2736,8 +2750,7 @@ window.addEventListener('load', () => {
   document.getElementById('theme-neon').addEventListener('click', () => setTheme('neon'));
   document.getElementById('theme-ruin').addEventListener('click', () => setTheme('ruin'));
   setTheme(cfg.theme);
-
-});
+})();
 </script>
 </body>
 </html>
