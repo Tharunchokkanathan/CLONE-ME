@@ -370,6 +370,10 @@
           <span>Crimson Nova</span>
         </div>
         <div class="ctrl-row">
+          <div class="ctrl-keys"><span class="key">P</span></div>
+          <span>Pistol (50% DMG)</span>
+        </div>
+        <div class="ctrl-row">
           <div class="ctrl-keys"><span class="key">ESC</span></div>
           <span>Pause</span>
         </div>
@@ -385,6 +389,7 @@
     <div class="ctrl"><span class="key">ALT</span><span>Attack</span></div>
     <div class="ctrl"><span class="key">SHIFT</span><span>Dash</span></div>
     <div class="ctrl"><span class="key">E</span><span>Nova</span></div>
+    <div class="ctrl"><span class="key">P</span><span>Pistol</span></div>
   </div>
 </div>
 
@@ -455,6 +460,7 @@ function leftKey()    { return pressing('ArrowLeft',  'KeyA'); }
 function rightKey()   { return pressing('ArrowRight', 'KeyD'); }
 function dashKey()    { return pressing('ShiftLeft', 'ShiftRight'); }
 function novaKey()    { return pressing('KeyE'); }
+function pistolKey()  { return pressing('KeyP'); }
 
 // ── State ──────────────────────────────────────────────────────
 let player, clones, inputBuffer;
@@ -591,6 +597,7 @@ function createPlayer() {
     dashTimer: 0,
     novaEnergy: 0,
     maxNovaEnergy: 100,
+    pistolCooldown: 0,
   };
 }
 
@@ -609,6 +616,7 @@ function recordFrame() {
     attacking: attackKey(),
     dashing:   dashKey(),
     novaing:   novaKey(),
+    pistoling: pistolKey(),
   });
   if (inputBuffer.length > RECORD_FRAMES) inputBuffer.shift();
 }
@@ -1096,6 +1104,44 @@ function updatePlayer() {
       }
     }
 
+  // Pistol Logic
+  if (pistolKey() && player.pistolCooldown <= 0) {
+    let target = null;
+    let minDist = 400; // Pistol Range
+
+    clones.forEach(c => {
+      const d = Math.sqrt(Math.pow((player.x - c.x), 2) + Math.pow((player.y - c.y), 2));
+      if (d < minDist) { minDist = d; target = c; }
+    });
+    if (isBossPhase && giantEcho) {
+      const d = Math.sqrt(Math.pow((player.x - giantEcho.x), 2) + Math.pow((player.y - giantEcho.y), 2));
+      if (d < minDist) { target = giantEcho; }
+    }
+
+    if (target) {
+      player.pistolCooldown = 480; // 8s Cooldown on success
+      const dmg = Math.floor(target.hp * 0.5);
+      target.hp -= dmg;
+      target.flashTimer = 20;
+      triggerShake(12);
+
+      // Sparkling effect at target
+      const tx = target.x + (target.isGiant ? (PLAYER_W*GIANT_SIZE_MULT)/2 : PLAYER_W/2);
+      const ty = target.y + (target.isGiant ? (PLAYER_H*GIANT_SIZE_MULT)/2 : PLAYER_H/2);
+      spawnParticles(tx, ty, '#f2eaf7', 25, 6);
+      spawnParticles(tx, ty, '#c59dd9', 15, 4);
+
+      // Muzzle spark at player
+      spawnParticles(player.x + PLAYER_W/2 + player.facing * 20, player.y + PLAYER_H/2, '#ffffff', 8, 2);
+
+      addFloatText(tx, target.y - 20, `-${dmg} (PISTOL)`, '#f2eaf7');
+      addFloatText(player.x + PLAYER_W/2, player.y - 40, "BANG!", "#ffffff");
+    } else {
+      player.pistolCooldown = 40; // Short miss cooldown
+      addFloatText(player.x + PLAYER_W/2, player.y - 40, "OUT OF RANGE", "#777777");
+    }
+  }
+  if (player.pistolCooldown > 0) player.pistolCooldown -= spMult;
 
   if (player.attackTimer > 0) player.attackTimer--;
   else player.isAttacking = false;
