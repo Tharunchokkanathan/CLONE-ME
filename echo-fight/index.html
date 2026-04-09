@@ -36,11 +36,11 @@
       font-size: 1.8rem;
       font-weight: 900;
       letter-spacing: 0.12em;
-      background: linear-gradient(90deg, #103310, #4f772d, #ffffff);
+      background: linear-gradient(90deg, #00ff41, #00ffcc, #ffffff);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      filter: drop-shadow(0 0 10px #4f772d);
+      filter: drop-shadow(0 0 15px #00ff41aa);
     }
 
     #hud {
@@ -61,7 +61,8 @@
       font-size: 0.6rem;
       text-transform: uppercase;
       letter-spacing: 0.15em;
-      color: #90a955;
+      color: #00ff41;
+      opacity: 0.9;
     }
 
     .hud-value {
@@ -91,10 +92,11 @@
 
     #health-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4f772d, #90a955);
+      background: linear-gradient(90deg, #00ff41, #ffffff);
       border-radius: 5px;
       transition: width 0.15s ease, background 0.3s;
       width: 100%;
+      box-shadow: 0 0 10px #00ff41;
     }
 
     #echo-bar-wrap {
@@ -117,10 +119,11 @@
 
     #echo-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4a90e2, #2ecc71);
+      background: linear-gradient(90deg, #00ccff, #00ffcc);
       border-radius: 5px;
       transition: width 0.1s linear;
       width: 0%;
+      box-shadow: 0 0 10px #00ccff;
     }
 
     #nova-bar-wrap {
@@ -189,9 +192,9 @@
       display: flex;
       gap: 20px;
       font-size: 0.65rem;
-      color: #90a955;
+      color: #00ff41;
       letter-spacing: 0.08em;
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     .ctrl { display: flex; align-items: center; gap: 5px; }
@@ -649,7 +652,8 @@ function spawnClone() {
   if (inputBuffer.length < 15) return;
   const timeline = [...inputBuffer];
   const first    = timeline[0];
-  const cloneColors = ['#4a90e2', '#f1c40f', '#e91e63', '#e74c3c', '#9b59b6', '#00bcd4'];
+  const cloneColors = ['#ff00ff', '#ffff00', '#00ffff', '#ff3300', '#ff0066', '#ffffff'];
+
   const clone = {
     x: first.x, y: first.y,
     vx: 0, vy: 0,
@@ -1328,11 +1332,12 @@ function drawCharacter(ent, isPlayer) {
   if (!isPlayer && ent.flashTimer > 0) ctx.filter = 'brightness(3)';
 
   if (isPlayer) {
-    ctx.shadowColor = '#4f772d';
-    ctx.shadowBlur  = 12;
+    ctx.shadowColor = '#00ff41';
+    ctx.shadowBlur  = 16;
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, '#1b4d3e');
-    g.addColorStop(1, '#4f772d');
+    g.addColorStop(0, '#00ff41');
+    g.addColorStop(0.5, '#00ccff');
+    g.addColorStop(1, '#ffffff');
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
@@ -1359,12 +1364,12 @@ function drawCharacter(ent, isPlayer) {
       ctx.lineWidth   = 2;
       ctx.strokeRect(cx - hw - 2, cy - hh - 2, PLAYER_W * s + 4, PLAYER_H * s + 4);
     } else {
-      ctx.shadowColor = ent.color || '#444444';
-      ctx.shadowBlur  = 10;
+      ctx.shadowColor = ent.color || '#ffffff';
+      ctx.shadowBlur  = 14;
     }
     
     const g = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    g.addColorStop(0, ent.isGiant ? 'rgba(233,30,99,0.9)' : (ent.color || '#444444'));
+    g.addColorStop(0, ent.isGiant ? '#ff00ff' : (ent.color || '#ffffff'));
     g.addColorStop(1, '#000000');
     ctx.fillStyle = g;
     ctx.beginPath();
