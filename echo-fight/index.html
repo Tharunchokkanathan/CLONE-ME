@@ -6,7 +6,7 @@
   <title>CLONE ME — Battle Your Past Self</title>
   <meta name="description" content="A 2D real-time arena game where you fight clones of your own past actions. How long can you survive yourself?" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&family=Cinzel:wght@400;600;700&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -303,11 +303,6 @@
     #overlay {
       position: absolute;
       top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
       border-radius: 14px;
       background: url('menu-bg.jpg') center center / cover no-repeat;
       z-index: 10;
@@ -317,28 +312,36 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.52);
-      backdrop-filter: blur(2px);
-      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.2) 100%);
+      pointer-events: none;
     }
 
     #overlay.hidden { display: none; }
 
     .overlay-title {
-      font-family: 'Orbitron', monospace;
-      font-size: 2.2rem;
-      font-weight: 900;
-      text-align: center;
-      background: linear-gradient(90deg, #00ff41, #ff66b2, #00ccff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-family: 'Cinzel', serif;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5);
+      margin-bottom: -5px;
+      letter-spacing: 0.1em;
+    }
+
+    .overlay-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 400;
+      color: #e0e0e0;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
+      margin-bottom: 40px;
     }
 
     .overlay-sub {
       font-size: 0.8rem;
       color: #ff66b2;
-      text-align: center;
       max-width: 440px;
       line-height: 1.7;
       letter-spacing: 0.05em;
@@ -422,21 +425,20 @@
 
     /* --- New Menu Styles --- */
     .menu-view {
-      position: relative;
+      position: absolute;
       z-index: 1;
+      left: 10%;
+      bottom: 12%;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      width: 100%;
-      height: 100%;
+      align-items: flex-start;
+      justify-content: flex-end;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .menu-view.hidden {
       display: none;
       opacity: 0;
-      transform: scale(0.95);
+      transform: translateX(-20px);
       pointer-events: none;
     }
 
@@ -449,46 +451,41 @@
 
     .menu-btn {
       position: relative;
-      padding: 14px 32px;
-      font-family: 'Orbitron', monospace;
-      font-size: 0.9rem;
-      font-weight: 700;
-      letter-spacing: 0.15em;
+      padding: 8px 0;
+      font-family: 'Cinzel', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: #ffffff;
+      color: #d0d0d0;
       background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50px;
+      border: none;
       cursor: pointer;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.8);
+      text-align: left;
+      transition: all 0.2s ease;
+      text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
     }
 
     .menu-btn::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,102,178,0.15), transparent);
-      transition: 0.5s;
+      display: none;
     }
 
     .menu-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 102, 178, 0.7);
-      box-shadow: 0 0 24px rgba(255, 102, 178, 0.35), inset 0 0 15px rgba(255,102,178,0.05);
-      transform: translateX(8px);
-      letter-spacing: 0.22em;
+      color: #ffffff;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 1px 1px 5px rgba(0,0,0,0.9);
+      transform: translateX(6px);
+      background: transparent;
+      box-shadow: none;
     }
 
     .menu-btn:hover::before {
-      left: 100%;
+      display: none;
     }
 
     .menu-btn.quit:hover {
-      border-color: rgba(255, 49, 49, 0.7);
-      box-shadow: 0 0 24px rgba(255, 49, 49, 0.35);
+      color: #ffaaaa;
+      text-shadow: 0 0 12px rgba(255, 49, 49, 0.6), 1px 1px 5px rgba(0,0,0,0.9);
+      box-shadow: none;
     }
 
     .settings-grid {
@@ -497,6 +494,9 @@
       gap: 15px;
       width: 400px;
       margin-top: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 8px;
     }
 
     .setting-item {
@@ -652,6 +652,7 @@
       <!-- MAIN MENU -->
       <div id="main-menu" class="menu-view">
         <div class="overlay-title">CLONE ME</div>
+        <div class="overlay-subtitle">Battle Your Past Self</div>
         <div class="btn-stack">
           <button class="menu-btn" id="new-game-btn">New Game</button>
           <button class="menu-btn" id="load-game-btn">Load Game</button>
