@@ -920,49 +920,60 @@ function updatePlayer() {
 
 
 
-  // Attack — Alt key
-  if (attackKey() && player.attackCooldown <= 0) {
-    player.isAttacking    = true;
-    player.attackTimer    = ATTACK_DUR;
-    player.attackCooldown = ATTACK_CD;
-    spawnParticles(
-      player.x + PLAYER_W / 2 + player.facing * 30,
-      player.y + PLAYER_H / 2,
-      '#55aaff', 6, 2
-    );
-
-    // Hit clones
-    clones.forEach(c => {
-      const ax = player.x + PLAYER_W / 2 + player.facing * (ATTACK_RANGE / 2);
-      const cx = c.x + PLAYER_W / 2;
-      const py = player.y + PLAYER_H / 2;
-      const cy = c.y + PLAYER_H / 2;
-      if (Math.abs(ax - cx) < ATTACK_RANGE && Math.abs(py - cy) < PLAYER_H + 10) {
-        c.hp -= ATTACK_DMG;
-        c.flashTimer = 10;
-        addFloatText(c.x + PLAYER_W / 2, c.y - 16, `-${ATTACK_DMG}`, '#44ddff');
-        spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#aa44ff', 12, 3.5);
-        triggerShake(3);
-      }
-    });
-
-    // Hit Giant Echo
-    if (isBossPhase && giantEcho) {
-      const s = GIANT_SIZE_MULT;
-      const ax = player.x + PLAYER_W / 2 + player.facing * (ATTACK_RANGE / 2);
-      const gx = giantEcho.x + (PLAYER_W * s) / 2;
-      const py = player.y + PLAYER_H / 2;
-      const gy = giantEcho.y + (PLAYER_H * s) / 2;
+    // Attack — Alt key
+    if (attackKey() && player.attackCooldown <= 0) {
+      player.isAttacking    = true;
+      player.attackTimer    = ATTACK_DUR;
+      player.attackCooldown = ATTACK_CD;
       
-      if (Math.abs(ax - gx) < ATTACK_RANGE * s * 0.7 && Math.abs(py - gy) < (PLAYER_H * s) / 2 + 20) {
-        giantEcho.hp -= ATTACK_DMG;
-        giantEcho.flashTimer = 10;
-        addFloatText(giantEcho.x + (PLAYER_W * s) / 2, giantEcho.y - 20, `-${ATTACK_DMG}`, '#ff33ff');
-        spawnParticles(giantEcho.x + (PLAYER_W * s) / 2, giantEcho.y + (PLAYER_H * s) / 2, '#ff33ff', 15, 4);
-        triggerShake(5);
+      const isPower = player.hasPowerSword && player.powerHits > 0;
+      if (isPower) {
+         player.powerHits--;
+         if (player.powerHits <= 0) player.hasPowerSword = false;
+      }
+      
+      const baseMult = player.baseDmgMult || 1.0;
+      const currentDmg = Math.floor(isPower ? (ATTACK_DMG * baseMult) * 5 : (ATTACK_DMG * baseMult));
+      const currentRange = isPower ? ATTACK_RANGE * 1.5 : ATTACK_RANGE;
+
+      spawnParticles(
+        player.x + PLAYER_W / 2 + player.facing * 30,
+        player.y + PLAYER_H / 2,
+        isPower ? '#ffcc00' : '#55aaff', 6, 2
+      );
+
+      // Hit clones
+      clones.forEach(c => {
+        const ax = player.x + PLAYER_W / 2 + player.facing * (currentRange / 2);
+        const cx = c.x + PLAYER_W / 2;
+        const py = player.y + PLAYER_H / 2;
+        const cy = c.y + PLAYER_H / 2;
+        if (Math.abs(ax - cx) < currentRange && Math.abs(py - cy) < PLAYER_H + 10) {
+          c.hp -= currentDmg;
+          c.flashTimer = 10;
+          addFloatText(c.x + PLAYER_W / 2, c.y - 16, `-${currentDmg}`, isPower ? '#ffff00' : '#44ddff');
+          spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, isPower ? '#ffaaaa' : '#aa44ff', 12, 3.5);
+          triggerShake(isPower ? 6 : 3);
+        }
+      });
+
+      // Hit Giant Echo
+      if (isBossPhase && giantEcho) {
+        const s = GIANT_SIZE_MULT;
+        const ax = player.x + PLAYER_W / 2 + player.facing * (currentRange / 2);
+        const gx = giantEcho.x + (PLAYER_W * s) / 2;
+        const py = player.y + PLAYER_H / 2;
+        const gy = giantEcho.y + (PLAYER_H * s) / 2;
+        
+        if (Math.abs(ax - gx) < currentRange * s * 0.7 && Math.abs(py - gy) < (PLAYER_H * s) / 2 + 20) {
+          giantEcho.hp -= currentDmg;
+          giantEcho.flashTimer = 10;
+          addFloatText(giantEcho.x + (PLAYER_W * s) / 2, giantEcho.y - 20, `-${currentDmg}`, isPower ? '#ffff00' : '#ff33ff');
+          spawnParticles(giantEcho.x + (PLAYER_W * s) / 2, giantEcho.y + (PLAYER_H * s) / 2, isPower ? '#ffcccc' : '#ff33ff', 15, 4);
+          triggerShake(isPower ? 10 : 5);
+        }
       }
     }
-  }
 
 
   if (player.attackTimer > 0) player.attackTimer--;
@@ -1355,6 +1366,14 @@ function gameLoop(ts) {
           y: giantEcho.y + (PLAYER_H * GIANT_SIZE_MULT) / 2,
           w: 20, h: 20, vy: -12, bounce: 3
         });
+
+        // Boost Player Stats (20% Max HP, 10% Strength)
+        player.maxHp = Math.floor(player.maxHp * 1.2);
+        player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.2));
+        player.baseDmgMult = (player.baseDmgMult || 1.0) * 1.1;
+        
+        addFloatText(player.x + PLAYER_W / 2, player.y - 50, "MAX HP +20%", "#44ff44");
+        addFloatText(player.x + PLAYER_W / 2, player.y - 35, "STRENGTH +10%", "#ff8844");
         
         giantEcho = null;
         isBossPhase = false;
