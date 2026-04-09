@@ -180,6 +180,33 @@
       box-shadow: 0 0 10px #00ccff;
     }
 
+    #gravity-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      flex: 1;
+      max-width: 160px;
+    }
+
+    #gravity-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(0,255,102,0.08);
+      border-radius: 5px;
+      border: 1px solid rgba(0,255,102,0.15);
+      overflow: hidden;
+    }
+
+    #gravity-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff66, #ffffff);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      width: 0%;
+      box-shadow: 0 0 12px rgba(0,255,102,0.7);
+    }
+
     canvas {
       display: block;
       border-radius: 14px;
@@ -362,6 +389,11 @@
       <div class="hud-label">🎯 Pistol Reload</div>
       <div id="pistol-bar-bg"><div id="pistol-bar-fill"></div></div>
     </div>
+
+    <div id="gravity-bar-wrap">
+      <div class="hud-label">🌌 Gravity Collapse</div>
+      <div id="gravity-bar-bg"><div id="gravity-bar-fill"></div></div>
+    </div>
   </div>
 
   <div style="position:relative;">
@@ -479,11 +511,22 @@ const GIANT_HP_MULT      = 1.2; // Extra health bonus for the boss
 const GIANT_SPEED_MULT   = 0.65;
 const GIANT_DMG_MULT     = 1.5;
 
+const GRAVITY_RADIUS     = 180;
+const GRAVITY_DURATION   = 180; // 3 seconds
+const GRAVITY_COOLDOWN   = 720; // 12 seconds
+
+
 
 // ── Input map ─────────────────────────────────────────────────
 const keys = {};
 document.addEventListener('keydown', e => { keys[e.code] = true;  });
 document.addEventListener('keyup',   e => { keys[e.code] = false; });
+let mouseX = 0, mouseY = 0;
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+});
 function pressing(...codes) { return codes.some(c => keys[c]); }
 function attackKey()  { return pressing('AltLeft', 'AltRight'); }
 function jumpKey()    { return pressing('ArrowUp', 'KeyW', 'Space'); }
@@ -492,6 +535,7 @@ function rightKey()   { return pressing('ArrowRight', 'KeyD'); }
 function dashKey()    { return pressing('ShiftLeft', 'ShiftRight'); }
 function novaKey()    { return pressing('KeyE'); }
 function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
+function gravityKey() { return pressing('KeyG'); }
 
 // ── State ──────────────────────────────────────────────────────
 let player, clones, inputBuffer;
@@ -504,6 +548,7 @@ let droppedWeapons = [];
 let isBossPhase = false;
 let spawnPaused = false;
 let shockwaves = [];
+let gravitySpirals = [];
 let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
@@ -684,6 +729,13 @@ function updateClone(c) {
   if (c.flashTimer > 0) c.flashTimer--;
 
   const sp = c.speedMult;
+
+  // If trapped in anti-gravity, bypass normal AI
+  if (c.isTrapped) {
+      c.trail.push({ x: c.x, y: c.y });
+      if (c.trail.length > 8) c.trail.shift();
+      return;
+  }
 
   if (c.frameIdx < c.timeline.length) {
     // Replay recorded inputs
@@ -901,6 +953,13 @@ function updateGiantEcho(g) {
   if (g.attackCooldown > 0) g.attackCooldown -= 1 * globalTimeScale;
   if (g.attackTimer > 0)    g.attackTimer -= 1 * globalTimeScale; else g.isAttacking = false;
 
+  // If trapped in anti-gravity, skip physics but keep trail
+  if (g.isTrapped) {
+      g.trail.push({ x: g.x, y: g.y });
+      if (g.trail.length > 10) g.trail.shift();
+      return;
+  }
+
   // Physics
   g.vy += GRAVITY * globalTimeScale;
   g.x  += g.vx * globalTimeScale;
@@ -1048,6 +1107,15 @@ function updatePlayer() {
     }
   }
   if (player.dashCooldown > 0) player.dashCooldown -= spMult;
+
+  // Activation check
+  if (gravityKey() && (player.gravityCooldown || 0) <= 0) {
+    player.gravityCooldown = GRAVITY_COOLDOWN;
+    spawnGravitySpiral(mouseX, mouseY);
+    triggerShake(10);
+    addFloatText(player.x + PLAYER_W/2, player.y - 40, "ANTI-GRAVITY ACTIVATED!", "#00ff66");
+  }
+  if (player.gravityCooldown > 0) player.gravityCooldown -= spMult;
 
   // Nova buildup
   player.novaEnergy = Math.min(player.maxNovaEnergy, player.novaEnergy + 0.05 * spMult);
@@ -1458,6 +1526,9 @@ function updateHUD() {
   document.getElementById('pistol-bar-fill').style.background = pistolPct >= 100 
     ? 'linear-gradient(90deg, #00ffff, #ffffff)' 
     : 'linear-gradient(90deg, #0066ff, #00ccff)';
+
+  const gravityPct = Math.max(0, (1 - (player.gravityCooldown || 0) / GRAVITY_COOLDOWN) * 100);
+  document.getElementById('gravity-bar-fill').style.width = Math.min(100, gravityPct) + '%';
 }
 
 // ── Game-Over overlay ────────────────────────────────────────
@@ -1494,6 +1565,7 @@ function startGame() {
   floatingTexts= [];
   shockwaves   = [];
   droppedWeapons = [];
+  gravitySpirals = [];
   shakeAmt     = 0; shakeX = 0; shakeY = 0;
   clonesKilled = 0;
   survivalTime = 0;
@@ -1629,6 +1701,7 @@ function gameLoop(ts) {
       setTimeout(showGameOver, 1300);
     }
 
+    updateGravitySpirals();
     updateParticles();
     updateFloatTexts();
     updateHUD();
@@ -1637,6 +1710,7 @@ function gameLoop(ts) {
 
   // ── Draw ──
   drawArena();
+  drawGravitySpirals();
 
   clones.forEach(c => {
     drawCharacter(c, false);
