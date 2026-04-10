@@ -388,21 +388,13 @@
       justify-content: center;
       gap: 18px;
       z-index: 10;
-      background: transparent; /* Letting shards show through */
-      transform-style: preserve-3d;
-      overflow: hidden;
+      background: rgba(4,2,12,0.92); /* Solid dark 2D background */
+      backdrop-filter: none;
     }
 
     #overlay.hidden { display: none; }
 
-    #menu-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 9;
-      pointer-events: none;
-    }
-    #menu-canvas.hidden { display: none; }
+
 
     .overlay-title {
       position: relative;
@@ -430,8 +422,6 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      transform: translateZ(80px); /* Deepest layer */
-      transition: transform 0.1s ease-out;
     }
       animation: title-gradient 4s ease-in-out infinite alternate;
       text-shadow: none;
@@ -534,17 +524,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 25px;
-      width: 380px;
-      height: fit-content;
-      padding: 50px 20px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(0, 255, 255, 0.15);
-      border-radius: 24px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 0 30px rgba(0,255,255,0.05);
-      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      transform-style: preserve-3d;
+      gap: 20px;
+      width: 100%;
+      height: 100%;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .menu-view.hidden {
       display: none;
@@ -558,28 +541,25 @@
       flex-direction: column;
       gap: 14px;
       width: 260px;
-      transform: translateZ(40px); /* Middle layer */
-      transition: transform 0.1s ease-out;
     }
 
     .menu-btn {
       position: relative;
-      padding: 14px 40px;
+      padding: 14px 32px;
       font-family: 'Orbitron', monospace;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
+      color: #e0e0ff;
+      background: rgba(10, 5, 25, 0.5);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 50px;
       cursor: pointer;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      text-shadow: 0 0 10px rgba(0,255,255,0.2);
-      transform: translateZ(50px);
-      margin: 0 10px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      text-shadow: 0 0 12px rgba(0,255,255,0.3);
+      backdrop-filter: blur(8px);
     }
 
     .menu-btn::before {
@@ -811,9 +791,8 @@
 
   <div id="canvas-wrap">
     <canvas id="canvas" width="820" height="480"></canvas>
-    <canvas id="menu-canvas" width="820" height="480"></canvas>
 
-    <!-- 2D Overlay Menu (always shows first, 3D is enhancement) -->
+    <!-- 2D Overlay Menu -->
     <div id="overlay">
       <!-- MAIN MENU -->
       <div id="main-menu" class="menu-view">
@@ -1037,11 +1016,6 @@ function scaleCanvas() {
     overlay.style.height = (H * scale) + 'px';
   }
   
-  const menuCanvas = document.getElementById('menu-canvas');
-  if (menuCanvas) {
-    menuCanvas.style.width  = (W * scale) + 'px';
-    menuCanvas.style.height = (H * scale) + 'px';
-  }
 }
 scaleCanvas();
 window.addEventListener('resize', scaleCanvas);
@@ -3340,202 +3314,14 @@ function gameLoop(ts) {
   requestAnimationFrame(gameLoop);
 }
 
-// ── 3D Menu Animation System (Neural Clone Web) ─────────────
-const menu3D = {
-  active: false,
-  canvas: null,
-  ctx: null,
-  nodes: [],
-  edges: [],
-  rotX: 0, rotY: 0, rotZ: 0,
-  tiltX: 0, tiltY: 0,
-  mouseInfluenceX: 0, mouseInfluenceY: 0,
-  time: 0,
-  NUM_NODES: 80,
-  RADIUS: 180,
-  MAX_EDGE_DIST: 120,
-
-  init() {
-    this.canvas = document.getElementById('menu-canvas');
-    if (!this.canvas) return;
-    this.ctx = this.canvas.getContext('2d');
-    this.generateConstellation();
-
-    // Mouse tilt listener on document (works over the overlay)
-    document.addEventListener('mousemove', e => {
-      const rect = this.canvas.getBoundingClientRect();
-      if (rect.width === 0) return;
-      this.mouseInfluenceX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      this.mouseInfluenceY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-    });
-  },
-
-  generateCrystallineField() {
-    this.nodes = [];
-    this.NUM_NODES = 25; // Fewer, larger shards for minimalism
-    for (let i = 0; i < this.NUM_NODES; i++) {
-      this.nodes.push({
-        x: (Math.random() - 0.5) * 1200,
-        y: (Math.random() - 0.5) * 800,
-        z: (Math.random() - 0.5) * 600,
-        size: 40 + Math.random() * 80,
-        points: this.createShardPoints(),
-        rotX: Math.random() * Math.PI * 2,
-        rotY: Math.random() * Math.PI * 2,
-        rotVel: (Math.random() - 0.5) * 0.01,
-        hue: Math.random() > 0.5 ? 180 : 300,
-        alpha: 0.05 + Math.random() * 0.1
-      });
-    }
-  },
-
-  createShardPoints() {
-    const pts = [];
-    const num = 3 + Math.floor(Math.random() * 3);
-    for(let i=0; i<num; i++) {
-      const ang = (i/num) * Math.PI * 2;
-      const r = 0.5 + Math.random() * 0.5;
-      pts.push({ x: Math.cos(ang) * r, y: Math.sin(ang) * r });
-    }
-    return pts;
-  },
-
-  project(x, y, z) {
-    let cx = Math.cos(this.rotX), sx = Math.sin(this.rotX);
-    let cy = Math.cos(this.rotY), sy = Math.sin(this.rotY);
-    let cz = Math.cos(this.rotZ), sz = Math.sin(this.rotZ);
-
-    let x1 = x * cy + z * sy;
-    let z1 = -x * sy + z * cy;
-    let y1 = y * cx - z1 * sx;
-    let z2 = y * sx + z1 * cx;
-    let x2 = x1 * cz - y1 * sz;
-    let y2 = x1 * sz + y1 * cz;
-
-    const fov = 600;
-    const scale = fov / (fov + z2 + 300);
-    return {
-      sx: x2 * scale + this.canvas.width / 2,
-      sy: y2 * scale + this.canvas.height / 2,
-      scale,
-      z: z2
-    };
-  },
-
-  start() {
-    if (this.active) return;
-    this.active = true;
-    this.generateCrystallineField(); // Initialize shards
-    this.canvas.classList.remove('hidden');
-    this.loop();
-  },
-
-  stop() {
-    this.active = false;
-    if (this.canvas) this.canvas.classList.add('hidden');
-  },
-
-  loop() {
-    if (!this.active) return;
-    this.update();
-    this.draw();
-    requestAnimationFrame(() => this.loop());
-  },
-
-  update() {
-    this.time += 0.016;
-    this.tiltX += (this.mouseInfluenceY * 0.35 - this.tiltX) * 0.04;
-    this.tiltY += (this.mouseInfluenceX * 0.35 - this.tiltY) * 0.04;
-
-    this.rotX = this.tiltX + Math.sin(this.time * 0.1) * 0.05;
-    this.rotY += 0.002 + this.tiltY * 0.01;
-
-    const overlay = document.getElementById('overlay');
-    if (overlay && this.active) {
-      const rx = (this.tiltX * 28).toFixed(2); // Higher sensitivity
-      const ry = (-this.tiltY * 28).toFixed(2);
-      overlay.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-      
-      const sx = (-this.tiltY * 35).toFixed(1) + 'px';
-      const sy = (this.tiltX * 35 + 8).toFixed(1) + 'px';
-      overlay.style.setProperty('--shadow-x', sx);
-      overlay.style.setProperty('--shadow-y', sy);
-    }
-
-    // Update individual shard rotations
-    this.nodes.forEach(n => {
-      n.rotX += n.rotVel;
-      n.rotY += n.rotVel * 1.2;
-    });
-  },
-
-  draw() {
-    const c = this.ctx;
-    const w = this.canvas.width, h = this.canvas.height;
-    c.clearRect(0, 0, w, h);
-
-    const bgGrad = c.createLinearGradient(0, 0, 0, h);
-    bgGrad.addColorStop(0, '#04020c');
-    bgGrad.addColorStop(1, '#0a0518');
-    c.fillStyle = bgGrad;
-    c.fillRect(0, 0, w, h);
-
-    // Project and Draw Shards
-    const projected = this.nodes.map(n => ({...this.project(n.x, n.y, n.z), node: n}));
-    projected.sort((a,b) => b.z - a.z); // Depth sorting
-
-    projected.forEach(p => {
-      const n = p.node;
-      c.save();
-      c.translate(p.sx, p.sy);
-      c.scale(p.scale, p.scale);
-      c.rotate(n.rotX + n.rotY);
-
-      c.beginPath();
-      n.points.forEach((pt, i) => {
-        const px = pt.x * n.size;
-        const py = pt.y * n.size;
-        if (i === 0) c.moveTo(px, py);
-        else c.lineTo(px, py);
-      });
-      c.closePath();
-
-      const shardGrad = c.createLinearGradient(-n.size, -n.size, n.size, n.size);
-      shardGrad.addColorStop(0, `hsla(${n.hue}, 100%, 70%, ${n.alpha * 1.5})`);
-      shardGrad.addColorStop(1, `hsla(${n.hue}, 100%, 40%, 0)`);
-      
-      c.fillStyle = shardGrad;
-      c.fill();
-      c.strokeStyle = `hsla(${n.hue}, 100%, 80%, ${n.alpha * 2})`;
-      c.lineWidth = 1;
-      c.stroke();
-      c.restore();
-    });
-
-    // Final Vignette
-    const vig = c.createRadialGradient(w/2, h/2, w*0.3, w/2, h/2, w*0.8);
-    vig.addColorStop(0, 'transparent');
-    vig.addColorStop(1, 'rgba(0,0,0,0.7)');
-    c.fillStyle = vig;
-    c.fillRect(0, 0, w, h);
-  }
-};
-};
-
 // ── Boot ──────────────────────────────────────────────────────
 (function initGame() {
-
-  // Init 3D menu animation
-  menu3D.init();
-  menu3D.start();
-
   // 1. Show menu immediately - no dependencies
   showMenu('main-menu');
 
   // 2. NEW GAME
   document.getElementById('new-game-btn').addEventListener('click', () => {
     SFX.init();
-    menu3D.stop();
     showMenu('none');
     scaleCanvas();
     startGame();
@@ -3548,7 +3334,6 @@ const menu3D = {
     const raw = localStorage.getItem('echo_fight_save');
     if (raw) {
       const data = JSON.parse(raw);
-      menu3D.stop();
       showMenu('none');
       scaleCanvas();
       startGame(data);
