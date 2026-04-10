@@ -987,8 +987,20 @@ function scaleCanvas() {
 scaleCanvas();
 window.addEventListener('resize', scaleCanvas);
 
-// Prevent Alt-key from opening browser menus
-window.addEventListener('keydown', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); });
+// Prevent Alt-key from opening browser menus, and bind Escape to pause/resume
+window.addEventListener('keydown', e => { 
+  if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); 
+  if (e.code === 'Escape') {
+    if (gameRunning && !gameOver) {
+      gameRunning = false;
+      showMenu('main-menu');
+    } else if (!gameRunning && !gameOver) {
+      showMenu('none');
+      gameRunning = true;
+      requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
+    }
+  }
+});
 
 // ── Arena ──────────────────────────────────────────────────────
 const ARENA = {
@@ -1211,6 +1223,8 @@ function createPlayer() {
     pistolCooldown: 0,
     thunderCooldown: 0,
     freezeTimer: 0,
+    gravityCooldown: 0,
+    flameCooldown: 0, isFlaming: false, flameDuration: 0
   };
 }
 
@@ -2909,6 +2923,9 @@ function startGame(savedData = null) {
   fireParticles = [];
   bossOrbs = [];
   laserBeams = [];
+  activeBosses = [];
+  isBossPhase = false;
+  spawnPaused = false;
   shakeAmt     = 0; shakeX = 0; shakeY = 0;
   
   if (savedData) {
