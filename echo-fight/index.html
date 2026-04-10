@@ -1041,7 +1041,7 @@ const ATTACK_DUR         = 18;
 const ATTACK_CD          = 28;
 const CLONE_ATTACK_RANGE = 52;
 const CLONE_ATTACK_CD    = 45;
-const CLONE_HP           = 60;
+const CLONE_HP           = 50;
 
 // ── Boss Phase ────────────────────────────────────────────────
 const MERGE_THRESHOLD    = 4;
@@ -1697,7 +1697,7 @@ function spawnLevelBosses() {
   const createBoss = (x, y, isSuperior = false) => {
     const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
     const hpMult = isSuperior ? 3 : 1.1;
-    const calculatedHp = currentLevel === 1 ? 50 : 1500 * hpMult * (1 + currentLevel * 0.22);
+    const calculatedHp = 350 * hpMult * (1 + (currentLevel - 1) * 0.5);
     return {
       x, y, vx: 0, vy: 0, facing: 1, onGround: false,
       isGiant: true, isSuperior,
