@@ -1390,7 +1390,8 @@ function mergeClonesIntoGiant() {
     trail: [], jumpsLeft: 0, dashCooldown: 0, 
     isTrapped: false,
     timeline: clones[0].timeline || [],
-    isSlamming: false, slamState: 0, slamTimer: 0, shockwaveTimer: 300, phase: 1
+    isSlamming: false, slamState: 0, slamTimer: 0, shockwaveTimer: 300, phase: 1,
+    attackTimer: 0, attackCooldown: 0, isAttacking: false
   });
   
   clones.forEach(c => spawnParticles(c.x + PLAYER_W/2, c.y + PLAYER_H/2, '#aa33ff', 10, 3));
@@ -1659,6 +1660,7 @@ function spawnLevelBosses() {
       alpha: 1, color: isSuperior ? '#ffd700' : '#ff33ff',
       trail: [],
       jumpsLeft: 0, dashCooldown: 0, isTrapped: false,
+      attackTimer: 0, attackCooldown: 0, isAttacking: false,
       timeline: [] // Bosses have no path initially
     };
   };
