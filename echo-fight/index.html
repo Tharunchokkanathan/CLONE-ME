@@ -1240,7 +1240,11 @@ function createPlayer() {
 function damagePlayer(amount, sourceX) {
   if (player.invincible > 0) return;
   if (player.isShielded && player.shieldEnergy > 0) {
-    player.shieldEnergy = Math.max(0, player.shieldEnergy - 25);
+    player.shieldEnergy -= 25;
+    if (player.shieldEnergy <= 0) {
+      player.shieldEnergy = 0;
+      player.shieldOverheated = true;
+    }
     player.invincible = 20;
     spawnParticles(player.x + PLAYER_W/2, player.y + PLAYER_H/2, '#00ffff', 12, 3);
     addFloatText(player.x + PLAYER_W/2, player.y - 15, "BLOCKED", "#00ffff");
@@ -1736,10 +1740,16 @@ function updatePlayer() {
   const spMult = globalTimeScale;
 
   // Kinetic Shield Logic
-  if (shieldKey() && player.shieldEnergy > 0) {
+  if (player.shieldEnergy <= 0) {
+    player.shieldOverheated = true;
+  } else if (player.shieldEnergy >= 40) {
+    player.shieldOverheated = false; // Recovered enough to use again
+  }
+
+  if (shieldKey() && !player.shieldOverheated && player.shieldEnergy > 0) {
     player.isShielded = true;
     player.shieldEnergy -= 0.6 * spMult; // Drain
-    if (player.shieldEnergy < 0) player.shieldEnergy = 0;
+    if (player.shieldEnergy <= 0) player.shieldEnergy = 0;
   } else {
     player.isShielded = false;
     player.shieldEnergy = Math.min(player.maxShield, player.shieldEnergy + 0.18 * spMult); // Regen
@@ -2686,6 +2696,13 @@ function updateHUD() {
   const shieldFill = document.getElementById('shield-bar-fill');
   if (shieldFill && player) {
     shieldFill.style.width = (player.shieldEnergy / player.maxShield * 100) + '%';
+    if (player.shieldOverheated) {
+       shieldFill.style.background = 'linear-gradient(90deg, #ff3300, #ff8800)';
+       shieldFill.style.boxShadow = '0 0 10px rgba(255,51,0,0.7)';
+    } else {
+       shieldFill.style.background = 'linear-gradient(90deg, #00ffff, #ffffff)';
+       shieldFill.style.boxShadow = '0 0 10px rgba(0,255,255,0.7)';
+    }
   }
   
   // Level display update
