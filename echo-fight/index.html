@@ -234,6 +234,7 @@
     }
 
 
+
     #flame-bar-wrap {
       display: flex;
       flex-direction: column;
@@ -741,6 +742,7 @@
     </div>
     
 
+
     <div id="flame-bar-wrap">
       <div class="hud-label"><span>🔥 Flame</span> <span id="timer-flame" class="cooldown-timer">READY</span></div>
       <div id="flame-bar-bg"><div id="flame-bar-fill"></div></div>
@@ -751,6 +753,7 @@
   <!-- Key Legend Box -->
   <div id="controls-legend" class="interface-hidden">
     <div class="legend-item"><span class="legend-key">F</span> Flame Thrower</div>
+
     <div class="legend-item"><span class="legend-key">G</span> Anti-Gravity (Tornado)</div>
     <div class="legend-item"><span class="legend-key">E</span> Crimson Nova</div>
     <div class="legend-item"><span class="legend-key">P</span> Precision Pistol</div>
@@ -1051,6 +1054,7 @@ const GRAVITY_RADIUS     = 180;
 const GRAVITY_DURATION   = 180; // 3 seconds
 const GRAVITY_COOLDOWN   = 290; // Duration + ~1.8 seconds
 const FREEZE_DURATION    = 180; // 3 seconds
+
 const FLAME_DURATION     = 300;  // 5 seconds of fire
 const FLAME_COOLDOWN     = 110; // ~1.8 seconds
 const FLAME_RANGE        = 240;
@@ -1077,6 +1081,7 @@ function dashKey()    { return pressing('ShiftLeft', 'ShiftRight'); }
 function novaKey()    { return pressing('KeyE'); }
 function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
 function gravityKey() { return pressing('KeyG'); }
+
 function flameKey()   { return pressing('KeyF'); }
 function shieldKey()  { return pressing('CapsLock', 'KeyC', 'c', 'C'); }
 
@@ -1095,6 +1100,7 @@ let isBossPhase = false;
 let spawnPaused = false;
 let shockwaves = [];
 let gravitySpirals = [];
+
 let screenFlash = 0;
 let fireParticles = [];
 let bossOrbs = [];
@@ -1792,6 +1798,7 @@ function updatePlayer() {
       updateFlameLogic(spMult);
     }
   }
+
 
 
   // Activation check
@@ -2694,6 +2701,7 @@ function updateHUD() {
   updateBar('nova-bar-fill',     'timer-nova',    player.novaEnergy, player.maxNovaEnergy, true);
   updateBar('pistol-bar-fill',   'timer-pistol',  player.pistolCooldown, 480);
   updateBar('gravity-bar-fill',  'timer-gravity', player.gravityCooldown, 110);
+
   updateBar('flame-bar-fill',    'timer-flame',    player.flameCooldown, 110);
 }
 
@@ -2816,7 +2824,7 @@ function startGame(savedData = null) {
   shockwaves   = [];
   droppedWeapons = [];
   gravitySpirals = [];
-  fireParticles = [];
+
   bossOrbs = [];
   laserBeams = [];
   activeBosses = [];
@@ -3034,6 +3042,7 @@ function gameLoop(ts) {
     }
 
     updateGravitySpirals();
+
     updateFireParticles();
     updateBossProjectiles();
     if (screenFlash > 0) screenFlash -= 1 * globalTimeScale;
@@ -3130,6 +3139,7 @@ function gameLoop(ts) {
     ctx.fillText(msg, W / 2, H - 20);
     ctx.restore();
   }
+
 
   // Echo warning pulse
   if (nextEchoTimer < 1000 && !gameOver && inputBuffer.length >= 15) {
