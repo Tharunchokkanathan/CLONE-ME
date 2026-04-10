@@ -388,7 +388,9 @@
       justify-content: center;
       gap: 18px;
       z-index: 10;
-      background: rgba(4,2,12,0.45);
+      background: transparent;
+      perspective: 800px;
+      overflow: hidden;
     }
 
     #overlay.hidden { display: none; }
@@ -401,6 +403,25 @@
       pointer-events: none;
     }
     #menu-canvas.hidden { display: none; }
+
+    /* Depth layers for parallax */
+    .depth-layer {
+      transition: transform 0.08s ease-out;
+      will-change: transform;
+    }
+    .menu-view {
+      transform-style: preserve-3d;
+    }
+
+    .menu-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(0, 255, 255, 0.5);
+      margin-top: -8px;
+      text-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    }
 
     .overlay-title {
       position: relative;
@@ -802,8 +823,9 @@
     <div id="overlay">
       <!-- MAIN MENU -->
       <div id="main-menu" class="menu-view">
-        <div class="overlay-title">CLONE ME</div>
-        <div class="btn-stack">
+        <div class="overlay-title depth-layer" data-depth="0.06">CLONE ME</div>
+        <div class="menu-subtitle depth-layer" data-depth="0.04">Battle Your Past Self</div>
+        <div class="btn-stack depth-layer" data-depth="0.025">
           <button class="menu-btn" id="new-game-btn">New Game</button>
           <button class="menu-btn" id="load-game-btn">Load Game</button>
           <button class="menu-btn" id="settings-btn">Settings</button>
@@ -3325,54 +3347,92 @@ function gameLoop(ts) {
   requestAnimationFrame(gameLoop);
 }
 
-// ── 3D Menu Animation System (Neural Clone Web) ─────────────
+// ── 3D Menu Animation System (Neural Clone Web + Parallax Depth) ──
 const menu3D = {
   active: false,
   canvas: null,
   ctx: null,
   nodes: [],
   edges: [],
+  floaters: [],
   rotX: 0, rotY: 0, rotZ: 0,
   tiltX: 0, tiltY: 0,
-  mouseInfluenceX: 0, mouseInfluenceY: 0,
+  mouseNormX: 0, mouseNormY: 0,
   time: 0,
-  NUM_NODES: 80,
-  RADIUS: 180,
-  MAX_EDGE_DIST: 120,
+  NUM_NODES: 120,
+  RADIUS: 200,
+  MAX_EDGE_DIST: 110,
+  NUM_FLOATERS: 40,
 
   init() {
     this.canvas = document.getElementById('menu-canvas');
     if (!this.canvas) return;
     this.ctx = this.canvas.getContext('2d');
     this.generateConstellation();
+    this.generateFloaters();
 
-    // Mouse tilt listener on document (works over the overlay)
     document.addEventListener('mousemove', e => {
       const rect = this.canvas.getBoundingClientRect();
       if (rect.width === 0) return;
-      this.mouseInfluenceX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      this.mouseInfluenceY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+      this.mouseNormX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      this.mouseNormY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+      this.applyParallax();
+      this.applyOverlayTilt();
     });
+  },
+
+  applyParallax() {
+    const layers = document.querySelectorAll('.depth-layer');
+    layers.forEach(el => {
+      const depth = parseFloat(el.dataset.depth) || 0;
+      const moveX = this.mouseNormX * depth * 80;
+      const moveY = this.mouseNormY * depth * 50;
+      const rotateY = this.mouseNormX * depth * 8;
+      const rotateX = -this.mouseNormY * depth * 5;
+      el.style.transform = `translate3d(${moveX}px, ${moveY}px, 0) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+    });
+  },
+
+  applyOverlayTilt() {
+    const overlay = document.getElementById('overlay');
+    if (!overlay || overlay.classList.contains('hidden')) return;
+    const tiltY = this.mouseNormX * 2.5;
+    const tiltX = -this.mouseNormY * 2;
+    overlay.style.transform = `rotateY(${tiltY}deg) rotateX(${tiltX}deg)`;
+  },
+
+  generateFloaters() {
+    this.floaters = [];
+    for (let i = 0; i < this.NUM_FLOATERS; i++) {
+      this.floaters.push({
+        x: Math.random() * 820,
+        y: Math.random() * 480,
+        z: Math.random(), // 0 = far, 1 = near
+        size: 0.5 + Math.random() * 2,
+        speedX: (Math.random() - 0.5) * 0.3,
+        speedY: -0.1 - Math.random() * 0.4,
+        hue: Math.random() > 0.5 ? 180 : 300,
+        pulseOff: Math.random() * Math.PI * 2,
+      });
+    }
   },
 
   generateConstellation() {
     this.nodes = [];
     this.edges = [];
     for (let i = 0; i < this.NUM_NODES; i++) {
-      // Fibonacci sphere distribution for even spacing
       const phi = Math.acos(1 - 2 * (i + 0.5) / this.NUM_NODES);
       const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-      const r = this.RADIUS * (0.6 + Math.random() * 0.4);
+      const r = this.RADIUS * (0.55 + Math.random() * 0.45);
       this.nodes.push({
         x: r * Math.sin(phi) * Math.cos(theta),
         y: r * Math.sin(phi) * Math.sin(theta),
         z: r * Math.cos(phi),
-        baseSize: 1.2 + Math.random() * 2.5,
+        baseSize: 1.0 + Math.random() * 2.8,
         pulseOffset: Math.random() * Math.PI * 2,
-        hue: Math.random() > 0.5 ? 180 : 300, // cyan or magenta
+        hue: [180, 280, 300, 200][Math.floor(Math.random() * 4)],
       });
     }
-    // Pre-compute edges (connect nearby nodes)
     for (let i = 0; i < this.nodes.length; i++) {
       for (let j = i + 1; j < this.nodes.length; j++) {
         const a = this.nodes[i], b = this.nodes[j];
@@ -3385,29 +3445,21 @@ const menu3D = {
   },
 
   project(x, y, z) {
-    // Apply rotation
     let cx = Math.cos(this.rotX), sx = Math.sin(this.rotX);
     let cy = Math.cos(this.rotY), sy = Math.sin(this.rotY);
     let cz = Math.cos(this.rotZ), sz = Math.sin(this.rotZ);
-
-    // Rotate Y
     let x1 = x * cy + z * sy;
     let z1 = -x * sy + z * cy;
-    // Rotate X
     let y1 = y * cx - z1 * sx;
     let z2 = y * sx + z1 * cx;
-    // Rotate Z
     let x2 = x1 * cz - y1 * sz;
     let y2 = x1 * sz + y1 * cz;
-
-    // Perspective projection
     const fov = 500;
-    const scale = fov / (fov + z2 + 250);
+    const scale = fov / (fov + z2 + 280);
     return {
       sx: x2 * scale + this.canvas.width / 2,
       sy: y2 * scale + this.canvas.height / 2,
-      scale,
-      z: z2
+      scale, z: z2
     };
   },
 
@@ -3421,6 +3473,9 @@ const menu3D = {
   stop() {
     this.active = false;
     if (this.canvas) this.canvas.classList.add('hidden');
+    const overlay = document.getElementById('overlay');
+    if (overlay) overlay.style.transform = '';
+    document.querySelectorAll('.depth-layer').forEach(el => { el.style.transform = ''; });
   },
 
   loop() {
@@ -3432,13 +3487,21 @@ const menu3D = {
 
   update() {
     this.time += 0.016;
-    // Smooth tilt towards mouse
-    this.tiltX += (this.mouseInfluenceY * 0.3 - this.tiltX) * 0.03;
-    this.tiltY += (this.mouseInfluenceX * 0.3 - this.tiltY) * 0.03;
+    this.tiltX += (this.mouseNormY * 0.35 - this.tiltX) * 0.04;
+    this.tiltY += (this.mouseNormX * 0.35 - this.tiltY) * 0.04;
+    this.rotX = this.tiltX + Math.sin(this.time * 0.12) * 0.1;
+    this.rotY += 0.0025 + this.tiltY * 0.008;
+    this.rotZ = Math.sin(this.time * 0.08) * 0.04;
 
-    this.rotX = this.tiltX + Math.sin(this.time * 0.15) * 0.08;
-    this.rotY += 0.003 + this.tiltY * 0.01;
-    this.rotZ = Math.sin(this.time * 0.1) * 0.05;
+    // Update floaters
+    const w = this.canvas.width, h = this.canvas.height;
+    this.floaters.forEach(f => {
+      f.x += f.speedX + this.mouseNormX * f.z * 0.5;
+      f.y += f.speedY;
+      if (f.y < -10) { f.y = h + 10; f.x = Math.random() * w; }
+      if (f.x < -10) f.x = w + 10;
+      if (f.x > w + 10) f.x = -10;
+    });
   },
 
   draw() {
@@ -3446,81 +3509,119 @@ const menu3D = {
     const w = this.canvas.width, h = this.canvas.height;
     c.clearRect(0, 0, w, h);
 
-    // Deep space background gradient
-    const bgGrad = c.createRadialGradient(w/2, h/2, 50, w/2, h/2, w*0.7);
-    bgGrad.addColorStop(0, 'rgba(15, 5, 30, 0.95)');
-    bgGrad.addColorStop(0.5, 'rgba(5, 2, 18, 0.9)');
-    bgGrad.addColorStop(1, 'rgba(2, 1, 8, 0.85)');
+    // Deep space gradient
+    const bgGrad = c.createRadialGradient(w/2, h/2, 30, w/2, h/2, w*0.75);
+    bgGrad.addColorStop(0, '#0d0520');
+    bgGrad.addColorStop(0.4, '#060215');
+    bgGrad.addColorStop(1, '#020108');
     c.fillStyle = bgGrad;
     c.fillRect(0, 0, w, h);
 
-    // Subtle nebula glow
-    const nebulaX = w/2 + Math.sin(this.time * 0.2) * 60;
-    const nebulaY = h/2 + Math.cos(this.time * 0.15) * 40;
-    const nebula = c.createRadialGradient(nebulaX, nebulaY, 20, nebulaX, nebulaY, 220);
-    nebula.addColorStop(0, `rgba(0, 255, 255, ${0.04 + Math.sin(this.time) * 0.02})`);
-    nebula.addColorStop(0.5, `rgba(255, 51, 255, ${0.02 + Math.sin(this.time * 0.7) * 0.01})`);
-    nebula.addColorStop(1, 'transparent');
-    c.fillStyle = nebula;
+    // Nebula clouds (multiple, drifting)
+    const drawNebula = (ox, oy, radius, hue, intensity) => {
+      const nx = w/2 + Math.sin(this.time * 0.15 + ox) * 80 + this.mouseNormX * 20;
+      const ny = h/2 + Math.cos(this.time * 0.1 + oy) * 50 + this.mouseNormY * 15;
+      const neb = c.createRadialGradient(nx, ny, 10, nx, ny, radius);
+      const a = (0.06 + Math.sin(this.time * 0.5 + ox) * 0.03) * intensity;
+      neb.addColorStop(0, `hsla(${hue}, 100%, 60%, ${a})`);
+      neb.addColorStop(0.6, `hsla(${hue}, 80%, 40%, ${a * 0.4})`);
+      neb.addColorStop(1, 'transparent');
+      c.fillStyle = neb;
+      c.fillRect(0, 0, w, h);
+    };
+    drawNebula(0, 0, 250, 180, 1.0); // cyan
+    drawNebula(2, 1, 200, 300, 0.7); // magenta
+    drawNebula(4, 3, 180, 40, 0.4);  // golden
+
+    // Mouse spotlight (follows cursor position)
+    const spotX = (this.mouseNormX * 0.5 + 0.5) * w;
+    const spotY = (this.mouseNormY * 0.5 + 0.5) * h;
+    const spot = c.createRadialGradient(spotX, spotY, 5, spotX, spotY, 180);
+    spot.addColorStop(0, 'rgba(0, 255, 255, 0.08)');
+    spot.addColorStop(0.5, 'rgba(255, 51, 255, 0.03)');
+    spot.addColorStop(1, 'transparent');
+    c.fillStyle = spot;
     c.fillRect(0, 0, w, h);
 
-    // Project all nodes
+    // Floating particles (back layer, z < 0.5)
+    this.floaters.forEach(f => {
+      if (f.z >= 0.5) return;
+      const pulse = Math.sin(this.time * 2.5 + f.pulseOff) * 0.3 + 0.7;
+      const alpha = (0.15 + f.z * 0.3) * pulse;
+      const sz = f.size * (0.5 + f.z * 0.5);
+      c.fillStyle = `hsla(${f.hue}, 100%, 75%, ${alpha})`;
+      c.beginPath();
+      c.arc(f.x, f.y, sz, 0, Math.PI * 2);
+      c.fill();
+    });
+
+    // Project constellation nodes
     const projected = this.nodes.map(n => this.project(n.x, n.y, n.z));
 
-    // Draw edges (connections)
+    // Draw edges
     c.globalCompositeOperation = 'lighter';
     this.edges.forEach(e => {
       const a = projected[e.i], b = projected[e.j];
       const avgZ = (a.z + b.z) / 2;
-      const alpha = Math.max(0, Math.min(0.25, (1 - e.dist / this.MAX_EDGE_DIST) * 0.35 * (avgZ > -100 ? 1 : 0.3)));
-      if (alpha < 0.01) return;
-
+      const alpha = Math.max(0, Math.min(0.22, (1 - e.dist / this.MAX_EDGE_DIST) * 0.3 * (avgZ > -120 ? 1 : 0.2)));
+      if (alpha < 0.005) return;
       const hueA = this.nodes[e.i].hue;
       c.strokeStyle = `hsla(${hueA}, 100%, 70%, ${alpha})`;
-      c.lineWidth = 0.5 * a.scale;
+      c.lineWidth = 0.6 * a.scale;
       c.beginPath();
       c.moveTo(a.sx, a.sy);
       c.lineTo(b.sx, b.sy);
       c.stroke();
     });
 
-    // Draw nodes (sorted by Z for depth)
-    const sortedIndices = projected.map((p, i) => i).sort((a, b) => projected[a].z - projected[b].z);
-    sortedIndices.forEach(i => {
+    // Draw nodes (depth-sorted)
+    const sorted = projected.map((p, i) => i).sort((a, b) => projected[a].z - projected[b].z);
+    sorted.forEach(i => {
       const p = projected[i];
       const node = this.nodes[i];
-      const pulse = Math.sin(this.time * 2 + node.pulseOffset) * 0.3 + 0.7;
+      const pulse = Math.sin(this.time * 2.2 + node.pulseOffset) * 0.3 + 0.7;
       const size = node.baseSize * p.scale * pulse;
-      const depthAlpha = Math.max(0.1, Math.min(1, (p.z + 250) / 450));
+      const depthAlpha = Math.max(0.08, Math.min(1, (p.z + 280) / 500));
 
-      // Outer glow
-      const glow = c.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, size * 6);
-      glow.addColorStop(0, `hsla(${node.hue}, 100%, 75%, ${0.4 * depthAlpha * pulse})`);
-      glow.addColorStop(0.5, `hsla(${node.hue}, 100%, 60%, ${0.1 * depthAlpha})`);
+      // Glow halo
+      const glow = c.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, size * 7);
+      glow.addColorStop(0, `hsla(${node.hue}, 100%, 75%, ${0.35 * depthAlpha * pulse})`);
+      glow.addColorStop(0.4, `hsla(${node.hue}, 100%, 55%, ${0.08 * depthAlpha})`);
       glow.addColorStop(1, 'transparent');
       c.fillStyle = glow;
       c.beginPath();
-      c.arc(p.sx, p.sy, size * 6, 0, Math.PI * 2);
+      c.arc(p.sx, p.sy, size * 7, 0, Math.PI * 2);
       c.fill();
 
-      // Core dot
-      c.fillStyle = `hsla(${node.hue}, 80%, 90%, ${depthAlpha})`;
+      // Core
+      c.fillStyle = `hsla(${node.hue}, 80%, 92%, ${depthAlpha})`;
       c.beginPath();
-      c.arc(p.sx, p.sy, size, 0, Math.PI * 2);
+      c.arc(p.sx, p.sy, size * 0.9, 0, Math.PI * 2);
+      c.fill();
+    });
+    c.globalCompositeOperation = 'source-over';
+
+    // Floating particles (front layer, z >= 0.5)
+    this.floaters.forEach(f => {
+      if (f.z < 0.5) return;
+      const pulse = Math.sin(this.time * 2.5 + f.pulseOff) * 0.3 + 0.7;
+      const alpha = (0.3 + f.z * 0.4) * pulse;
+      const sz = f.size * (0.8 + f.z * 0.6);
+      c.fillStyle = `hsla(${f.hue}, 100%, 80%, ${alpha})`;
+      c.beginPath();
+      c.arc(f.x, f.y, sz, 0, Math.PI * 2);
       c.fill();
     });
 
-    c.globalCompositeOperation = 'source-over';
-
     // Vignette
-    const vig = c.createRadialGradient(w/2, h/2, w*0.2, w/2, h/2, w*0.65);
+    const vig = c.createRadialGradient(w/2, h/2, w*0.18, w/2, h/2, w*0.62);
     vig.addColorStop(0, 'transparent');
-    vig.addColorStop(1, 'rgba(0,0,0,0.6)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.55)');
     c.fillStyle = vig;
     c.fillRect(0, 0, w, h);
 
-    // Scan line effect
-    c.fillStyle = 'rgba(0,0,0,0.04)';
+    // Scanlines
+    c.fillStyle = 'rgba(0,0,0,0.03)';
     for (let y = 0; y < h; y += 3) {
       c.fillRect(0, y, w, 1);
     }
