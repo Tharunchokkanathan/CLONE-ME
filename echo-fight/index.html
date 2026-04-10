@@ -388,21 +388,55 @@
       justify-content: center;
       gap: 18px;
       z-index: 10;
-      background: rgba(10,10,15,0.85);
-      backdrop-filter: blur(8px);
+      background: rgba(6,4,15,0.82);
+      backdrop-filter: blur(6px);
     }
 
     #overlay.hidden { display: none; }
+
+    #menu-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 9;
+      pointer-events: none;
+    }
+    #menu-canvas.hidden { display: none; }
+
+    .overlay-title {
+      position: relative;
+      background: linear-gradient(135deg, #00ffff 0%, #ff33ff 50%, #ffaa00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: title-shimmer 4s ease-in-out infinite alternate;
+    }
+    @keyframes title-shimmer {
+      0%   { filter: drop-shadow(0 0 12px rgba(0,255,255,0.6)); }
+      50%  { filter: drop-shadow(0 0 24px rgba(255,51,255,0.8)); }
+      100% { filter: drop-shadow(0 0 12px rgba(255,170,0,0.6)); }
+    }
 
     .overlay-title {
       font-family: 'Orbitron', monospace;
       font-size: 2.2rem;
       font-weight: 900;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
       text-align: center;
-      background: linear-gradient(90deg, #ff66b2, #00ff41, #00ccff);
+      background: linear-gradient(135deg, #00ffff 0%, #ff33ff 50%, #ffaa00 100%);
+      background-size: 200% 200%;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      animation: title-gradient 4s ease-in-out infinite alternate;
+      text-shadow: none;
+      filter: drop-shadow(0 0 20px rgba(0,255,255,0.4));
+    }
+    @keyframes title-gradient {
+      0%   { background-position: 0% 50%; filter: drop-shadow(0 0 15px rgba(0,255,255,0.5)); }
+      50%  { background-position: 100% 50%; filter: drop-shadow(0 0 30px rgba(255,51,255,0.6)); }
+      100% { background-position: 0% 50%; filter: drop-shadow(0 0 15px rgba(255,170,0,0.5)); }
     }
 
     .overlay-sub {
@@ -523,14 +557,15 @@
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #ffffff;
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #e0e0ff;
+      background: rgba(10, 5, 25, 0.5);
+      border: 1px solid rgba(0, 255, 255, 0.2);
       border-radius: 50px;
       cursor: pointer;
       overflow: hidden;
-      transition: all 0.3s ease;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.9);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      text-shadow: 0 0 12px rgba(0,255,255,0.3);
+      backdrop-filter: blur(8px);
     }
 
     .menu-btn::before {
@@ -538,16 +573,18 @@
       position: absolute;
       top: 0; left: -100%;
       width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,102,178,0.15), transparent);
-      transition: 0.5s;
+      background: linear-gradient(90deg, transparent, rgba(0,255,255,0.12), rgba(255,51,255,0.08), transparent);
+      transition: 0.6s;
     }
 
     .menu-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 102, 178, 0.7);
-      box-shadow: 0 0 24px rgba(255, 102, 178, 0.35);
-      transform: translateX(8px);
+      background: rgba(0, 255, 255, 0.06);
+      border-color: rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.05);
+      transform: translateX(6px) scale(1.02);
       letter-spacing: 0.22em;
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(0,255,255,0.5);
     }
 
     .menu-btn:hover::before {
@@ -555,8 +592,9 @@
     }
 
     .menu-btn.quit:hover {
-      border-color: rgba(255, 49, 49, 0.7);
-      box-shadow: 0 0 24px rgba(255, 49, 49, 0.35);
+      border-color: rgba(255, 51, 255, 0.7);
+      box-shadow: 0 0 24px rgba(255, 51, 255, 0.35), inset 0 0 20px rgba(255, 51, 255, 0.05);
+      text-shadow: 0 0 15px rgba(255,51,255,0.5);
     }
 
     .settings-grid {
@@ -759,6 +797,7 @@
 
   <div id="canvas-wrap">
     <canvas id="canvas" width="820" height="480"></canvas>
+    <canvas id="menu-canvas" width="820" height="480"></canvas>
 
     <!-- 2D Overlay Menu (always shows first, 3D is enhancement) -->
     <div id="overlay">
@@ -2820,6 +2859,15 @@ function showMenu(viewId) {
     else overlay.classList.add('hidden');
   }
 
+  // Start/stop 3D menu animation based on menu visibility
+  if (typeof menu3D !== 'undefined') {
+    if (isMenuVisible && (viewId === 'main-menu' || viewId === 'settings-menu' || viewId === 'load-menu' || viewId === 'quit-menu')) {
+      menu3D.start();
+    } else {
+      menu3D.stop();
+    }
+  }
+
   const uiElements = [
     document.getElementById('title'), 
     document.getElementById('hud'), 
@@ -3272,8 +3320,214 @@ function gameLoop(ts) {
   requestAnimationFrame(gameLoop);
 }
 
+// ── 3D Menu Animation System (Neural Clone Web) ─────────────
+const menu3D = {
+  active: false,
+  canvas: null,
+  ctx: null,
+  nodes: [],
+  edges: [],
+  rotX: 0, rotY: 0, rotZ: 0,
+  tiltX: 0, tiltY: 0,
+  mouseInfluenceX: 0, mouseInfluenceY: 0,
+  time: 0,
+  NUM_NODES: 80,
+  RADIUS: 180,
+  MAX_EDGE_DIST: 120,
+
+  init() {
+    this.canvas = document.getElementById('menu-canvas');
+    if (!this.canvas) return;
+    this.ctx = this.canvas.getContext('2d');
+    this.generateConstellation();
+
+    // Mouse tilt listener on document (works over the overlay)
+    document.addEventListener('mousemove', e => {
+      const rect = this.canvas.getBoundingClientRect();
+      if (rect.width === 0) return;
+      this.mouseInfluenceX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      this.mouseInfluenceY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    });
+  },
+
+  generateConstellation() {
+    this.nodes = [];
+    this.edges = [];
+    for (let i = 0; i < this.NUM_NODES; i++) {
+      // Fibonacci sphere distribution for even spacing
+      const phi = Math.acos(1 - 2 * (i + 0.5) / this.NUM_NODES);
+      const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+      const r = this.RADIUS * (0.6 + Math.random() * 0.4);
+      this.nodes.push({
+        x: r * Math.sin(phi) * Math.cos(theta),
+        y: r * Math.sin(phi) * Math.sin(theta),
+        z: r * Math.cos(phi),
+        baseSize: 1.2 + Math.random() * 2.5,
+        pulseOffset: Math.random() * Math.PI * 2,
+        hue: Math.random() > 0.5 ? 180 : 300, // cyan or magenta
+      });
+    }
+    // Pre-compute edges (connect nearby nodes)
+    for (let i = 0; i < this.nodes.length; i++) {
+      for (let j = i + 1; j < this.nodes.length; j++) {
+        const a = this.nodes[i], b = this.nodes[j];
+        const d = Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2);
+        if (d < this.MAX_EDGE_DIST) {
+          this.edges.push({ i, j, dist: d });
+        }
+      }
+    }
+  },
+
+  project(x, y, z) {
+    // Apply rotation
+    let cx = Math.cos(this.rotX), sx = Math.sin(this.rotX);
+    let cy = Math.cos(this.rotY), sy = Math.sin(this.rotY);
+    let cz = Math.cos(this.rotZ), sz = Math.sin(this.rotZ);
+
+    // Rotate Y
+    let x1 = x * cy + z * sy;
+    let z1 = -x * sy + z * cy;
+    // Rotate X
+    let y1 = y * cx - z1 * sx;
+    let z2 = y * sx + z1 * cx;
+    // Rotate Z
+    let x2 = x1 * cz - y1 * sz;
+    let y2 = x1 * sz + y1 * cz;
+
+    // Perspective projection
+    const fov = 500;
+    const scale = fov / (fov + z2 + 250);
+    return {
+      sx: x2 * scale + this.canvas.width / 2,
+      sy: y2 * scale + this.canvas.height / 2,
+      scale,
+      z: z2
+    };
+  },
+
+  start() {
+    if (this.active) return;
+    this.active = true;
+    this.canvas.classList.remove('hidden');
+    this.loop();
+  },
+
+  stop() {
+    this.active = false;
+    if (this.canvas) this.canvas.classList.add('hidden');
+  },
+
+  loop() {
+    if (!this.active) return;
+    this.update();
+    this.draw();
+    requestAnimationFrame(() => this.loop());
+  },
+
+  update() {
+    this.time += 0.016;
+    // Smooth tilt towards mouse
+    this.tiltX += (this.mouseInfluenceY * 0.3 - this.tiltX) * 0.03;
+    this.tiltY += (this.mouseInfluenceX * 0.3 - this.tiltY) * 0.03;
+
+    this.rotX = this.tiltX + Math.sin(this.time * 0.15) * 0.08;
+    this.rotY += 0.003 + this.tiltY * 0.01;
+    this.rotZ = Math.sin(this.time * 0.1) * 0.05;
+  },
+
+  draw() {
+    const c = this.ctx;
+    const w = this.canvas.width, h = this.canvas.height;
+    c.clearRect(0, 0, w, h);
+
+    // Deep space background gradient
+    const bgGrad = c.createRadialGradient(w/2, h/2, 50, w/2, h/2, w*0.7);
+    bgGrad.addColorStop(0, 'rgba(15, 5, 30, 0.95)');
+    bgGrad.addColorStop(0.5, 'rgba(5, 2, 18, 0.9)');
+    bgGrad.addColorStop(1, 'rgba(2, 1, 8, 0.85)');
+    c.fillStyle = bgGrad;
+    c.fillRect(0, 0, w, h);
+
+    // Subtle nebula glow
+    const nebulaX = w/2 + Math.sin(this.time * 0.2) * 60;
+    const nebulaY = h/2 + Math.cos(this.time * 0.15) * 40;
+    const nebula = c.createRadialGradient(nebulaX, nebulaY, 20, nebulaX, nebulaY, 220);
+    nebula.addColorStop(0, `rgba(0, 255, 255, ${0.04 + Math.sin(this.time) * 0.02})`);
+    nebula.addColorStop(0.5, `rgba(255, 51, 255, ${0.02 + Math.sin(this.time * 0.7) * 0.01})`);
+    nebula.addColorStop(1, 'transparent');
+    c.fillStyle = nebula;
+    c.fillRect(0, 0, w, h);
+
+    // Project all nodes
+    const projected = this.nodes.map(n => this.project(n.x, n.y, n.z));
+
+    // Draw edges (connections)
+    c.globalCompositeOperation = 'lighter';
+    this.edges.forEach(e => {
+      const a = projected[e.i], b = projected[e.j];
+      const avgZ = (a.z + b.z) / 2;
+      const alpha = Math.max(0, Math.min(0.25, (1 - e.dist / this.MAX_EDGE_DIST) * 0.35 * (avgZ > -100 ? 1 : 0.3)));
+      if (alpha < 0.01) return;
+
+      const hueA = this.nodes[e.i].hue;
+      c.strokeStyle = `hsla(${hueA}, 100%, 70%, ${alpha})`;
+      c.lineWidth = 0.5 * a.scale;
+      c.beginPath();
+      c.moveTo(a.sx, a.sy);
+      c.lineTo(b.sx, b.sy);
+      c.stroke();
+    });
+
+    // Draw nodes (sorted by Z for depth)
+    const sortedIndices = projected.map((p, i) => i).sort((a, b) => projected[a].z - projected[b].z);
+    sortedIndices.forEach(i => {
+      const p = projected[i];
+      const node = this.nodes[i];
+      const pulse = Math.sin(this.time * 2 + node.pulseOffset) * 0.3 + 0.7;
+      const size = node.baseSize * p.scale * pulse;
+      const depthAlpha = Math.max(0.1, Math.min(1, (p.z + 250) / 450));
+
+      // Outer glow
+      const glow = c.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, size * 6);
+      glow.addColorStop(0, `hsla(${node.hue}, 100%, 75%, ${0.4 * depthAlpha * pulse})`);
+      glow.addColorStop(0.5, `hsla(${node.hue}, 100%, 60%, ${0.1 * depthAlpha})`);
+      glow.addColorStop(1, 'transparent');
+      c.fillStyle = glow;
+      c.beginPath();
+      c.arc(p.sx, p.sy, size * 6, 0, Math.PI * 2);
+      c.fill();
+
+      // Core dot
+      c.fillStyle = `hsla(${node.hue}, 80%, 90%, ${depthAlpha})`;
+      c.beginPath();
+      c.arc(p.sx, p.sy, size, 0, Math.PI * 2);
+      c.fill();
+    });
+
+    c.globalCompositeOperation = 'source-over';
+
+    // Vignette
+    const vig = c.createRadialGradient(w/2, h/2, w*0.2, w/2, h/2, w*0.65);
+    vig.addColorStop(0, 'transparent');
+    vig.addColorStop(1, 'rgba(0,0,0,0.6)');
+    c.fillStyle = vig;
+    c.fillRect(0, 0, w, h);
+
+    // Scan line effect
+    c.fillStyle = 'rgba(0,0,0,0.04)';
+    for (let y = 0; y < h; y += 3) {
+      c.fillRect(0, y, w, 1);
+    }
+  }
+};
+
 // ── Boot ──────────────────────────────────────────────────────
 (function initGame() {
+
+  // Init 3D menu animation
+  menu3D.init();
+  menu3D.start();
 
   // 1. Show menu immediately - no dependencies
   showMenu('main-menu');
@@ -3281,8 +3535,9 @@ function gameLoop(ts) {
   // 2. NEW GAME
   document.getElementById('new-game-btn').addEventListener('click', () => {
     SFX.init();
+    menu3D.stop();
     showMenu('none');
-    scaleCanvas(); // Recalculate canvas size now that HUD occupies vertical space
+    scaleCanvas();
     startGame();
     requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
   });
@@ -3293,12 +3548,12 @@ function gameLoop(ts) {
     const raw = localStorage.getItem('echo_fight_save');
     if (raw) {
       const data = JSON.parse(raw);
+      menu3D.stop();
       showMenu('none');
       scaleCanvas();
-      startGame(data); // New overload
+      startGame(data);
       requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
     } else {
-      // Show empty timeline or notification if no save
       loadSession();
       showMenu('load-menu');
     }
