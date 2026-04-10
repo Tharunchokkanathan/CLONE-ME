@@ -266,7 +266,7 @@
     #controls-legend {
       position: absolute;
       bottom: 16px;
-      left: 16px;
+      right: 16px;
       padding: 12px 16px;
       background: rgba(5, 10, 8, 0.85);
       backdrop-filter: blur(12px);
@@ -2856,8 +2856,8 @@ function showGameOver() {
   const view = document.getElementById('game-over-view');
   view.innerHTML = `
     <div class="overlay-title">GAME OVER</div>
-    <div class="overlay-sub">Your echoes caught up with you.<br/><em>The past always returns.</em></div>
-    <div class="stat-row">
+    <div class="overlay-sub" style="text-align:center;">Your echoes caught up with you.<br/><em>The past always returns.</em></div>
+    <div class="stat-row" style="justify-content:center;">
       <div class="stat-box">
         <span class="stat-value">${survivalTime.toFixed(1)}s</span>
         <span class="stat-label">⏱ Survived</span>
@@ -2867,7 +2867,7 @@ function showGameOver() {
         <span class="stat-label">💀 Echoes Defeated</span>
       </div>
     </div>
-    <div class="btn-stack" style="margin-top:20px;">
+    <div class="btn-stack" style="margin-top:20px; align-items:center;">
       <button class="menu-btn" onclick="startGame(); showMenu('none'); document.getElementById('overlay').classList.add('hidden');">↺ QUICK RESTART</button>
       <button class="menu-btn" onclick="showMenu('main-menu')">Main Menu</button>
     </div>
