@@ -372,14 +372,24 @@
 
 
     .overlay-title {
-      font-family: 'Inter', sans-serif;
-      font-size: 2rem;
-      font-weight: 300;
-      letter-spacing: 0.2rem;
+      font-family: 'Orbitron', monospace;
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 0.25em;
       text-transform: uppercase;
       text-align: center;
-      color: #ffffff;
-      margin-bottom: 20px;
+      background: linear-gradient(135deg, #00ffff 0%, #ff33ff 50%, #ffaa00 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: title-gradient 4s ease-in-out infinite alternate;
+      filter: drop-shadow(0 0 20px rgba(0,255,255,0.4));
+    }
+    @keyframes title-gradient {
+      0%   { background-position: 0% 50%; filter: drop-shadow(0 0 15px rgba(0,255,255,0.5)); }
+      50%  { background-position: 100% 50%; filter: drop-shadow(0 0 30px rgba(255,51,255,0.6)); }
+      100% { background-position: 0% 50%; filter: drop-shadow(0 0 15px rgba(255,170,0,0.5)); }
     }
 
     .overlay-sub {
@@ -419,21 +429,24 @@
     }
 
     .btn {
-      padding: 10px 24px;
-      font-family: 'Inter', sans-serif;
+      padding: 12px 36px;
+      font-family: 'Orbitron', monospace;
       font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border: 1px solid #ff66b2;
+      border-radius: 8px;
       cursor: pointer;
-      background: transparent;
+      background: #000000;
       color: #ffffff;
+      box-shadow: 0 0 15px rgba(255,102,178,0.3);
       transition: all 0.2s ease;
     }
 
     .btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.6);
+      transform: translateY(-2px);
+      background: rgba(255,102,178,0.1);
+      box-shadow: 0 4px 25px rgba(255,102,178,0.4);
     }
 
     .controls-grid {
@@ -490,22 +503,51 @@
     }
 
     .menu-btn {
-      padding: 12px 28px;
-      font-family: 'Inter', sans-serif;
+      position: relative;
+      padding: 14px 32px;
+      font-family: 'Orbitron', monospace;
       font-size: 0.9rem;
-      letter-spacing: 0.1em;
+      font-weight: 700;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #ffffff;
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
+      color: #e0e0ff;
+      background: rgba(10, 5, 25, 0.5);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 50px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      text-shadow: 0 0 12px rgba(0,255,255,0.3);
+      backdrop-filter: blur(8px);
+    }
+
+    .menu-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,255,0.12), rgba(255,51,255,0.08), transparent);
+      transition: 0.6s;
     }
 
     .menu-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(0, 255, 255, 0.06);
+      border-color: rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.05);
+      transform: translateX(6px) scale(1.02);
+      letter-spacing: 0.22em;
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(0,255,255,0.5);
+    }
+
+    .menu-btn:hover::before {
+      left: 100%;
+    }
+
+    .menu-btn.quit:hover {
+      border-color: rgba(255, 51, 255, 0.7);
+      box-shadow: 0 0 24px rgba(255, 51, 255, 0.35), inset 0 0 20px rgba(255, 51, 255, 0.05);
+      text-shadow: 0 0 15px rgba(255,51,255,0.5);
     }
 
     .settings-grid {
@@ -694,14 +736,17 @@
 
   <!-- Key Legend Box -->
   <div id="controls-legend" class="interface-hidden">
+    <div class="legend-item" style="margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px; display:flex; flex-direction:column; gap:3px;">
+      <div><span class="legend-key">⬅</span><span class="legend-key">➡</span> Move</div>
+      <div><span class="legend-key">⬆</span> or <span class="legend-key">SPACE</span> Jump</div>
+      <div><span class="legend-key">ALT</span> Attack</div>
+    </div>
     <div class="legend-item"><span class="legend-key">F</span> Flame Thrower</div>
-
     <div class="legend-item"><span class="legend-key">G</span> Anti-Gravity (Tornado)</div>
     <div class="legend-item"><span class="legend-key">E</span> Crimson Nova</div>
     <div class="legend-item"><span class="legend-key">P</span> Precision Pistol</div>
     <div class="legend-item"><span class="legend-key">CAPS</span> Kinetic Shield</div>
     <div class="legend-item"><span class="legend-key">SHIFT</span> Dash / Dodge</div>
-    <div class="legend-item" style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; opacity:0.6; font-size:0.6rem;">ALT: Attack | SPACE: Jump</div>
   </div>
 
   <div id="canvas-wrap">
