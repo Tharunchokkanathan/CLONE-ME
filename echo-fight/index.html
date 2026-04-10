@@ -363,7 +363,7 @@
       justify-content: center;
       gap: 18px;
       z-index: 10;
-      background: rgba(4,2,12,0.92); /* Solid dark 2D background */
+      background: rgba(4,2,12,0.92);
       backdrop-filter: none;
     }
 
@@ -498,8 +498,9 @@
     .btn-stack {
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 14px;
-      width: 260px;
+      width: 280px;
     }
 
     .menu-btn {
@@ -510,14 +511,15 @@
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: #e0e0ff;
-      background: rgba(10, 5, 25, 0.5);
-      border: 1px solid rgba(0, 255, 255, 0.2);
+      color: #a8ffcc;
+      background: rgba(0, 30, 15, 0.6);
+      border: 1px solid rgba(0, 180, 80, 0.4);
       border-radius: 50px;
       cursor: pointer;
       overflow: hidden;
       transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      text-shadow: 0 0 12px rgba(0,255,255,0.3);
+      text-shadow: 0 0 10px rgba(0, 255, 100, 0.3);
+      box-shadow: 0 0 12px rgba(0, 180, 80, 0.25), inset 0 0 12px rgba(0, 60, 30, 0.3);
       backdrop-filter: blur(8px);
     }
 
@@ -526,18 +528,17 @@
       position: absolute;
       top: 0; left: -100%;
       width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(0,255,255,0.12), rgba(255,51,255,0.08), transparent);
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 100, 0.1), transparent);
       transition: 0.6s;
     }
 
     .menu-btn:hover {
-      background: rgba(0, 255, 255, 0.06);
-      border-color: rgba(0, 255, 255, 0.6);
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.05);
-      transform: translateX(6px) scale(1.02);
-      letter-spacing: 0.22em;
+      background: rgba(0, 60, 30, 0.7);
+      border-color: rgba(0, 255, 100, 0.8);
+      box-shadow: 0 0 28px rgba(0, 255, 100, 0.5), 0 0 8px rgba(0, 255, 100, 0.3), inset 0 0 20px rgba(0, 80, 40, 0.3);
+      transform: scale(1.03);
       color: #ffffff;
-      text-shadow: 0 0 15px rgba(0,255,255,0.5);
+      text-shadow: 0 0 18px rgba(0, 255, 100, 0.8);
     }
 
     .menu-btn:hover::before {
@@ -545,9 +546,9 @@
     }
 
     .menu-btn.quit:hover {
-      border-color: rgba(255, 51, 255, 0.7);
-      box-shadow: 0 0 24px rgba(255, 51, 255, 0.35), inset 0 0 20px rgba(255, 51, 255, 0.05);
-      text-shadow: 0 0 15px rgba(255,51,255,0.5);
+      border-color: rgba(255, 51, 80, 0.7);
+      box-shadow: 0 0 24px rgba(255, 51, 80, 0.4), inset 0 0 20px rgba(80, 10, 20, 0.3);
+      text-shadow: 0 0 15px rgba(255, 80, 100, 0.6);
     }
 
     .settings-grid {
