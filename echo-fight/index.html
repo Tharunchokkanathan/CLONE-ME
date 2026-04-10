@@ -1670,7 +1670,14 @@ function advanceLevel() {
     return;
   }
   
-  addFloatText(W/2, H/2 - 40, `ENTERING ZONE ${currentLevel}`, "#00ffff");
+  let difficultyName = "EASY";
+  if (currentLevel === 2) difficultyName = "MEDIUM EASY";
+  else if (currentLevel === 3) difficultyName = "MEDIUM";
+  else if (currentLevel === 4) difficultyName = "MEDIUM HARD";
+  else if (currentLevel === 5) difficultyName = "HARD";
+  else if (currentLevel >= 6) difficultyName = "IMPOSSIBLE";
+
+  addFloatText(W/2, H/2 - 40, `ENTERING ZONE ${currentLevel} - ${difficultyName}`, "#00ffff");
   triggerShake(10);
 }
 
@@ -1705,11 +1712,19 @@ function spawnLevelBosses() {
   } else if (currentLevel === 2) {
     activeBosses.push(createBoss(W/4, 100));
     activeBosses.push(createBoss(3*W/4, 100));
+  } else if (currentLevel === 3) {
+    activeBosses.push(createBoss(W/2 - 50, 100, true));
+  } else if (currentLevel === 4) {
+    activeBosses.push(createBoss(W/4, 100, true));
+    activeBosses.push(createBoss(3*W/4, 100, true));
+  } else if (currentLevel === 5) {
+    activeBosses.push(createBoss(W/5, 100, true));
+    activeBosses.push(createBoss(2*W/5, 100, true));
+    activeBosses.push(createBoss(3*W/5, 100, true));
+    activeBosses.push(createBoss(4*W/5, 100, true));
   } else {
-    // Levels 3-6 use combinations or multiple superiors
-    const bossCount = currentLevel >= 4 ? 2 : 4; 
-    for(let i=0; i<bossCount; i++) {
-       activeBosses.push(createBoss(100 + i * 200, 100, currentLevel >= 4));
+    for(let i=1; i<=6; i++) {
+      activeBosses.push(createBoss(i * (W/7), 80 + (i%2)*40, true));
     }
   }
 
@@ -1980,7 +1995,9 @@ function updatePlayer() {
 
 // ── Spawn interval (scales with time) ─────────────────────────
 function spawnInterval() {
-  return Math.max(2000, 5000 - (survivalTime / 120) * 3000);
+  let baseMultiplier = Math.max(0.2, 1.2 - (currentLevel * 0.15)); 
+  if (currentLevel >= 6) baseMultiplier = 0.15; // Impossible swarm
+  return Math.max(200, (5000 - (survivalTime / 60) * 2000) * baseMultiplier);
 }
 
 // ── Draw arena background ─────────────────────────────────────
@@ -2848,7 +2865,7 @@ function startGame(savedData = null) {
     startTime    = performance.now();
   }
   
-  diffMult     = 1 + survivalTime / 30;
+  diffMult     = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
   window.currentWave = Math.floor(clonesKilled / 3 + 1);
 
   nextEchoTimer = 5000;
@@ -2884,7 +2901,7 @@ function gameLoop(ts) {
     if (eScale > 0) {
       nextEchoTimer -= dt;
       survivalTime = (ts - startTime) / 1000;
-      diffMult = 1 + survivalTime / 30;
+      diffMult = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
     }
     
     if (nextEchoTimer <= 0 && !spawnPaused && eScale > 0) {
@@ -3160,10 +3177,17 @@ function gameLoop(ts) {
 
   // Wave / difficulty badge
   ctx.save();
+  let diffName = "EASY";
+  if (currentLevel === 2) diffName = "MEDIUM EASY";
+  else if (currentLevel === 3) diffName = "MEDIUM";
+  else if (currentLevel === 4) diffName = "MEDIUM HARD";
+  else if (currentLevel === 5) diffName = "HARD";
+  else if (currentLevel >= 6) diffName = "IMPOSSIBLE";
+
   ctx.font      = '600 11px Inter, sans-serif';
-  ctx.fillStyle = 'rgba(196,141,158,0.5)';
+  ctx.fillStyle = currentLevel >= 6 ? 'rgba(255,50,50,0.8)' : 'rgba(196,141,158,0.5)';
   ctx.textAlign = 'right';
-  ctx.fillText(`WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
+  ctx.fillText(`ZONE ${currentLevel} [${diffName}] | WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
   ctx.restore();
 
   ctx.restore(); // end shake
