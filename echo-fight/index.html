@@ -767,7 +767,7 @@
     </div>
     
     <div id="thunder-bar-wrap">
-      <div class="hud-label"><span>⏳ Freeze</span> <span id="timer-thunder" class="cooldown-timer">READY</span></div>
+      <div class="hud-label"><span>⚡ Thunder</span> <span id="timer-thunder" class="cooldown-timer">READY</span></div>
       <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
     </div>
     
@@ -1817,8 +1817,10 @@ function updatePlayer() {
   if (player.thunderCooldown > 0) player.thunderCooldown -= spMult;
   if (thunderKey() && (player.thunderCooldown || 0) <= 0) {
     executeThunderStrike();
-    triggerShake(15);
+    player.freezeTimer = 50; // Add a brief world-slow (stun) for impact
+    triggerShake(20);
   }
+  if (player.freezeTimer > 0) player.freezeTimer -= spMult;
 
   // Activation check
   if (player.gravityCooldown > 0) player.gravityCooldown -= spMult;
@@ -3216,7 +3218,6 @@ function gameLoop(ts) {
   // ── Draw ──
   drawArena();
   drawGravitySpirals();
-  drawLightnings();
   drawFireParticles();
   drawBossProjectiles();
 
@@ -3283,29 +3284,32 @@ function gameLoop(ts) {
        ctx.restore();
     }
 
-  // Time Distortion & Freeze Overlay
+  // Time Distortion & Thunder Overlay
   if (isTimeDistorted || (player && player.freezeTimer > 0)) {
     const isFrozen = player && player.freezeTimer > 0;
-    const pulse = Math.abs(Math.sin((isFrozen ? player.freezeTimer : distortionTimer) * 2)) * 0.1;
+    const pulse = Math.abs(Math.sin((isFrozen ? player.freezeTimer : distortionTimer) * 4)) * 0.15;
     ctx.save();
     
     if (isFrozen) {
-      ctx.fillStyle = `rgba(0, 180, 255, ${0.15 + pulse})`; // Cold heavy blue for freeze
+      ctx.fillStyle = `rgba(0, 240, 255, ${0.12 + pulse})`; // Electric cyan pulse
     } else {
       ctx.fillStyle = globalTimeScale < 1 
-        ? `rgba(0, 100, 255, ${0.05 + pulse})` // Blueish for slow
-        : `rgba(255, 50, 0, ${0.05 + pulse})`;  // Redish for fast
+        ? `rgba(0, 100, 255, ${0.05 + pulse})` 
+        : `rgba(255, 50, 0, ${0.05 + pulse})`;  
     }
     
     ctx.fillRect(0, 0, W, H);
     
     ctx.font = 'bold 12px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.textAlign = 'center';
-    const msg = isFrozen ? "STASIS ACTIVE" : `TIME SCALE: ${globalTimeScale.toFixed(2)}x`;
+    const msg = isFrozen ? "⚡ STORM CALLING ⚡" : `TIME SCALE: ${globalTimeScale.toFixed(2)}x`;
     ctx.fillText(msg, W / 2, H - 20);
     ctx.restore();
   }
+
+  // Draw Lightning on TOP of all overlays
+  drawLightnings();
 
   // Echo warning pulse
   if (nextEchoTimer < 1000 && !gameOver && inputBuffer.length >= 15) {
