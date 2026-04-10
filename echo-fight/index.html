@@ -233,32 +233,6 @@
       box-shadow: 0 0 12px rgba(0,255,102,0.7);
     }
 
-    #thunder-bar-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 3px;
-      flex: 1;
-      max-width: 160px;
-    }
-
-    #thunder-bar-bg {
-      width: 100%;
-      height: 10px;
-      background: rgba(255,255,0,0.08);
-      border-radius: 5px;
-      border: 1px solid rgba(255,255,0,0.15);
-      overflow: hidden;
-    }
-
-    #thunder-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #ffff33, #ffffff);
-      border-radius: 5px;
-      transition: width 0.1s linear;
-      width: 0%;
-      box-shadow: 0 0 12px rgba(255,255,0,0.7);
-    }
 
     #flame-bar-wrap {
       display: flex;
@@ -766,11 +740,7 @@
       <div id="gravity-bar-bg"><div id="gravity-bar-fill"></div></div>
     </div>
     
-    <div id="thunder-bar-wrap">
-      <div class="hud-label"><span>⚡ Thunder</span> <span id="timer-thunder" class="cooldown-timer">READY</span></div>
-      <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
-    </div>
-    
+
     <div id="flame-bar-wrap">
       <div class="hud-label"><span>🔥 Flame</span> <span id="timer-flame" class="cooldown-timer">READY</span></div>
       <div id="flame-bar-bg"><div id="flame-bar-fill"></div></div>
@@ -781,7 +751,6 @@
   <!-- Key Legend Box -->
   <div id="controls-legend" class="interface-hidden">
     <div class="legend-item"><span class="legend-key">F</span> Flame Thrower</div>
-    <div class="legend-item"><span class="legend-key">T</span> Thunder Strike</div>
     <div class="legend-item"><span class="legend-key">G</span> Anti-Gravity (Tornado)</div>
     <div class="legend-item"><span class="legend-key">E</span> Crimson Nova</div>
     <div class="legend-item"><span class="legend-key">P</span> Precision Pistol</div>
@@ -1082,7 +1051,6 @@ const GRAVITY_RADIUS     = 180;
 const GRAVITY_DURATION   = 180; // 3 seconds
 const GRAVITY_COOLDOWN   = 290; // Duration + ~1.8 seconds
 const FREEZE_DURATION    = 180; // 3 seconds
-const THUNDER_COOLDOWN   = 110; // ~1.8 seconds
 const FLAME_DURATION     = 300;  // 5 seconds of fire
 const FLAME_COOLDOWN     = 110; // ~1.8 seconds
 const FLAME_RANGE        = 240;
@@ -1109,7 +1077,6 @@ function dashKey()    { return pressing('ShiftLeft', 'ShiftRight'); }
 function novaKey()    { return pressing('KeyE'); }
 function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
 function gravityKey() { return pressing('KeyG'); }
-function thunderKey() { return pressing('KeyT'); }
 function flameKey()   { return pressing('KeyF'); }
 function shieldKey()  { return pressing('CapsLock', 'KeyC', 'c', 'C'); }
 
@@ -1128,7 +1095,6 @@ let isBossPhase = false;
 let spawnPaused = false;
 let shockwaves = [];
 let gravitySpirals = [];
-let lightnings = [];
 let screenFlash = 0;
 let fireParticles = [];
 let bossOrbs = [];
@@ -1255,8 +1221,6 @@ function createPlayer() {
     novaEnergy: 0, maxNovaEnergy: 100,
     shieldEnergy: 100, maxShield: 100, isShielded: false,
     pistolCooldown: 0,
-    thunderCooldown: 0,
-    freezeTimer: 0,
     gravityCooldown: 0,
     flameCooldown: 0, isFlaming: false, flameDuration: 0
   };
@@ -1813,14 +1777,6 @@ function updatePlayer() {
     }
   }
 
-  // Thunder Strike Activation
-  if (player.thunderCooldown > 0) player.thunderCooldown -= spMult;
-  if (thunderKey() && (player.thunderCooldown || 0) <= 0) {
-    executeThunderStrike();
-    player.freezeTimer = 50; // Add a brief world-slow (stun) for impact
-    triggerShake(20);
-  }
-  if (player.freezeTimer > 0) player.freezeTimer -= spMult;
 
   // Activation check
   if (player.gravityCooldown > 0) player.gravityCooldown -= spMult;
@@ -2453,148 +2409,6 @@ function drawGravitySpirals() {
   });
 }
 
-// ── Thunder Strike Logic ───────────────────────────────────
-function executeThunderStrike() {
-  let target = null;
-  let minDist = THUNDER_RANGE;
-
-  const potentialTargets = [...clones, ...activeBosses];
-
-  potentialTargets.forEach(c => {
-    const dx = player.x - c.x;
-    const dy = player.y - c.y;
-    const d = Math.sqrt(dx*dx + dy*dy);
-    if (d < minDist) { minDist = d; target = c; }
-  });
-
-  if (target) {
-    player.thunderCooldown = THUNDER_COOLDOWN;
-    
-    // Initial Impact
-    const dmg = Math.floor(target.hp * 0.85);
-    target.hp -= dmg;
-    target.flashTimer = 25;
-    
-    // Conduit Bolt: Sky to Player
-    lightnings.push({
-      segments: generateLightningPath({x: player.x + PLAYER_W/2 + (Math.random()-0.5)*200, y: -100}, {x: player.x + PLAYER_W/2, y: player.y + PLAYER_H/2}),
-      life: 15, maxLife: 15, tx: player.x, ty: player.y
-    });
-
-    addFloatText(player.x + PLAYER_W/2, player.y - 50, "STORM OF JUDGEMENT!", "#00ffff");
-    addFloatText(target.x + 10, target.y - 45, `-${dmg} HEAVENLY DEVASTATION`, '#ffff33');
-
-    // Multi-Strike Loop (Visual) - From Sky to Target directly
-    for (let sIdx = 0; sIdx < 6; sIdx++) {
-      setTimeout(() => {
-        if (!target || !gameRunning) return;
-        
-        const bSize = target.sizeMult || (target.isGiant ? GIANT_SIZE_MULT : 1);
-        const tx = target.x + (PLAYER_W*bSize)/2 + (Math.random()-0.5)*40;
-        const ty = target.y + (PLAYER_H*bSize)/2 + (Math.random()-0.5)*30;
-        
-        // Main target bolt
-        lightnings.push({
-          segments: generateLightningPath({x: tx + (Math.random()-0.5)*150, y: -120}, {x: tx, y: ty}),
-          life: 14, maxLife: 14, tx, ty
-        });
-
-        // Horizontal Conduit Bolt if close
-        if (sIdx % 2 === 0) {
-           lightnings.push({
-             segments: generateLightningPath({x: player.x + PLAYER_W/2, y: player.y + PLAYER_H/2}, {x: tx, y: ty}),
-             life: 10, maxLife: 10, tx, ty
-           });
-        }
-
-        triggerShake(28);
-        screenFlash = 6;
-        spawnParticles(tx, ty, '#ffff33', 18, 7);
-        spawnParticles(tx, ty, '#00ffff', 10, 4);
-        
-        target.hp -= Math.floor(target.maxHp * 0.03); 
-        target.flashTimer = 15;
-      }, sIdx * 85);
-    }
-  } else {
-    // Miss / Out of range
-    player.thunderCooldown = 60; // 1s penalty
-    addFloatText(player.x + PLAYER_W/2, player.y - 50, "NO TARGET", "#777777");
-  }
-}
-
-function generateLightningPath(start, end) {
-  const segments = [];
-  let cur = { ...start };
-  const steps = 12;
-  const dx = (end.x - start.x) / steps;
-  const dy = (end.y - start.y) / steps;
-
-  for (let i = 0; i < steps; i++) {
-    const next = {
-      x: cur.x + dx + (Math.random() - 0.5) * 45,
-      y: cur.y + dy + (Math.random() - 0.5) * 10
-    };
-    if (i === steps - 1) { next.x = end.x; next.y = end.y; }
-    segments.push({ x1: cur.x, y1: cur.y, x2: next.x, y2: next.y });
-    cur = next;
-  }
-
-  // Branching logic
-  if (Math.random() < 0.6) {
-    const bStart = segments[Math.floor(segments.length * 0.4)];
-    let bCur = { x: bStart.x2, y: bStart.y2 };
-    for (let j = 0; j < 5; j++) {
-       const bNext = { x: bCur.x + (Math.random() - 0.5) * 60, y: bCur.y + 20 + Math.random() * 20 };
-       segments.push({ x1: bCur.x, y1: bCur.y, x2: bNext.x, y2: bNext.y, isBranch: true });
-       bCur = bNext;
-    }
-  }
-
-  return segments;
-}
-
-function updateLightnings() {
-  const ts = globalTimeScale;
-  for (let i = lightnings.length - 1; i >= 0; i--) {
-    lightnings[i].life -= ts;
-    if (lightnings[i].life <= 0) lightnings.splice(i, 1);
-  }
-}
-
-function drawLightnings() {
-  lightnings.forEach(l => {
-    const alpha = l.life / l.maxLife;
-    ctx.save();
-    
-    // Core electric glow
-    ctx.shadowBlur = 40 * alpha;
-    ctx.shadowColor = '#00ffff';
-    
-    l.segments.forEach(seg => {
-      // Main bolt
-      ctx.strokeStyle = seg.isBranch ? `rgba(180, 240, 255, ${alpha * 0.7})` : `rgba(255, 255, 255, ${alpha})`;
-      ctx.lineWidth = (seg.isBranch ? 1.5 : (4 + Math.random() * 6)) * alpha;
-      
-      ctx.beginPath();
-      ctx.moveTo(seg.x1, seg.y1);
-      ctx.lineTo(seg.x2, seg.y2);
-      ctx.stroke();
-
-      // Inner beam
-      if (!seg.isBranch) {
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = alpha * 2;
-        ctx.beginPath();
-        ctx.moveTo(seg.x1, seg.y1);
-        ctx.lineTo(seg.x2, seg.y2);
-        ctx.stroke();
-      }
-    });
-
-    ctx.restore();
-  });
-}
 
 // ── Flame Thrower Logic ────────────────────────────────────
 function updateFlameLogic(spMult) {
@@ -2863,7 +2677,6 @@ function updateHUD() {
   updateBar('nova-bar-fill',     'timer-nova',    player.novaEnergy, player.maxNovaEnergy, true);
   updateBar('pistol-bar-fill',   'timer-pistol',  player.pistolCooldown, 480);
   updateBar('gravity-bar-fill',  'timer-gravity', player.gravityCooldown, 110);
-  updateBar('thunder-bar-fill',  'timer-thunder', player.thunderCooldown, 110);
   updateBar('flame-bar-fill',    'timer-flame',    player.flameCooldown, 110);
 }
 
@@ -2986,7 +2799,6 @@ function startGame(savedData = null) {
   shockwaves   = [];
   droppedWeapons = [];
   gravitySpirals = [];
-  lightnings = [];
   fireParticles = [];
   bossOrbs = [];
   laserBeams = [];
@@ -3041,7 +2853,7 @@ function gameLoop(ts) {
     updatePlayer();
 
     // Time Scale for world entities
-    const eScale = player.freezeTimer > 0 ? 0 : globalTimeScale;
+    const eScale = globalTimeScale;
     const eDt = eScale * dt;
 
     if (eScale > 0) {
@@ -3205,7 +3017,6 @@ function gameLoop(ts) {
     }
 
     updateGravitySpirals();
-    updateLightnings();
     updateFireParticles();
     updateBossProjectiles();
     if (screenFlash > 0) screenFlash -= 1 * globalTimeScale;
@@ -3284,32 +3095,24 @@ function gameLoop(ts) {
        ctx.restore();
     }
 
-  // Time Distortion & Thunder Overlay
-  if (isTimeDistorted || (player && player.freezeTimer > 0)) {
-    const isFrozen = player && player.freezeTimer > 0;
-    const pulse = Math.abs(Math.sin((isFrozen ? player.freezeTimer : distortionTimer) * 4)) * 0.15;
+  // Time Distortion Overlay
+  if (isTimeDistorted) {
+    const pulse = Math.abs(Math.sin(distortionTimer * 4)) * 0.15;
     ctx.save();
     
-    if (isFrozen) {
-      ctx.fillStyle = `rgba(0, 240, 255, ${0.12 + pulse})`; // Electric cyan pulse
-    } else {
-      ctx.fillStyle = globalTimeScale < 1 
-        ? `rgba(0, 100, 255, ${0.05 + pulse})` 
-        : `rgba(255, 50, 0, ${0.05 + pulse})`;  
-    }
+    ctx.fillStyle = globalTimeScale < 1 
+      ? `rgba(0, 100, 255, ${0.05 + pulse})` 
+      : `rgba(255, 50, 0, ${0.05 + pulse})`;  
     
     ctx.fillRect(0, 0, W, H);
     
     ctx.font = 'bold 12px Orbitron, monospace';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.textAlign = 'center';
-    const msg = isFrozen ? "⚡ STORM CALLING ⚡" : `TIME SCALE: ${globalTimeScale.toFixed(2)}x`;
+    const msg = `TIME SCALE: ${globalTimeScale.toFixed(2)}x`;
     ctx.fillText(msg, W / 2, H - 20);
     ctx.restore();
   }
-
-  // Draw Lightning on TOP of all overlays
-  drawLightnings();
 
   // Echo warning pulse
   if (nextEchoTimer < 1000 && !gameOver && inputBuffer.length >= 15) {
