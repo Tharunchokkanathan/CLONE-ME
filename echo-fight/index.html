@@ -1044,7 +1044,7 @@ const CLONE_BASE_SPEED   = 3.6;
 const RECORD_FRAMES      = 5 * 60;   // 5 s × 60 fps
 const PLAYER_W           = 26;
 const PLAYER_H           = 36;
-const PLAYER_HP          = 100;
+const PLAYER_HP          = 250;
 const ATTACK_DMG         = 35;
 const CLONE_DMG          = 8;
 const ATTACK_RANGE       = 55;
@@ -1678,6 +1678,11 @@ function advanceLevel() {
   spawnPaused = false;
   clones = [];
   nextEchoTimer = 2000;
+  
+  if (player) {
+    player.hp = player.maxHp;
+    addFloatText(player.x + PLAYER_W / 2, player.y - 40, "HEALTH FULLY RESTORED!", "#00ff41");
+  }
   
   if (currentLevel > 6) {
     addFloatText(W/2, H/2, "THE TIMELINE IS STABILIZED. YOU WIN!", "#ffd700");
