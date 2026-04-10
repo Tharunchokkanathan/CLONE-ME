@@ -774,6 +774,7 @@
           <button class="menu-btn" id="new-game-btn">New Game</button>
           <button class="menu-btn" id="load-game-btn">Load Game</button>
           <button class="menu-btn" id="settings-btn">Settings</button>
+          <button class="menu-btn" id="info-btn">Game Info</button>
           <button class="menu-btn quit" id="quit-btn">Quit</button>
         </div>
       </div>
@@ -810,6 +811,16 @@
           </div>
         </div>
         <button class="btn" id="settings-back-btn" style="margin-top:16px">BACK</button>
+      </div>
+
+      <!-- GAME INFO MENU -->
+      <div id="info-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size:1.4rem">GAME INFO</div>
+        <div class="overlay-sub" id="info-content" style="max-width:500px">
+          <!-- Context will be added here -->
+          <p>Incoming data transmission...</p>
+        </div>
+        <button class="btn" id="info-back-btn" style="margin-top:16px">BACK</button>
       </div>
 
       <!-- LOAD GAME MENU -->
@@ -2742,7 +2753,7 @@ function updateHUD() {
 
 // ── Navigation Manager ──────────────────────────────────────
 function showMenu(viewId) {
-  const views = ['main-menu', 'settings-menu', 'load-menu', 'quit-menu', 'game-over-view'];
+  const views = ['main-menu', 'settings-menu', 'load-menu', 'quit-menu', 'game-over-view', 'info-menu'];
   const isMenuVisible = viewId !== 'none';
   const overlay = document.getElementById('overlay');
 
@@ -3249,6 +3260,13 @@ function gameLoop(ts) {
     showMenu('settings-menu');
   });
   document.getElementById('settings-back-btn').addEventListener('click', () => showMenu('main-menu'));
+
+  // 4a. GAME INFO
+  document.getElementById('info-btn').addEventListener('click', () => {
+    SFX.init();
+    showMenu('info-menu');
+  });
+  document.getElementById('info-back-btn').addEventListener('click', () => showMenu('main-menu'));
 
   // 5. LOAD BACK
   document.getElementById('load-back-btn').addEventListener('click', () => showMenu('main-menu'));
