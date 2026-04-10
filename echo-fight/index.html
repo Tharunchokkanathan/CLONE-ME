@@ -1186,13 +1186,17 @@ function drawFloatTexts() {
 
 // ── Platform Collision ────────────────────────────────────────
 function applyPlatforms(entity) {
+  const s = entity.sizeMult || (entity.isGiant ? GIANT_SIZE_MULT : 1);
+  const ew = PLAYER_W * s;
+  const eh = PLAYER_H * s;
+  
   for (const p of PLATFORMS) {
-    const prevBottom = entity.y + PLAYER_H - entity.vy;
-    const curBottom  = entity.y + PLAYER_H;
-    const inX  = entity.x + PLAYER_W > p.x + 4 && entity.x < p.x + p.w - 4;
+    const prevBottom = entity.y + eh - entity.vy;
+    const curBottom  = entity.y + eh;
+    const inX  = entity.x + ew > p.x + 4 && entity.x < p.x + p.w - 4;
     const crossed = prevBottom <= p.y + 2 && curBottom >= p.y;
     if (inX && crossed && entity.vy >= 0) {
-      entity.y       = p.y - PLAYER_H;
+      entity.y       = p.y - eh;
       entity.vy      = 0;
       entity.onGround = true;
     }
@@ -1396,8 +1400,8 @@ function mergeClonesIntoGiant() {
     x: avgX, y: avgY, vx: 0, vy: 0, facing: 1, onGround: false,
     isGiant: true, isSuperior,
     sizeMult: s,
-    hp: totalHP * (isSuperior ? 8 : 2),
-    maxHp: totalHP * (isSuperior ? 8 : 2),
+    hp: totalHP * (isSuperior ? 5 : 1.3),
+    maxHp: totalHP * (isSuperior ? 5 : 1.3),
     alpha: 0, color: isSuperior ? '#ffd700' : '#ff33ff',
     trail: [], jumpsLeft: 0, dashCooldown: 0, 
     isTrapped: false,
@@ -1517,15 +1521,22 @@ function updateGiantEcho(g) {
       
       if (dist < CLONE_ATTACK_RANGE * s * 0.7 && Math.abs(dy) < (PLAYER_H * s)) {
         g.isAttacking = true;
-        g.attackTimer = Math.floor(ATTACK_DUR * 1.5); // 1.5x longer swing
+        g.attackTimer = Math.floor(ATTACK_DUR * 1.5); 
         g.attackCooldown = CLONE_ATTACK_CD + 20;
-        g.maxAttackTimer = g.attackTimer; // Store max for prog calc
+        g.maxAttackTimer = g.attackTimer; 
         
         if (player.invincible <= 0) {
           const damage = Math.round(CLONE_DMG * (g.isSuperior ? 3.5 : 1.8));
           damagePlayer(damage, gx);
         }
       }
+    }
+
+    // Boss Jumping AI
+    if (g.onGround && player.y < g.y - 120 && Math.random() < 0.02) {
+      g.vy = -16;
+      g.onGround = false;
+      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s), g.color, 15, 3);
     }
   }
 
@@ -1537,13 +1548,18 @@ function updateGiantEcho(g) {
   g.x  += (g.vx || 0) * globalTimeScale;
   g.y  += g.vy * globalTimeScale;
 
-  // Ground
+  // Ground & Platform Collision
+  applyPlatforms(g);
+
   const gh = PLAYER_H * s;
   const gw = PLAYER_W * s;
   if (g.y + gh >= ARENA.ground) {
     g.y = ARENA.ground - gh;
     g.vy = 0; g.onGround = true;
-  } else { g.onGround = false; }
+  } else { 
+    // Manual onGround check if not on platform
+    if (g.vy !== 0) g.onGround = false;
+  }
 
   // Walls
   if (g.x < ARENA.left)      { g.x = ARENA.left;   g.vx = 0; }
@@ -1663,18 +1679,18 @@ function spawnLevelBosses() {
   
   const createBoss = (x, y, isSuperior = false) => {
     const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
-    const hpMult = isSuperior ? 5 : 1.5;
+    const hpMult = isSuperior ? 3 : 1.1;
     return {
       x, y, vx: 0, vy: 0, facing: 1, onGround: false,
       isGiant: true, isSuperior,
       sizeMult: s,
-      hp: 1500 * hpMult * (1 + currentLevel * 0.25),
-      maxHp: 1500 * hpMult * (1 + currentLevel * 0.25),
+      hp: 1500 * hpMult * (1 + currentLevel * 0.22),
+      maxHp: 1500 * hpMult * (1 + currentLevel * 0.22),
       alpha: 1, color: isSuperior ? '#ffd700' : '#ff33ff',
       trail: [],
       jumpsLeft: 0, dashCooldown: 0, isTrapped: false,
       attackTimer: 0, attackCooldown: 0, isAttacking: false,
-      timeline: [] // Bosses have no path initially
+      timeline: [] 
     };
   };
 
@@ -2408,6 +2424,7 @@ function drawGravitySpirals() {
     ctx.restore();
   });
 }
+
 
 
 // ── Flame Thrower Logic ────────────────────────────────────
