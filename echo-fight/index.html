@@ -1495,9 +1495,9 @@ function updateGiantEcho(g) {
     // Pursuit AI
     const px = player.x + PLAYER_W / 2;
     const gx = g.x + (PLAYER_W * s) / 2;
-    if (px > gx + 20)      g.vx = MOVE_SPEED * 0.75 * globalTimeScale;
-    else if (px < gx - 20) g.vx = -MOVE_SPEED * 0.75 * globalTimeScale;
-    else                   g.vx *= 0.9;
+    if (px > gx + 20)      { g.vx = MOVE_SPEED * 0.75 * globalTimeScale; g.facing = 1; }
+    else if (px < gx - 20) { g.vx = -MOVE_SPEED * 0.75 * globalTimeScale; g.facing = -1; }
+    else                   { g.vx *= 0.9; }
 
     if (g.attackCooldown <= 0) {
       const dy = (player.y + PLAYER_H / 2) - (g.y + (PLAYER_H * s) / 2);
@@ -1505,8 +1505,9 @@ function updateGiantEcho(g) {
       
       if (dist < CLONE_ATTACK_RANGE * s * 0.7 && Math.abs(dy) < (PLAYER_H * s)) {
         g.isAttacking = true;
-        g.attackTimer = ATTACK_DUR + 10;
+        g.attackTimer = Math.floor(ATTACK_DUR * 1.5); // 1.5x longer swing
         g.attackCooldown = CLONE_ATTACK_CD + 20;
+        g.maxAttackTimer = g.attackTimer; // Store max for prog calc
         
         if (player.invincible <= 0) {
           const damage = Math.round(CLONE_DMG * (g.isSuperior ? 3.5 : 1.8));
@@ -2228,9 +2229,10 @@ function drawCharacter(ent, isPlayer) {
   // Attack slash
   if (ent.isAttacking && ent.attackTimer > 0) {
     const isPower = isPlayer && ent.hasPowerSword && ent.powerHits > 0;
-    const prog  = ent.attackTimer / ATTACK_DUR;
+    const maxDur = ent.maxAttackTimer || ATTACK_DUR;
+    const prog  = Math.min(1, ent.attackTimer / maxDur);
     const atkX  = cx + ent.facing * (hw + 6 * s);
-    const usedRange = isPower ? ATTACK_RANGE * 1.5 : ATTACK_RANGE;
+    const usedRange = isPower ? ATTACK_RANGE * 1.5 : (ent.isGiant ? ATTACK_RANGE * 1.5 : ATTACK_RANGE);
     const atkLen = usedRange * s * prog;
 
     ctx.save();
