@@ -781,7 +781,7 @@
   <!-- Key Legend Box -->
   <div id="controls-legend" class="interface-hidden">
     <div class="legend-item"><span class="legend-key">F</span> Flame Thrower</div>
-    <div class="legend-item"><span class="legend-key">T</span> Time Freeze</div>
+    <div class="legend-item"><span class="legend-key">T</span> Thunder Strike</div>
     <div class="legend-item"><span class="legend-key">G</span> Anti-Gravity (Tornado)</div>
     <div class="legend-item"><span class="legend-key">E</span> Crimson Nova</div>
     <div class="legend-item"><span class="legend-key">P</span> Precision Pistol</div>
@@ -1813,16 +1813,12 @@ function updatePlayer() {
     }
   }
 
-  // Time Freeze Activation (Replaces Thunder)
-  if (player.thunderCooldown > 0 && (player.freezeTimer || 0) <= 0) player.thunderCooldown -= spMult;
-  if (thunderKey() && (player.thunderCooldown || 0) <= 0 && (player.freezeTimer || 0) <= 0) {
-    player.freezeTimer = FREEZE_DURATION;
-    player.thunderCooldown = THUNDER_COOLDOWN;
-    SFX.playFreeze();
-    addFloatText(player.x + PLAYER_W/2, player.y - 50, "TIME STOP!", "#00ffff");
+  // Thunder Strike Activation
+  if (player.thunderCooldown > 0) player.thunderCooldown -= spMult;
+  if (thunderKey() && (player.thunderCooldown || 0) <= 0) {
+    executeThunderStrike();
     triggerShake(15);
   }
-  if (player.freezeTimer > 0) player.freezeTimer -= spMult;
 
   // Activation check
   if (player.gravityCooldown > 0) player.gravityCooldown -= spMult;
@@ -2473,38 +2469,50 @@ function executeThunderStrike() {
     player.thunderCooldown = THUNDER_COOLDOWN;
     
     // Initial Impact
-    const dmg = Math.floor(target.hp * 0.8);
+    const dmg = Math.floor(target.hp * 0.85);
     target.hp -= dmg;
     target.flashTimer = 25;
     
-    addFloatText(player.x + PLAYER_W/2, player.y - 50, "STORM OF JUDGEMENT!", "#ffff33");
-    addFloatText(target.x + 10, target.y - 30, `-${dmg} HEAVENLY DEVASTATION`, '#ffff00');
+    // Conduit Bolt: Sky to Player
+    lightnings.push({
+      segments: generateLightningPath({x: player.x + PLAYER_W/2 + (Math.random()-0.5)*200, y: -100}, {x: player.x + PLAYER_W/2, y: player.y + PLAYER_H/2}),
+      life: 15, maxLife: 15, tx: player.x, ty: player.y
+    });
 
-    // Multi-Strike Loop (Visual)
-    for (let sIdx = 0; sIdx < 5; sIdx++) {
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "STORM OF JUDGEMENT!", "#00ffff");
+    addFloatText(target.x + 10, target.y - 45, `-${dmg} HEAVENLY DEVASTATION`, '#ffff33');
+
+    // Multi-Strike Loop (Visual) - From Sky to Target directly
+    for (let sIdx = 0; sIdx < 6; sIdx++) {
       setTimeout(() => {
         if (!target || !gameRunning) return;
         
         const bSize = target.sizeMult || (target.isGiant ? GIANT_SIZE_MULT : 1);
-        const tx = target.x + (PLAYER_W*bSize)/2 + (Math.random()-0.5)*30;
-        const ty = target.y + (PLAYER_H*bSize)/2 + (Math.random()-0.5)*20;
+        const tx = target.x + (PLAYER_W*bSize)/2 + (Math.random()-0.5)*40;
+        const ty = target.y + (PLAYER_H*bSize)/2 + (Math.random()-0.5)*30;
         
+        // Main target bolt
         lightnings.push({
-          segments: generateLightningPath({x: tx + (Math.random()-0.5)*100, y: -100}, {x: tx, y: ty}),
-          life: 12,
-          maxLife: 12,
-          tx, ty
+          segments: generateLightningPath({x: tx + (Math.random()-0.5)*150, y: -120}, {x: tx, y: ty}),
+          life: 14, maxLife: 14, tx, ty
         });
 
-        triggerShake(35);
-        screenFlash = 5;
-        spawnParticles(tx, ty, '#ffff33', 15, 6);
-        spawnParticles(tx, ty, '#ffffff', 8, 3);
+        // Horizontal Conduit Bolt if close
+        if (sIdx % 2 === 0) {
+           lightnings.push({
+             segments: generateLightningPath({x: player.x + PLAYER_W/2, y: player.y + PLAYER_H/2}, {x: tx, y: ty}),
+             life: 10, maxLife: 10, tx, ty
+           });
+        }
+
+        triggerShake(28);
+        screenFlash = 6;
+        spawnParticles(tx, ty, '#ffff33', 18, 7);
+        spawnParticles(tx, ty, '#00ffff', 10, 4);
         
-        // Minor extra damage for the follow-up bolts (visual consistency)
-        target.hp -= Math.floor(target.hp * 0.05); 
+        target.hp -= Math.floor(target.maxHp * 0.03); 
         target.flashTimer = 15;
-      }, sIdx * 90);
+      }, sIdx * 85);
     }
   } else {
     // Miss / Out of range
@@ -2556,16 +2564,30 @@ function drawLightnings() {
   lightnings.forEach(l => {
     const alpha = l.life / l.maxLife;
     ctx.save();
-    ctx.shadowBlur = 30 * alpha;
+    
+    // Core electric glow
+    ctx.shadowBlur = 40 * alpha;
     ctx.shadowColor = '#00ffff';
     
     l.segments.forEach(seg => {
-      ctx.strokeStyle = seg.isBranch ? `rgba(180, 240, 255, ${alpha * 0.6})` : `rgba(255, 255, 255, ${alpha})`;
-      ctx.lineWidth = (seg.isBranch ? 1.5 : (3 + Math.random() * 4)) * alpha;
+      // Main bolt
+      ctx.strokeStyle = seg.isBranch ? `rgba(180, 240, 255, ${alpha * 0.7})` : `rgba(255, 255, 255, ${alpha})`;
+      ctx.lineWidth = (seg.isBranch ? 1.5 : (4 + Math.random() * 6)) * alpha;
+      
       ctx.beginPath();
       ctx.moveTo(seg.x1, seg.y1);
       ctx.lineTo(seg.x2, seg.y2);
       ctx.stroke();
+
+      // Inner beam
+      if (!seg.isBranch) {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = alpha * 2;
+        ctx.beginPath();
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(seg.x2, seg.y2);
+        ctx.stroke();
+      }
     });
 
     ctx.restore();
