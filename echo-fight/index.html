@@ -816,28 +816,26 @@
       <!-- GAME INFO MENU -->
       <div id="info-menu" class="menu-view hidden">
         <div class="overlay-title" style="font-size:1.4rem">GAME INFO</div>
-        <div class="overlay-sub" id="info-content" style="max-width:600px; text-align: left; padding: 10px 20px; max-height: 60vh; overflow-y: auto;">
+        <div class="overlay-sub" id="info-content" style="max-width:550px; text-align: left; padding: 20px; max-height: 60vh; overflow-y: auto; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #ccc;">
           <p style="margin-bottom: 12px; color: #fff;"><strong>Clone Me</strong> is a fast-paced combat game where you battle your own past actions.</p>
-          <p style="margin-bottom: 12px;">Every move you make is recorded, and after a short delay, a clone appears and replays those exact actions. As time passes, more clones spawn — turning your own strategy into your biggest challenge.</p>
-          <p style="margin-bottom: 20px; font-weight: bold; color: #ff66b2; text-align: center; font-size: 0.9rem;">Think fast. Adapt faster. Survive yourself.</p>
+          <p style="margin-bottom: 20px;">Every move you make is recorded, and after a short delay, a clone appears and replays those exact actions. As time passes, more clones spawn — turning your own strategy into your biggest challenge.</p>
           
-          <h3 style="color: #00ffff; margin-bottom: 12px; font-family: 'Orbitron', monospace; text-transform: uppercase; font-size: 0.85rem; border-bottom: 1px solid rgba(0,255,255,0.3); padding-bottom: 5px;">Algorithms Used</h3>
-          <ul style="list-style-type: none; padding: 0; font-size: 0.75rem; line-height: 1.5;">
-            <li style="margin-bottom: 10px;"><strong style="color: #ffff33;">⏱️ Time-Stamped Recording</strong><br>Captures every player action with exact timing.</li>
-            <li style="margin-bottom: 10px;"><strong style="color: #ff3131;">👻 Replay / Ghost Playback</strong><br>Clones mimic past actions exactly as recorded.</li>
-            <li style="margin-bottom: 10px;"><strong style="color: #00ff66;">🔄 Finite State Machine (FSM)</strong><br>Controls states like Idle, Move, Jump, Attack.</li>
-            <li style="margin-bottom: 10px;"><strong style="color: #ff6600;">💥 Collision Detection</strong><br>Handles hits, damage, and interactions.</li>
-            <li style="margin-bottom: 10px;"><strong style="color: #00ccff;">⏳ Delay-Based Spawn</strong><br>Spawns clones after a fixed time delay.</li>
-            <li style="margin-bottom: 10px;"><strong style="color: #ff00ff;">🔁 Circular Buffer (Queue)</strong><br>Stores recent actions efficiently (FIFO).</li>
+          <h3 style="color: #fff; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">Algorithms Used</h3>
+          <ul style="list-style-type: none; padding: 0; font-size: 0.8rem; line-height: 1.6;">
+            <li style="margin-bottom: 8px;"><strong>Time-Stamped Recording:</strong> Captures every player action with exact timing.</li>
+            <li style="margin-bottom: 8px;"><strong>Replay / Ghost Playback:</strong> Clones mimic past actions exactly as recorded.</li>
+            <li style="margin-bottom: 8px;"><strong>Finite State Machine (FSM):</strong> Controls states like Idle, Move, Jump, Attack.</li>
+            <li style="margin-bottom: 8px;"><strong>Collision Detection:</strong> Handles hits, damage, and interactions.</li>
+            <li style="margin-bottom: 8px;"><strong>Delay-Based Spawn:</strong> Spawns clones after a fixed time delay.</li>
+            <li style="margin-bottom: 20px;"><strong>Circular Buffer:</strong> Stores recent actions efficiently.</li>
           </ul>
 
-          <h3 style="color: #00ffff; margin-top: 20px; margin-bottom: 12px; font-family: 'Orbitron', monospace; text-transform: uppercase; font-size: 0.85rem; border-bottom: 1px solid rgba(0,255,255,0.3); padding-bottom: 5px;">What Problem It Solves</h3>
-          <p style="margin-bottom: 10px; font-size: 0.75rem; line-height: 1.4;">Most combat games rely on predictable enemies or simple AI, which become repetitive and easy to master.</p>
-          <p style="margin-bottom: 8px; font-size: 0.75rem; color: #ff66b2;"><strong>Clone Me solves this by:</strong></p>
-          <ul style="list-style-type: none; padding-left: 0; font-size: 0.75rem; line-height: 1.5; color: #e0e0e0;">
-            <li style="margin-bottom: 6px;"><span style="color: #00ff41;">▶</span> Turning the player’s own skill and behavior into the challenge</li>
-            <li style="margin-bottom: 6px;"><span style="color: #00ff41;">▶</span> Creating infinite, unpredictable difficulty without complex AI</li>
-            <li style="margin-bottom: 15px;"><span style="color: #00ff41;">▶</span> Forcing players to adapt, improve, and rethink their strategy constantly</li>
+          <h3 style="color: #fff; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">What Problem It Solves</h3>
+          <p style="margin-bottom: 12px; font-size: 0.8rem; line-height: 1.5;">Most combat games rely on predictable enemies or simple AI, which become repetitive and easy to master. <strong>Clone Me</strong> solves this by:</p>
+          <ul style="list-style-type: disc; padding-left: 20px; font-size: 0.8rem; line-height: 1.6;">
+            <li style="margin-bottom: 6px;">Turning the player’s own skill and behavior into the challenge.</li>
+            <li style="margin-bottom: 6px;">Creating infinite, unpredictable difficulty without complex AI.</li>
+            <li style="margin-bottom: 10px;">Forcing players to adapt, improve, and rethink their strategy constantly.</li>
           </ul>
         </div>
         <button class="btn" id="info-back-btn" style="margin-top:16px">BACK</button>
