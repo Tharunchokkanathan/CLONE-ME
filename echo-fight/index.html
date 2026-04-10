@@ -369,8 +369,15 @@
       justify-content: center;
       gap: 18px;
       z-index: 10;
-      background: rgba(4,2,12,0.92);
+      background: linear-gradient(135deg, #46000D 0%, #5E0009 20%, #720137 45%, #590054 70%, #42002E 100%);
+      background-size: 300% 300%;
+      animation: palette-shift 10s ease infinite alternate;
       backdrop-filter: none;
+    }
+    @keyframes palette-shift {
+      0%   { background-position: 0% 0%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 100%; }
     }
 
     #overlay.hidden { display: none; }
