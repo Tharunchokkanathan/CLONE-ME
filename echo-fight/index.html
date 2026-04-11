@@ -3188,123 +3188,125 @@ function drawHUD2D() {
     }
 }
 
-// ── Boot & Event Registry ─────────────────────────────────────
-// ── Boot & Event Registry ─────────────────────────────────────
-function initGame() {
-  console.log('initGame executing...');
-  
-  // 1. Show menu immediately 
-  showMenu('main-menu');
-
-  // 2. NEW GAME
-  const newGameBtn = document.getElementById('new-game-btn');
-  if (newGameBtn) {
-    newGameBtn.addEventListener('click', () => {
-      console.log('JS: New Game Clicked');
-      SFX.init();
-      showMenu('none');
-      scaleCanvas();
-      startGame();
-      requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
-    });
-  } else { console.error('new-game-btn not found!'); }
-
-  // 3. LOAD GAME
-  const loadGameBtn = document.getElementById('load-game-btn');
-  if (loadGameBtn) {
-    loadGameBtn.addEventListener('click', () => {
-      console.log('JS: Load Game Clicked');
-      SFX.init();
-      const raw = localStorage.getItem('echo_fight_save');
-      if (raw) {
-        const data = JSON.parse(raw);
-        showMenu('none');
-        scaleCanvas();
-        startGame(data);
-        requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
-      } else {
-        loadSession();
-        showMenu('load-menu');
-      }
-    });
+// ── Final Boot Sequence ──────────────────────────────────────────
+// Ensure Three.js is initialized before anything else
+if (typeof initEngine === 'function') {
+  try {
+    initEngine();
+    console.log("3D Engine Initialized.");
+  } catch(e) {
+    console.error("3D Engine failed to initialize:", e);
   }
-
-  // Settings & Navigation
-  const settingsBtn = document.getElementById('settings-btn');
-  if (settingsBtn) {
-    settingsBtn.addEventListener('click', () => { 
-      console.log('JS: Settings Clicked');
-      SFX.init(); 
-      showMenu('settings-menu'); 
-    });
-  }
-
-  document.getElementById('settings-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
-  document.getElementById('info-btn')?.addEventListener('click', () => { SFX.init(); showMenu('info-menu'); });
-  document.getElementById('info-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
-  document.getElementById('load-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
-
-  // Quit & Stats
-  document.getElementById('quit-btn')?.addEventListener('click', () => {
-    showMenu('quit-menu');
-    const final = document.getElementById('final-stats');
-    const raw = localStorage.getItem('echo_fight_save');
-    if (raw) {
-      const d = JSON.parse(raw);
-      final.innerHTML = `<div class="stat-box"><span class="stat-value">${d.time.toFixed(1)}s</span><span class="stat-label">Best Time</span></div>
-        <div class="stat-box"><span class="stat-value">${d.kills}</span><span class="stat-label">Echoes Defeated</span></div>`;
-    }
-  });
-
-  // Settings sliders persistence
-  const settingsKey = 'echo_fight_settings';
-  const saved = JSON.parse(localStorage.getItem(settingsKey) || '{}');
-  const defaults = { music: 80, sense: 50, vibe: 70, fps: 60, theme: 'neon' };
-  const cfg = { ...defaults, ...saved };
-  window.gameCfg = cfg; 
-
-  const setSlider = (id, valId, key) => {
-    const el = document.getElementById(id);
-    const valEl = document.getElementById(valId);
-    if (!el || !valEl) return;
-    el.value = cfg[key];
-    valEl.textContent = cfg[key];
-    el.addEventListener('input', e => {
-      cfg[key] = Number(e.target.value);
-      valEl.textContent = cfg[key];
-      localStorage.setItem(settingsKey, JSON.stringify(cfg));
-    });
-  };
-  setSlider('set-music', 'val-music', 'music');
-  setSlider('set-sense', 'val-sense', 'sense');
-  setSlider('set-vibe',  'val-vibe',  'vibe');
-
-  // FPS & Theme
-  const setFPS = fps => {
-    cfg.fps = fps;
-    localStorage.setItem(settingsKey, JSON.stringify(cfg));
-    document.getElementById('fps-60').style.borderColor = fps === 60 ? '#ff66b2' : '#333';
-    document.getElementById('fps-90').style.borderColor = fps === 90 ? '#ff66b2' : '#333';
-  };
-  document.getElementById('fps-60')?.addEventListener('click', () => setFPS(60));
-  document.getElementById('fps-90')?.addEventListener('click', () => setFPS(90));
-  setFPS(cfg.fps);
-
-  const setTheme = theme => {
-    cfg.theme = theme;
-    localStorage.setItem(settingsKey, JSON.stringify(cfg));
-    document.getElementById('theme-neon').style.borderColor = theme === 'neon' ? '#ff66b2' : '#333';
-    document.getElementById('theme-ruin').style.borderColor = theme === 'ruin' ? '#00ff41' : '#333';
-  };
-  document.getElementById('theme-neon')?.addEventListener('click', () => setTheme('neon'));
-  document.getElementById('theme-ruin')?.addEventListener('click', () => setTheme('ruin'));
-  setTheme(cfg.theme);
-
-  console.log('initGame finished.');
 }
 
-// Global invocation
-initGame();
+// Attach Event Listeners 
+console.log("Attaching UI Event Listeners...");
+
+const newGameBtn = document.getElementById('new-game-btn');
+if (newGameBtn) {
+  newGameBtn.onclick = () => {
+    console.log('New Game Triggered');
+    if (typeof SFX !== 'undefined') SFX.init();
+    showMenu('none');
+    scaleCanvas();
+    if (typeof startGame === 'function') {
+      startGame();
+      requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
+    }
+  };
+}
+
+const loadGameBtn = document.getElementById('load-game-btn');
+if (loadGameBtn) {
+  loadGameBtn.onclick = () => {
+    console.log('Load Game Triggered');
+    if (typeof SFX !== 'undefined') SFX.init();
+    const raw = localStorage.getItem('echo_fight_save');
+    if (raw) {
+      const data = JSON.parse(raw);
+      showMenu('none');
+      scaleCanvas();
+      startGame(data);
+      requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
+    } else {
+      loadSession();
+      showMenu('load-menu');
+    }
+  };
+}
+
+const settingsBtn = document.getElementById('settings-btn');
+if (settingsBtn) {
+  settingsBtn.onclick = () => { showMenu('settings-menu'); };
+}
+
+document.getElementById('settings-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
+document.getElementById('info-btn')?.addEventListener('click', () => { showMenu('info-menu'); });
+document.getElementById('info-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
+document.getElementById('load-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
+
+document.getElementById('quit-btn')?.addEventListener('click', () => {
+  showMenu('quit-menu');
+  const final = document.getElementById('final-stats');
+  const raw = localStorage.getItem('echo_fight_save');
+  if (raw) {
+    const d = JSON.parse(raw);
+    final.innerHTML = `<div class="stat-box"><span class="stat-value">${d.time.toFixed(1)}s</span><span class="stat-label">Best Time</span></div>
+      <div class="stat-box"><span class="stat-value">${d.kills}</span><span class="stat-label">Echoes Defeated</span></div>`;
+  }
+});
+
+// Auto-run menu on load
+window.addEventListener('load', () => {
+  console.log("Page Loaded. Showing Menu.");
+  showMenu('main-menu');
+  scaleCanvas();
+});
+
+// Settings persistence
+const settingsKey = 'echo_fight_settings';
+const savedCfg = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+const defaultsCfg = { music: 80, sense: 50, vibe: 70, fps: 60, theme: 'neon' };
+const currentCfg = { ...defaultsCfg, ...savedCfg };
+window.gameCfg = currentCfg; 
+
+const setSlider = (id, valId, key) => {
+  const el = document.getElementById(id);
+  const valEl = document.getElementById(valId);
+  if (!el || !valEl) return;
+  el.value = currentCfg[key];
+  valEl.textContent = currentCfg[key];
+  el.addEventListener('input', e => {
+    currentCfg[key] = Number(e.target.value);
+    valEl.textContent = currentCfg[key];
+    localStorage.setItem(settingsKey, JSON.stringify(currentCfg));
+  });
+};
+setSlider('set-music', 'val-music', 'music');
+setSlider('set-sense', 'val-sense', 'sense');
+setSlider('set-vibe',  'val-vibe',  'vibe');
+
+const setFPS = fps => {
+  currentCfg.fps = fps;
+  localStorage.setItem(settingsKey, JSON.stringify(currentCfg));
+  const f60 = document.getElementById('fps-60');
+  const f90 = document.getElementById('fps-90');
+  if(f60) f60.style.borderColor = fps === 6;
+  if(f90) f90.style.borderColor = fps === 90 ? '#ff66b2' : '#333';
+};
+document.getElementById('fps-60')?.addEventListener('click', () => setFPS(60));
+document.getElementById('fps-90')?.addEventListener('click', () => setFPS(90));
+
+const setTheme = theme => {
+  currentCfg.theme = theme;
+  localStorage.setItem(settingsKey, JSON.stringify(currentCfg));
+  const tNeon = document.getElementById('theme-neon');
+  const tRuin = document.getElementById('theme-ruin');
+  if(tNeon) tNeon.style.borderColor = theme === 'neon' ? '#ff66b2' : '#333';
+  if(tRuin) tRuin.style.borderColor = theme === 'ruin' ? '#00ff41' : '#333';
+};
+document.getElementById('theme-neon')?.addEventListener('click', () => setTheme('neon'));
+document.getElementById('theme-ruin')?.addEventListener('click', () => setTheme('ruin'));
 </script>
 </body>
 </html>
