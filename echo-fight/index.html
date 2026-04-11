@@ -1221,14 +1221,13 @@ let isBossPhase = false;
 let spawnPaused = false;
 let shockwaves = [];
 let gravitySpirals = [];
-
-let screenFlash = 0;
-let fireParticles = [];
-let bossOrbs = [];
-let laserBeams = [];
+let clonesKilled = 0;
+let survivalTime = 0;
+let startTime = 0;
 let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
+let droppedWeapons = [];
 
 
 
@@ -3026,6 +3025,45 @@ function showGameOver() {
   `;
   showMenu('game-over-view');
   document.getElementById('overlay').classList.remove('hidden');
+}
+
+// ── Game Initialization Logic ──────────────────────────────
+function startGame(savedData = null) {
+  player       = createPlayer();
+  clones       = [];
+  inputBuffer  = [];
+  particles    = [];
+  floatingTexts= [];
+  shockwaves   = [];
+  droppedRelics = [];
+  droppedWeapons = [];
+  gravitySpirals = [];
+
+  bossOrbs = [];
+  laserBeams = [];
+  activeBosses = [];
+  isBossPhase = false;
+  spawnPaused = false;
+  shakeAmt     = 0; shakeX = 0; shakeY = 0;
+  
+  if (savedData) {
+    clonesKilled = savedData.kills || 0;
+    survivalTime = savedData.time || 0;
+    currentLevel = savedData.level || 1;
+    startTime    = performance.now() - (survivalTime * 1000);
+  } else {
+    clonesKilled = 0;
+    survivalTime = 0;
+    currentLevel = 1;
+    startTime    = performance.now();
+  }
+  
+  diffMult     = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
+  gameOver     = false;
+  gameRunning  = true;
+  globalTimeScale = 1.0;
+  isTimeDistorted = false;
+  distortionTimer = 0;
 }
 
 // ── Main Game Loop (3D Optimized) ──────────────────────────
