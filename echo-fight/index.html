@@ -905,6 +905,8 @@ const meshes = {
   platforms: []
 };
 
+let ctx; // 2D Context for HUD and UI overlays
+
 /* --- Audio Synthesis System --- */
 const SFX = {
   ctx: null,
@@ -1113,6 +1115,9 @@ function initEngine() {
   composer = new THREE.EffectComposer(renderer);
   composer.addPass(renderScene);
   composer.addPass(bloomPass);
+
+  // Initialize 2D context for HUD
+  ctx = canvas.getContext('2d');
 
   // Initialize Platforms as 3D Cubes
   PLATFORMS.forEach(p => {
@@ -3023,79 +3028,32 @@ function showGameOver() {
   document.getElementById('overlay').classList.remove('hidden');
 }
 
-// ── Init ──────────────────────────────────────────────────────
-function startGame(savedData = null) {
-  player       = createPlayer();
-  clones       = [];
-  inputBuffer  = [];
-  particles    = [];
-  floatingTexts= [];
-  shockwaves   = [];
-  droppedWeapons = [];
-  gravitySpirals = [];
-
-  bossOrbs = [];
-  laserBeams = [];
-  activeBosses = [];
-  isBossPhase = false;
-  spawnPaused = false;
-  shakeAmt     = 0; shakeX = 0; shakeY = 0;
+// ── Main Game Loop (3D Optimized) ──────────────────────────
+function gameLoop(timestamp) {
+  if (!gameRunning) return;
   
-  if (savedData) {
-    clonesKilled = savedData.kills || 0;
-    survivalTime = savedData.time || 0;
-    currentLevel = savedData.level || 1;
-    startTime    = performance.now() - (survivalTime * 1000);
-    if (savedData.stats) {
-       player.hp = savedData.stats.hp;
-       player.maxHp = savedData.stats.maxHp;
-    }
-  } else {
-    clonesKilled = 0;
-    survivalTime = 0;
-    currentLevel = 1;
-    startTime    = performance.now();
-  }
-  
-  diffMult     = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
-  window.currentWave = Math.floor(clonesKilled / 3 + 1);
+  if (!window.lastTime) window.lastTime = timestamp;
+  const dt = timestamp - window.lastTime;
+  window.lastTime = timestamp;
 
-  nextEchoTimer = 5000;
-  gameOver     = false;
-  gameRunning  = true;
-  globalTimeScale = 1.0;
-  isTimeDistorted = false;
-  distortionTimer = 0;
-}
-
-
-
-// ── Main Loop ─────────────────────────────────────────────────
-let lastTime = 0;
-
-function gameLoop(ts) {
-  const dt = Math.min(ts - lastTime, 33);
-  lastTime  = ts;
-
+  // 1. Logic Updates
   updateShake();
-
-  ctx.save();
-  ctx.translate(shakeX, shakeY);
-
-  if (!gameOver && gameRunning) {
+  
+  if (!gameOver) {
     recordFrame();
     updatePlayer();
-
+    
     // Time Scale for world entities
     const eScale = globalTimeScale;
-    const eDt = eScale * dt;
-
+    
+    // Level Progression
     if (eScale > 0) {
-      nextEchoTimer -= dt;
-      survivalTime = (ts - startTime) / 1000;
+      survivalTime += (dt * eScale) / 1000;
+      nextEchoTimer -= dt * eScale;
       diffMult = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
     }
-    
+
+    // Spawner
     if (nextEchoTimer <= 0 && !spawnPaused && eScale > 0) {
       spawnClone();
       nextEchoTimer = spawnInterval();
@@ -3107,213 +3065,62 @@ function gameLoop(ts) {
       }
     }
 
-    const newWave = Math.floor(clonesKilled / 3 + 1);
-    if (newWave > window.currentWave) {
-      window.currentWave = newWave;
-      saveSession();
-      addFloatText(W/2, H/2 - 40, "CHECKPOINT SAVED", "#00ff41");
-      SFX.playWin();
-    }
-
     // Check for merge
     if (!isBossPhase && clones.length >= MERGE_THRESHOLD) {
       mergeClonesIntoGiant();
     }
 
     // Update / cull clones
-    if (!isBossPhase) {
-      for (let i = clones.length - 1; i >= 0; i--) {
-        const c = clones[i];
-        if (eScale > 0) updateClone(c);
-        if (c.hp <= 0) {
-          const c = clones[i];
-          spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#cc44ff', 22, 5);
-          addFloatText(c.x + PLAYER_W / 2, c.y - 22, 'ECHO BANISHED', '#dd88ff');
-          clones.splice(i, 1);
-          clonesKilled++;
-          triggerShake(4);
-        }
+    clones.forEach(c => { if (eScale > 0) updateClone(c); });
+    clones = clones.filter(c => {
+      if (c.hp <= 0) {
+        if (c.mesh) scene.remove(c.mesh);
+        clonesKilled++;
+        spawnParticles(c.x, c.y, c.color || '#ff00ff', 15, 3);
+        return false;
       }
-    }
+      return true;
+    });
+
     // Update / cull Bosses
-    for (let i = activeBosses.length - 1; i >= 0; i--) {
-      const b = activeBosses[i];
-      if (eScale > 0) updateGiantEcho(b);
+    activeBosses.forEach(b => { if (eScale > 0) updateGiantEcho(b); });
+    activeBosses = activeBosses.filter(b => {
       if (b.hp <= 0) {
-        const bSize = b.sizeMult || GIANT_SIZE_MULT;
-        spawnParticles(b.x + (PLAYER_W * bSize) / 2, b.y + (PLAYER_H * bSize) / 2, b.isSuperior ? '#ffd700' : '#ff33ff', 50, 10);
-        addFloatText(b.x + (PLAYER_W * bSize) / 2, b.y - 40, b.isSuperior ? 'SUPERIOR BANISHED' : 'GIANT DESTROYED', b.isSuperior ? '#ffd700' : '#ff55ff');
-        
-        // Spawn Relic / Reward
-        droppedRelics.push({
-          x: b.x + (PLAYER_W * bSize) / 2 - 15,
-          y: b.y + (PLAYER_H * bSize) / 2,
-          w: 30, h: 30, vy: -8, type: Math.random() < 0.3 ? 'HP' : (Math.random() < 0.6 ? 'DUR' : 'WP'),
-          bounce: 3
-        });
-
-        activeBosses.splice(i, 1);
-        clonesKilled += 2;
-        triggerShake(15);
-        SFX.playWin();
-
-        // Level clearing logic
-        if (activeBosses.length === 0) {
-           startLevelClearTransition();
-        }
+        if (b.mesh) scene.remove(b.mesh);
+        clonesKilled += 5;
+        spawnParticles(b.x, b.y, b.color || '#ff00ff', 30, 5);
+        if (activeBosses.length === 0) startLevelClearTransition();
+        return false;
       }
-    }
+      return true;
+    });
 
+    // Progression logic
     if (levelClearing && eScale > 0) {
-       levelTimer -= dt;
+       levelTimer -= dt * eScale;
        if (levelTimer <= 0) advanceLevel();
     }
 
-    // Update Relics
-    for (let i = droppedRelics.length - 1; i >= 0; i--) {
-      const r = droppedRelics[i];
-      if (eScale > 0) {
-        r.vy += GRAVITY * globalTimeScale;
-        r.y += r.vy * globalTimeScale;
-      }
-      if (r.y + r.h >= ARENA.ground) {
-        r.y = ARENA.ground - r.h;
-        if (r.bounce > 0) { r.vy = -r.vy * 0.4; r.bounce--; } else { r.vy = 0; }
-      }
-      
-      const pCx = player.x + PLAYER_W / 2;
-      const pCy = player.y + PLAYER_H / 2;
-      const rCx = r.x + r.w / 2;
-      const rCy = r.y + r.h / 2;
-      
-      if (Math.abs(pCx - rCx) < (PLAYER_W/2 + r.w/2) && Math.abs(pCy - rCy) < (PLAYER_H/2 + r.h/2)) {
-         if (r.type === 'WP') {
-           player.hasPowerSword = true;
-           player.powerHits = 40;
-           addFloatText(player.x, player.y - 60, "OMEGA BLADE ACQUIRED", "#ffd700");
-         } else if (r.type === 'HP') {
-           player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5);
-           addFloatText(player.x, player.y - 60, "VITALITY POTION", "#00ff41");
-         } else if (r.type === 'DUR') {
-           player.maxHp += 100;
-           player.hp += 100;
-           addFloatText(player.x, player.y - 60, "FORTIFIED CORE (+100 HP)", "#ff33b2");
-         }
-         droppedRelics.splice(i, 1);
-         SFX.playWin();
-      }
+    // World Entities & Abilities
+    if (eScale > 0) {
+      updateShockwaves();
+      updateGravitySpirals();
+      updateFireParticles();
+      updateBossProjectiles();
     }
-
-    // Update Shockwaves
-    if (eScale > 0) updateShockwaves();
-
-    // Update Weapons
-    for (let i = droppedWeapons.length - 1; i >= 0; i--) {
-      const w = droppedWeapons[i];
-      if (eScale > 0) {
-        w.vy += GRAVITY * globalTimeScale;
-        w.y += w.vy * globalTimeScale;
-      }
-      if (w.y + w.h >= ARENA.ground) {
-        w.y = ARENA.ground - w.h;
-        if (w.bounce > 0) { w.vy = -w.vy * 0.4; w.bounce--; } else { w.vy = 0; }
-      }
-      const pCx = player.x + PLAYER_W / 2;
-      const pCy = player.y + PLAYER_H / 2;
-      const wCx = w.x + w.w / 2;
-      const wCy = w.y + w.h / 2;
-      if (Math.abs(pCx - wCx) < (PLAYER_W/2 + w.w/2) && Math.abs(pCy - wCy) < (PLAYER_H/2 + w.h/2)) {
-         player.hasPowerSword = true;
-         player.powerHits = 15;
-         droppedWeapons.splice(i, 1);
-         addFloatText(pCx, pCy - 30, "POWER SWORD!", "#ffcc00");
-         spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ffcc00', 15, 4);
-      }
-    }
-
-    // Time Distortion Logic
-    if (isTimeDistorted) {
-      distortionTimer += 0.015;
-      // Cycle: Normal (1.0) -> Slow (0.4) -> Fast (1.6) -> Normal (1.0)
-      const cycle = Math.sin(distortionTimer); // -1 to 1
-      globalTimeScale = 1.0 + cycle * 0.6;
-    } else {
-      globalTimeScale = 1.0;
-    }
-
-    // Player death
-    if (player.hp <= 0) {
-      gameOver = true;
-      gameRunning = false;
-      triggerShake(14);
-      spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#4488ff', 30, 7);
-      setTimeout(showGameOver, 1300);
-    }
-
-    updateGravitySpirals();
-
-    updateFireParticles();
-    updateBossProjectiles();
-    if (screenFlash > 0) screenFlash -= 1 * globalTimeScale;
+    
     updateParticles();
     updateFloatTexts();
     updateHUD();
   }
 
-
-// ── Main Game Loop ──────────────────────────────────────────
-function gameLoop(timestamp) {
-  if (!gameRunning) return;
-  
-  if (!window.lastTime) window.lastTime = timestamp;
-  const dt = timestamp - window.lastTime;
-  window.lastTime = timestamp;
-
-  // 1. Physics & Logic Updates
-  updateShake();
-  updatePlayer();
-  recordFrame();
-  
-  // Clones
-  clones.forEach(updateClone);
-  clones = clones.filter(c => {
-    if (c.hp <= 0) {
-      if (c.mesh) scene.remove(c.mesh);
-      return false;
-    }
-    return true;
-  });
-
-  // Bosses
-  activeBosses.forEach(updateGiantEcho);
-  activeBosses = activeBosses.filter(b => {
-    if (b.hp <= 0) {
-      if (b.mesh) scene.remove(b.mesh);
-      clonesKilled++;
-      return false;
-    }
-    return true;
-  });
-
-  // Level Progression
-  survivalTime += dt / 1000;
-  
-  // Spawner
-  if (!spawnPaused) {
-    nextEchoTimer -= dt;
-    if (nextEchoTimer <= 0) {
-      spawnClone();
-      nextEchoTimer = spawnInterval();
-    }
-  }
-
-  // 2. Ability Updates (3D Visuals)
-  // [Nova, Flame, Tornado logic would go here]
-
   // 3. Clear 2D Canvas for HUD/Text
   if (ctx) {
      ctx.clearRect(0, 0, W, H);
-     drawHUD2D(); // Minimal 2D overlay for text
+     ctx.save();
+     ctx.translate(shakeX, shakeY);
+     drawHUD2D(); 
+     ctx.restore();
   }
 
   // 4. Render 3D Scene
@@ -3343,9 +3150,9 @@ function drawHUD2D() {
     }
 }
 
-// ── Boot ──────────────────────────────────────────────────────
+// ── Boot & Event Registry ─────────────────────────────────────
 (function initGame() {
-  // 1. Show menu immediately - no dependencies
+  // 1. Show menu immediately 
   showMenu('main-menu');
 
   // 2. NEW GAME
@@ -3354,10 +3161,10 @@ function drawHUD2D() {
     showMenu('none');
     scaleCanvas();
     startGame();
-    requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+    requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
   });
 
-  // 3. LOAD GAME (Resume)
+  // 3. LOAD GAME
   document.getElementById('load-game-btn').addEventListener('click', () => {
     SFX.init();
     const raw = localStorage.getItem('echo_fight_save');
@@ -3366,31 +3173,21 @@ function drawHUD2D() {
       showMenu('none');
       scaleCanvas();
       startGame(data);
-      requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+      requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
     } else {
       loadSession();
       showMenu('load-menu');
     }
   });
 
-  // 4. SETTINGS
-  document.getElementById('settings-btn').addEventListener('click', () => {
-    SFX.init();
-    showMenu('settings-menu');
-  });
+  // Settings & Navigation
+  document.getElementById('settings-btn').addEventListener('click', () => { SFX.init(); showMenu('settings-menu'); });
   document.getElementById('settings-back-btn').addEventListener('click', () => showMenu('main-menu'));
-
-  // 4a. GAME INFO
-  document.getElementById('info-btn').addEventListener('click', () => {
-    SFX.init();
-    showMenu('info-menu');
-  });
+  document.getElementById('info-btn').addEventListener('click', () => { SFX.init(); showMenu('info-menu'); });
   document.getElementById('info-back-btn').addEventListener('click', () => showMenu('main-menu'));
-
-  // 5. LOAD BACK
   document.getElementById('load-back-btn').addEventListener('click', () => showMenu('main-menu'));
 
-  // 6. QUIT
+  // Quit & Stats
   document.getElementById('quit-btn').addEventListener('click', () => {
     showMenu('quit-menu');
     const final = document.getElementById('final-stats');
@@ -3402,12 +3199,12 @@ function drawHUD2D() {
     }
   });
 
-  // 7. Settings sliders - persist to localStorage
+  // Settings sliders persistence
   const settingsKey = 'echo_fight_settings';
   const saved = JSON.parse(localStorage.getItem(settingsKey) || '{}');
   const defaults = { music: 80, sense: 50, vibe: 70, fps: 60, theme: 'neon' };
   const cfg = { ...defaults, ...saved };
-  window.gameCfg = cfg; // Expose globally for rendering
+  window.gameCfg = cfg; 
 
   const setSlider = (id, valId, key) => {
     const el = document.getElementById(id);
@@ -3419,14 +3216,13 @@ function drawHUD2D() {
       cfg[key] = Number(e.target.value);
       valEl.textContent = cfg[key];
       localStorage.setItem(settingsKey, JSON.stringify(cfg));
-      if (key === 'vibe' && navigator.vibrate) navigator.vibrate(15);
     });
   };
   setSlider('set-music', 'val-music', 'music');
   setSlider('set-sense', 'val-sense', 'sense');
   setSlider('set-vibe',  'val-vibe',  'vibe');
 
-  // FPS toggle
+  // FPS & Theme
   const setFPS = fps => {
     cfg.fps = fps;
     localStorage.setItem(settingsKey, JSON.stringify(cfg));
@@ -3437,7 +3233,6 @@ function drawHUD2D() {
   document.getElementById('fps-90').addEventListener('click', () => setFPS(90));
   setFPS(cfg.fps);
 
-  // Theme toggle
   const setTheme = theme => {
     cfg.theme = theme;
     localStorage.setItem(settingsKey, JSON.stringify(cfg));
