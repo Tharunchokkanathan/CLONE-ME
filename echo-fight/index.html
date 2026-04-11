@@ -4,7 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CLONE ME — Battle Your Past Self</title>
-  <meta name="description" content="A 2D real-time arena game where you fight clones of your own past actions. How long can you survive yourself?" />
+  <meta name="description" content="A 3D real-time arena game where you fight clones of your own past actions. How long can you survive yourself?" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
 
@@ -884,7 +891,19 @@
 // ═══════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('canvas');
-const ctx    = canvas.getContext('2d');
+// Three.js Core
+let renderer, scene, camera, composer;
+let camMode = 0; // 0: Iso, 1: Follow, 2: Side
+const CAM_MODES = ['ISO', 'FOLLOW', 'SIDE'];
+
+// 3D Objects
+const meshes = {
+  player: null,
+  clones: [],
+  bosses: [],
+  arena: null,
+  platforms: []
+};
 
 /* --- Audio Synthesis System --- */
 const SFX = {
@@ -1006,9 +1025,9 @@ function scaleCanvas() {
   const scale   = Math.min(availW / W, availH / H);
   
   const canv = document.getElementById('canvas');
-  if (canv) {
-    canv.style.width  = (W * scale) + 'px';
-    canv.style.height = (H * scale) + 'px';
+  if (canv && renderer) {
+    renderer.setSize(W * scale, H * scale);
+    if (composer) composer.setSize(W * scale, H * scale);
     canv._scale = scale;
   }
   
@@ -1025,6 +1044,10 @@ window.addEventListener('resize', scaleCanvas);
 // Prevent Alt-key from opening browser menus, and bind Escape to pause/resume
 window.addEventListener('keydown', e => { 
   if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); 
+  if (e.code === 'KeyV') {
+    camMode = (camMode + 1) % 3;
+    addFloatText(W/2, H/2, `CAMERA: ${CAM_MODES[camMode]}`, '#00ffff');
+  }
   if (e.code === 'Escape') {
     if (gameRunning && !gameOver) {
       gameRunning = false;
@@ -1037,14 +1060,75 @@ window.addEventListener('keydown', e => {
   }
 });
 
-// ── Arena ──────────────────────────────────────────────────────
+// ── Arena (3D Space) ─────────────────────────────────────────
 const ARENA = {
-  x: 30, y: 30,
-  w: W - 60,
-  ground: H - 60,
-  left:  30,
-  right: W - 30,
+  w: 1200,
+  d: 1200, // Depth (Z-axis)
+  ground: 0,
+  limitX: 600,
+  limitZ: 600
 };
+
+function initEngine() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x000000, 0.0008);
+
+  camera = new THREE.PerspectiveCamera(75, W / H, 0.1, 5000);
+  
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(W, H);
+  renderer.setClearColor(0x000000, 1);
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0x404040, 0.5);
+  scene.add(ambient);
+  
+  const sun = new THREE.DirectionalLight(0x00ffcc, 0.8);
+  sun.position.set(100, 200, 100);
+  scene.add(sun);
+
+  // Floor
+  const gridHelper = new THREE.GridHelper(ARENA.w, 40, 0xff00ff, 0x333333);
+  scene.add(gridHelper);
+  
+  const floorGeo = new THREE.PlaneGeometry(ARENA.w, ARENA.d);
+  const floorMat = new THREE.MeshPhongMaterial({ 
+    color: 0x050505, 
+    transparent: true, 
+    opacity: 0.8,
+    side: THREE.DoubleSide 
+  });
+  meshes.arena = new THREE.Mesh(floorGeo, floorMat);
+  meshes.arena.rotation.x = -Math.PI / 2;
+  scene.add(meshes.arena);
+
+  // Post-processing
+  const renderScene = new THREE.RenderPass(scene, camera);
+  const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.5, 0.4, 0.85);
+  bloomPass.threshold = 0.2;
+  bloomPass.strength = 1.2;
+  bloomPass.radius = 0.5;
+
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(renderScene);
+  composer.addPass(bloomPass);
+
+  // Initialize Platforms as 3D Cubes
+  PLATFORMS.forEach(p => {
+    const geo = new THREE.BoxGeometry(p.w, 10, 60);
+    const mat = new THREE.MeshPhongMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5 });
+    const mesh = new THREE.Mesh(geo, mat);
+    // Convert 2D coord to 3D: 2D(x, y) -> 3D(x - W/2, H - y, 0?) 
+    // Actually, let's map Arena width center to 0.
+    mesh.position.set(p.x - W/2 + p.w/2, (H - p.y), 0);
+    scene.add(mesh);
+    meshes.platforms.push(mesh);
+  });
+
+  scaleCanvas();
+}
+initEngine();
 
 // ── Platforms ─────────────────────────────────────────────────
 const PLATFORMS = [
@@ -1106,6 +1190,9 @@ function attackKey()  { return pressing('AltLeft', 'AltRight'); }
 function jumpKey()    { return pressing('ArrowUp', 'KeyW', 'Space'); }
 function leftKey()    { return pressing('ArrowLeft',  'KeyA'); }
 function rightKey()   { return pressing('ArrowRight', 'KeyD'); }
+// 3D Specific
+function forwardKey() { return pressing('KeyW', 'ArrowUp'); }
+function backwardKey() { return pressing('KeyS', 'ArrowDown'); }
 function dashKey()    { return pressing('ShiftLeft', 'ShiftRight'); }
 function novaKey()    { return pressing('KeyE'); }
 function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
@@ -1221,18 +1308,32 @@ function drawFloatTexts() {
 
 // ── Platform Collision ────────────────────────────────────────
 function applyPlatforms(entity) {
-  const s = entity.sizeMult || (entity.isGiant ? GIANT_SIZE_MULT : 1);
-  const ew = PLAYER_W * s;
-  const eh = PLAYER_H * s;
+  const ew = PLAYER_W;
+  const ed = 60; // Standard platform depth in 3D init
   
-  for (const p of PLATFORMS) {
-    const prevBottom = entity.y + eh - entity.vy;
-    const curBottom  = entity.y + eh;
-    const inX  = entity.x + ew > p.x + 4 && entity.x < p.x + p.w - 4;
-    const crossed = prevBottom <= p.y + 2 && curBottom >= p.y;
-    if (inX && crossed && entity.vy >= 0) {
-      entity.y       = p.y - eh;
-      entity.vy      = 0;
+  for (let i = 0; i < PLATFORMS.length; i++) {
+    const p = PLATFORMS[i];
+    const mesh = meshes.platforms[i];
+    if (!mesh) continue;
+
+    // Platform bounds in 3D (mesh position is center)
+    const pX = mesh.position.x;
+    const pY = mesh.position.y;
+    const pZ = mesh.position.z;
+    const pW = p.w;
+    const pH = 10;
+    const pD = 60;
+
+    const inX = entity.x + ew/2 > pX - pW/2 && entity.x - ew/2 < pX + pW/2;
+    const inZ = entity.z + ed/2 > pZ - pD/2 && entity.z - ed/2 < pZ + pD/2;
+    
+    const prevBottom = entity.y - entity.vy;
+    const curBottom  = entity.y;
+    const crossed = prevBottom >= pY + pH/2 && curBottom <= pY + pH/2;
+
+    if (inX && inZ && crossed && entity.vy <= 0) {
+      entity.y = pY + pH/2;
+      entity.vy = 0;
       entity.onGround = true;
     }
   }
@@ -1240,12 +1341,17 @@ function applyPlatforms(entity) {
 
 // ── Player factory ────────────────────────────────────────────
 function createPlayer() {
+  const geo = new THREE.CapsuleGeometry(PLAYER_W/2, PLAYER_H/2, 4, 8);
+  const mat = new THREE.MeshPhongMaterial({ color: 0x00ff41, emissive: 0x00ff41, emissiveIntensity: 0.5 });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+  meshes.player = mesh;
+
   return {
-    x: W / 2 - PLAYER_W / 2,
-    y: ARENA.ground - PLAYER_H,
-    vx: 0, vy: 0,
+    x: 0, y: 50, z: 0,
+    vx: 0, vy: 0, vz: 0,
     onGround: false,
-    facing: 1,
+    facing: new THREE.Vector3(1, 0, 0),
     hp: PLAYER_HP, maxHp: PLAYER_HP,
     attackTimer: 0, attackCooldown: 0,
     isAttacking: false,
@@ -1261,7 +1367,8 @@ function createPlayer() {
     shieldEnergy: 100, maxShield: 100, isShielded: false,
     pistolCooldown: 0,
     gravityCooldown: 0,
-    flameCooldown: 0, isFlaming: false, flameDuration: 0
+    flameCooldown: 0, isFlaming: false, flameDuration: 0,
+    mesh: mesh
   };
 }
 
@@ -1292,14 +1399,16 @@ function damagePlayer(amount, sourceX) {
 // ── Record one snapshot of the player ─────────────────────────
 function recordFrame() {
   inputBuffer.push({
-    x: player.x, y: player.y,
-    vx: player.vx, vy: player.vy,
-    facing: player.facing,
+    x: player.x, y: player.y, z: player.z,
+    vx: player.vx, vy: player.vy, vz: player.vz,
+    facing: player.facing.clone(),
     onGround: player.onGround,
     isAttacking: player.isAttacking,
     attackTimer: player.attackTimer,
     moveLeft:  leftKey(),
     moveRight: rightKey(),
+    moveForward: forwardKey(),
+    moveBackward: backwardKey(),
     jumping:   jumpKey(),
     attacking: attackKey(),
     dashing:   dashKey(),
@@ -1312,15 +1421,20 @@ function recordFrame() {
 // ── Spawn clone using recorded timeline ───────────────────────
 function spawnClone() {
   if (inputBuffer.length < 15) return;
-  const timeline = [...inputBuffer];
+  const timeline = JSON.parse(JSON.stringify(inputBuffer)); 
   const first    = timeline[0];
-  const cloneColors = ['#ff00ff', '#ff66b2', '#ff3131', '#ffff33', '#00ccff'];
+  const cloneColors = [0xff00ff, 0xff66b2, 0xff3131, 0xffff33, 0x00ccff];
+  const color = cloneColors[Math.floor(Math.random() * cloneColors.length)];
 
+  const geo = new THREE.CapsuleGeometry(PLAYER_W/2, PLAYER_H/2, 4, 8);
+  const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.5, transparent: true, opacity: 0 });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
 
   const clone = {
-    x: first.x, y: first.y,
-    vx: 0, vy: 0,
-    facing: first.facing,
+    x: first.x, y: first.y, z: first.z,
+    vx: 0, vy: 0, vz: 0,
+    facing: new THREE.Vector3(1, 0, 0),
     onGround: false,
     hp: CLONE_HP, maxHp: CLONE_HP,
     frameIdx: 0,
@@ -1332,10 +1446,12 @@ function spawnClone() {
     alpha: 0,
     trail: [],
     flashTimer: 0,
-    color: cloneColors[Math.floor(Math.random() * cloneColors.length)],
+    color: '#' + color.toString(16).padStart(6, '0'),
+    mesh: mesh
   };
   clones.push(clone);
-  spawnParticles(clone.x + PLAYER_W / 2, clone.y + PLAYER_H / 2, clone.color, 18, 5);
+  meshes.clones.push(mesh);
+  spawnParticles(clone.x, clone.y, clone.color, 18, 5);
 }
 
 // ── Update one clone ──────────────────────────────────────────
@@ -1398,21 +1514,23 @@ function updateClone(c) {
   c.vy += GRAVITY * globalTimeScale;
   c.x  += c.vx * globalTimeScale;
   c.y  += c.vy * globalTimeScale;
-
-
+  c.z  += (c.vz || 0) * globalTimeScale;
 
   // Ground
-  if (c.y + PLAYER_H >= ARENA.ground) {
-    c.y = ARENA.ground - PLAYER_H;
+  if (c.y <= ARENA.ground) {
+    c.y = ARENA.ground;
     c.vy = 0; c.onGround = true;
   } else { c.onGround = false; }
 
-  // Platforms
-  applyPlatforms(c);
-
   // Walls
-  if (c.x < ARENA.left)              { c.x = ARENA.left;              c.vx = 0; }
-  if (c.x + PLAYER_W > ARENA.right)  { c.x = ARENA.right - PLAYER_W;  c.vx = 0; }
+  if (Math.abs(c.x) > ARENA.limitX) c.x = Math.sign(c.x) * ARENA.limitX;
+  if (Math.abs(c.z) > ARENA.limitZ) c.z = Math.sign(c.z) * ARENA.limitZ;
+
+  // Visual Update
+  if (c.mesh) {
+    c.mesh.position.set(c.x, c.y + PLAYER_H/2, c.z);
+    c.mesh.rotation.y = Math.atan2(c.vx, c.vz || 0.001);
+  }
 
   // Trail
   c.trail.push({ x: c.x, y: c.y });
@@ -1427,31 +1545,45 @@ function mergeClonesIntoGiant() {
   spawnPaused = true;
   triggerShake(15);
 
-  let avgX = 0, avgY = 0, totalHP = 0;
-  clones.forEach(c => { avgX += c.x; avgY += c.y; totalHP += c.hp; });
+  let avgX = 0, avgY = 0, avgZ = 0, totalHP = 0;
+  clones.forEach(c => { avgX += c.x; avgY += c.y; avgZ += (c.z || 0); totalHP += c.hp; });
   avgX /= clones.length;
   avgY /= clones.length;
+  avgZ /= clones.length;
 
   const isSuperior = currentLevel >= 3;
   const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
   
-  activeBosses.push({
-    x: avgX, y: avgY, vx: 0, vy: 0, facing: 1, onGround: false,
+  const color = isSuperior ? 0xffd700 : 0xff33ff;
+  const geo = new THREE.CapsuleGeometry((PLAYER_W/2)*s, (PLAYER_H/2)*s, 4, 8);
+  const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+
+  const boss = {
+    x: avgX, y: avgY, z: avgZ,
+    vx: 0, vy: 0, vz: 0, facing: new THREE.Vector3(1, 0, 0), onGround: false,
     isGiant: true, isSuperior,
     sizeMult: s,
     hp: totalHP * (isSuperior ? 5 : 1.3),
     maxHp: totalHP * (isSuperior ? 5 : 1.3),
-    alpha: 0, color: isSuperior ? '#ffd700' : '#ff33ff',
+    alpha: 1, color: '#' + color.toString(16).padStart(6, '0'),
     trail: [], jumpsLeft: 0, dashCooldown: 0, 
     isTrapped: false,
     timeline: clones[0].timeline || [],
     isSlamming: false, slamState: 0, slamTimer: 0, shockwaveTimer: 300, phase: 1,
-    attackTimer: 0, attackCooldown: 0, isAttacking: false
-  });
+    attackTimer: 0, attackCooldown: 0, isAttacking: false,
+    mesh: mesh
+  };
+  activeBosses.push(boss);
+  meshes.bosses.push(mesh);
   
-  clones.forEach(c => spawnParticles(c.x + PLAYER_W/2, c.y + PLAYER_H/2, '#aa33ff', 10, 3));
+  clones.forEach(c => {
+    spawnParticles(c.x, c.y, '#aa33ff', 10, 3);
+    scene.remove(c.mesh);
+  });
   clones = [];
-  addFloatText(W/2, H/2 - 50, isSuperior ? "SUPERIOR GIANT FORMING" : "GIANT ECHO FORMING", isSuperior ? "#ffd700" : "#ff33ff");
+  addFloatText(0, 200, isSuperior ? "SUPERIOR GIANT FORMING" : "GIANT ECHO FORMING", isSuperior ? "#ffd700" : "#ff33ff");
 }
 
 function updateGiantEcho(g) {
@@ -1464,150 +1596,64 @@ function updateGiantEcho(g) {
 
   const s = g.sizeMult || GIANT_SIZE_MULT;
 
-  // Boss Special Abilities by Level
+  // Boss Special Abilities in 3D
   if (currentLevel >= 3) {
     g.fireTrailTimer = (g.fireTrailTimer || 0) - 1 * globalTimeScale;
-    if (g.fireTrailTimer <= 0 && Math.abs(g.vx) > 0.5 && !g.isSlamming) {
+    if (g.fireTrailTimer <= 0 && (Math.abs(g.vx) > 0.5 || Math.abs(g.vz) > 0.5) && !g.isSlamming) {
       g.fireTrailTimer = 18;
-      spawnFireParticle(g.x + (PLAYER_W*s)/2, ARENA.ground - 10, 0, -2);
+      spawnFireParticle(g.x, ARENA.ground, 0, -2); // Still 2D particles for now, but centered
     }
   }
 
-  if (currentLevel >= 4) {
-    g.orbTimer = (g.orbTimer || 300) - 1 * globalTimeScale;
-    if (g.orbTimer <= 0 && !g.isSlamming) {
-      g.orbTimer = 350 + Math.random() * 200;
-      bossOrbs.push({
-        x: g.x + (PLAYER_W*s)/2, y: g.y + (PLAYER_H*s)/2,
-        vx: 0, vy: 0, speed: 2.5, life: 600, radius: 15
-      });
-      triggerShake(5);
-      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 40, "SEEKER ORB!", "#ff00ff");
-    }
-  }
-
-  if (currentLevel >= 5) {
-    g.blinkTimer = (g.blinkTimer || 450) - 1 * globalTimeScale;
-    if (g.blinkTimer <= 0 && !g.isSlamming) {
-      g.blinkTimer = 450 + Math.random() * 200;
-      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s)/2, '#ffffff', 30, 8); // Poof
-      g.x = Math.max(50, Math.min(W - (PLAYER_W*s) - 50, player.x + PLAYER_W/2 - (PLAYER_W*s)/2));
-      g.y = player.y - 150;
-      g.vy = 5;
-      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s)/2, '#00ffff', 30, 8); // Reappear
-      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 20, "BLINK STRIKE", "#00ffff");
-      g.isSlamming = true; g.slamState = 2; // Immediate slam mid-air drop
-    }
-  }
-
-  if (currentLevel >= 6) {
-    g.laserTimer = (g.laserTimer || 600) - 1 * globalTimeScale;
-    if (g.laserTimer <= 0 && !g.isSlamming) {
-      g.laserTimer = 450 + Math.random() * 150;
-      g.vx = 0; // stop moving
-      const dir = player.x > g.x ? 1 : -1;
-      laserBeams.push({
-        x: g.x + (PLAYER_W*s)/2, y: g.y + (PLAYER_H*s)/2 - 30,
-        angle: dir === 1 ? -Math.PI/8 : Math.PI + Math.PI/8,
-        sweepSpeed: dir === 1 ? 0.015 : -0.015,
-        life: 150, width: 22
-      });
-      triggerShake(20);
-      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 60, "OMEGA LASER", "#ff0000");
-    }
-  }
-
-  // Slam State Machine
-  if (g.isSlamming) {
-    if (g.slamState === 1) { // Jumping
-      g.vy = -18;
-      g.onGround = false;
-      g.slamState = 2;
-      addFloatText(g.x + (PLAYER_W * s) / 2, g.y - 20, "PREPARING SLAM", "#ffaa00");
-    } else if (g.slamState === 2) { // Mid-air wait
-      if (g.vy >= 0) { // Peak of jump
-        g.vy = 0;
-        g.slamTimer += 1 * globalTimeScale;
-        if (g.slamTimer > 40) {
-          g.slamState = 3;
-          g.vy = 25; // Slam down!
-        }
-      }
-    } else if (g.slamState === 3) { // Slamming down
-      if (g.onGround) {
-        g.isSlamming = false;
-        g.shockwaveTimer = 400 + Math.random() * 200; // Reset cooldown
-        triggerShake(18);
-        spawnParticles(g.x + (PLAYER_W * s) / 2, ARENA.ground, "#ffaa00", 30, 8);
-        spawnShockwave();
-        addFloatText(g.x + (PLAYER_W * s) / 2, g.y - 20, "ECHO SHOCKWAVE!", "#ff4400");
-      }
-    }
-  }
-
-  // Large Boss independent attack
+  // Pursuit AI in 3D
   if (!g.isSlamming) {
-    // Pursuit AI
-    const px = player.x + PLAYER_W / 2;
-    const gx = g.x + (PLAYER_W * s) / 2;
-    if (px > gx + 20)      { g.vx = MOVE_SPEED * 0.75 * globalTimeScale; g.facing = 1; }
-    else if (px < gx - 20) { g.vx = -MOVE_SPEED * 0.75 * globalTimeScale; g.facing = -1; }
-    else                   { g.vx *= 0.9; }
+    const dx = player.x - g.x;
+    const dz = player.z - g.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
+    
+    if (dist > 50) {
+      g.vx = (dx / dist) * MOVE_SPEED * 0.7 * globalTimeScale;
+      g.vz = (dz / dist) * MOVE_SPEED * 0.7 * globalTimeScale;
+      g.facing.set(dx/dist, 0, dz/dist);
+    } else {
+      g.vx *= 0.9;
+      g.vz *= 0.9;
+    }
 
-    if (g.attackCooldown <= 0) {
-      const dy = (player.y + PLAYER_H / 2) - (g.y + (PLAYER_H * s) / 2);
-      const dist = Math.abs(px - gx);
-      
-      if (dist < CLONE_ATTACK_RANGE * s * 0.7 && Math.abs(dy) < (PLAYER_H * s)) {
+    if (g.attackCooldown <= 0 && dist < CLONE_ATTACK_RANGE * s) {
         g.isAttacking = true;
         g.attackTimer = Math.floor(ATTACK_DUR * 1.5); 
         g.attackCooldown = CLONE_ATTACK_CD + 20;
-        g.maxAttackTimer = g.attackTimer; 
-        
         if (player.invincible <= 0) {
-          const damage = Math.round(CLONE_DMG * (g.isSuperior ? 3.5 : 1.8));
-          damagePlayer(damage, gx);
+          damagePlayer(Math.round(CLONE_DMG * (g.isSuperior ? 3.5 : 1.8)), g.x);
         }
-      }
-    }
-
-    // Boss Jumping AI
-    if (g.onGround && player.y < g.y - 120 && Math.random() < 0.02) {
-      g.vy = -16;
-      g.onGround = false;
-      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s), g.color, 15, 3);
     }
   }
-
-  if (g.attackCooldown > 0) g.attackCooldown -= 1 * globalTimeScale;
-  if (g.attackTimer > 0)    g.attackTimer -= 1 * globalTimeScale; else g.isAttacking = false;
 
   // Physics
   g.vy += GRAVITY * globalTimeScale;
-  g.x  += (g.vx || 0) * globalTimeScale;
-  g.y  += g.vy * globalTimeScale;
+  g.x  += g.vx;
+  g.y  += g.vy;
+  g.z  += g.vz;
 
-  // Ground & Platform Collision
-  applyPlatforms(g);
-
-  const gh = PLAYER_H * s;
-  const gw = PLAYER_W * s;
-  if (g.y + gh >= ARENA.ground) {
-    g.y = ARENA.ground - gh;
+  // Ground
+  if (g.y <= ARENA.ground) {
+    g.y = ARENA.ground;
     g.vy = 0; g.onGround = true;
-  } else { 
-    // Manual onGround check if not on platform
-    if (g.vy !== 0) g.onGround = false;
-  }
+  } else { g.onGround = false; }
 
   // Walls
-  if (g.x < ARENA.left)      { g.x = ARENA.left;   g.vx = 0; }
-  if (g.x + gw > ARENA.right) { g.x = ARENA.right - gw; g.vx = 0; }
+  if (Math.abs(g.x) > ARENA.limitX) g.x = Math.sign(g.x) * ARENA.limitX;
+  if (Math.abs(g.z) > ARENA.limitZ) g.z = Math.sign(g.z) * ARENA.limitZ;
 
-  // Trail
-  g.trail.push({ x: g.x, y: g.y });
-  if (g.trail.length > 8) g.trail.shift();
+  // Visual Update
+  if (g.mesh) {
+    g.mesh.position.set(g.x, g.y + (PLAYER_H*s)/2, g.z);
+    g.mesh.rotation.y = Math.atan2(g.vx, g.vz || 0.001);
+  }
 }
+
+// ── Shockwave Functions ──────────────────────────────────────
 
 
 // ── Shockwave Functions ──────────────────────────────────────
@@ -1724,50 +1770,59 @@ function spawnLevelBosses() {
   spawnPaused = true;
   triggerShake(20);
   
+  // Cleanup old boss meshes
+  activeBosses.forEach(b => { if(b.mesh) scene.remove(b.mesh); });
   activeBosses = [];
   bossOrbs = [];
   laserBeams = [];
   
-  const createBoss = (x, y, isSuperior = false) => {
+  const createBoss = (x, z, isSuperior = false) => {
     const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
     const hpMult = isSuperior ? 3 : 1.1;
     const calculatedHp = 350 * hpMult * (1 + (currentLevel - 1) * 0.5);
+    const color = isSuperior ? 0xffd700 : 0xff33ff;
+    
+    const geo = new THREE.CapsuleGeometry((PLAYER_W/2)*s, (PLAYER_H/2)*s, 4, 8);
+    const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
+    const mesh = new THREE.Mesh(geo, mat);
+    scene.add(mesh);
+
     return {
-      x, y, vx: 0, vy: 0, facing: 1, onGround: false,
+      x, y: 0, z, vx: 0, vy: 0, vz: 0, facing: new THREE.Vector3(1, 0, 0), onGround: true,
       isGiant: true, isSuperior,
       sizeMult: s,
       hp: calculatedHp,
       maxHp: calculatedHp,
-      alpha: 1, color: isSuperior ? '#ffd700' : '#ff33ff',
+      alpha: 1, color: '#' + color.toString(16).padStart(6, '0'),
       trail: [],
       jumpsLeft: 0, dashCooldown: 0, isTrapped: false,
       attackTimer: 0, attackCooldown: 0, isAttacking: false,
-      timeline: [] 
+      timeline: [],
+      mesh: mesh
     };
   };
 
   if (currentLevel === 1) {
-    activeBosses.push(createBoss(W/2 - 50, 100));
+    activeBosses.push(createBoss(0, -300));
   } else if (currentLevel === 2) {
-    activeBosses.push(createBoss(W/4, 100));
-    activeBosses.push(createBoss(3*W/4, 100));
+    activeBosses.push(createBoss(-300, -300));
+    activeBosses.push(createBoss(300, -300));
   } else if (currentLevel === 3) {
-    activeBosses.push(createBoss(W/2 - 50, 100, true));
+    activeBosses.push(createBoss(0, -400, true));
   } else if (currentLevel === 4) {
-    activeBosses.push(createBoss(W/4, 100, true));
-    activeBosses.push(createBoss(3*W/4, 100, true));
+    activeBosses.push(createBoss(-400, -400, true));
+    activeBosses.push(createBoss(400, -400, true));
   } else if (currentLevel === 5) {
-    activeBosses.push(createBoss(W/5, 100, true));
-    activeBosses.push(createBoss(2*W/5, 100, true));
-    activeBosses.push(createBoss(3*W/5, 100, true));
-    activeBosses.push(createBoss(4*W/5, 100, true));
+    for(let i=0; i<4; i++) {
+        activeBosses.push(createBoss(-600 + i*400, -500, true));
+    }
   } else {
-    for(let i=1; i<=6; i++) {
-      activeBosses.push(createBoss(i * (W/7), 80 + (i%2)*40, true));
+    for(let i=0; i<6; i++) {
+      activeBosses.push(createBoss(-600 + i*200, -600, true));
     }
   }
 
-  addFloatText(W/2, H/2 - 60, "TARGETS DETECTED", "#ff3300");
+  addFloatText(0, 200, "TARGETS DETECTED", "#ff3300");
 }
 
 // ── Update player ─────────────────────────────────────────────
@@ -1778,24 +1833,37 @@ function updatePlayer() {
   if (player.shieldEnergy <= 0) {
     player.shieldOverheated = true;
   } else if (player.shieldEnergy >= 40) {
-    player.shieldOverheated = false; // Recovered enough to use again
+    player.shieldOverheated = false; 
   }
 
   if (shieldKey() && !player.shieldOverheated && player.shieldEnergy > 0) {
     player.isShielded = true;
-    player.shieldEnergy -= 0.6 * spMult; // Drain
+    player.shieldEnergy -= 0.6 * spMult;
     if (player.shieldEnergy <= 0) player.shieldEnergy = 0;
   } else {
     player.isShielded = false;
-    player.shieldEnergy = Math.min(player.maxShield, player.shieldEnergy + 0.18 * spMult); // Regen
+    player.shieldEnergy = Math.min(player.maxShield, player.shieldEnergy + 0.18 * spMult);
   }
 
   const flamingMult = (player.isFlaming ? 0.75 : 1.0);
   const shieldMult = (player.isShielded ? 0.35 : 1.0);
 
-  if (leftKey())       { player.vx = -MOVE_SPEED * spMult * flamingMult * shieldMult; player.facing = -1; }
-  else if (rightKey()) { player.vx =  MOVE_SPEED * spMult * flamingMult * shieldMult; player.facing =  1; }
-  else                 { player.vx *= 0.75; }
+  // 3D Movement
+  let mx = 0, mz = 0;
+  if (leftKey()) mx = -1;
+  if (rightKey()) mx = 1;
+  if (forwardKey()) mz = -1;
+  if (backwardKey()) mz = 1;
+
+  if (mx !== 0 || mz !== 0) {
+    const dir = new THREE.Vector3(mx, 0, mz).normalize();
+    player.vx = dir.x * MOVE_SPEED * spMult * flamingMult * shieldMult;
+    player.vz = dir.z * MOVE_SPEED * spMult * flamingMult * shieldMult;
+    player.facing.copy(dir);
+  } else {
+    player.vx *= 0.75;
+    player.vz *= 0.75;
+  }
 
   // Jump logic
   const jumping = jumpKey();
@@ -1805,12 +1873,12 @@ function updatePlayer() {
       player.onGround = false;
       player.jumpsLeft = 1;
       player.squishY = 0.7; player.squishX = 1.3;
-      spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H, '#ff4444', 5, 2.5);
+      spawnParticles(player.x, player.y, '#ff4444', 5, 2.5);
     } else if (player.jumpsLeft > 0) {
       player.vy = JUMP_FORCE * 0.9 * Math.sqrt(spMult);
       player.jumpsLeft--;
       player.squishY = 0.8; player.squishX = 1.2;
-      spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ffaa00', 12, 3);
+      spawnParticles(player.x, player.y, '#ffaa00', 12, 3);
       triggerShake(3);
     }
   }
@@ -1853,8 +1921,24 @@ function updatePlayer() {
     player.flameTimer -= spMult;
     if (player.flameTimer <= 0 || !flameKey()) {
       player.isFlaming = false;
+      if (player.flameMesh) player.flameMesh.visible = false;
     } else {
       if (Math.random() < 0.3 && SFX.playFire) SFX.playFire();
+      
+      // 3D Flame Visual
+      if (!player.flameMesh) {
+        const fGeo = new THREE.ConeGeometry(80, 240, 16);
+        const fMat = new THREE.MeshPhongMaterial({ color: 0xff4400, transparent: true, opacity: 0.5 });
+        player.flameMesh = new THREE.Mesh(fGeo, fMat);
+        player.flameMesh.rotation.z = Math.PI / 2;
+        scene.add(player.flameMesh);
+      }
+      player.flameMesh.visible = true;
+      const fPos = player.facing.clone().multiplyScalar(140);
+      player.flameMesh.position.set(player.x + fPos.x, player.y + PLAYER_H/2, player.z + fPos.z);
+      player.flameMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), player.facing);
+      player.flameMesh.rotateZ(-Math.PI/2); // Adjust cone orientation
+
       updateFlameLogic(spMult);
     }
   }
@@ -1878,14 +1962,34 @@ function updatePlayer() {
     spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ffaa00', 50, 10);
     addFloatText(player.x + PLAYER_W / 2, player.y - 40, "CRIMSON NOVA!", "#ffcc00");
     clones.forEach(c => {
-      const dx = (player.x + PLAYER_W / 2) - (c.x + PLAYER_W / 2);
-      const dy = (player.y + PLAYER_H / 2) - (c.y + PLAYER_H / 2);
-      if (Math.sqrt(dx*dx + dy*dy) < 350) {
+      const dx = player.x - c.x;
+      const dy = player.y - c.y;
+      const dz = player.z - c.z;
+      if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 350) {
         c.hp -= 100;
         c.flashTimer = 20;
-        spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#ff3300', 15, 6);
+        spawnParticles(c.x, c.y, '#ff3300', 15, 6);
       }
     });
+
+    // 3D Nova Visual
+    const novaGeo = new THREE.SphereGeometry(10, 32, 32);
+    const novaMat = new THREE.MeshPhongMaterial({ color: 0xffaa00, emissive: 0xffaa00, transparent: true, opacity: 0.8 });
+    const novaMesh = new THREE.Mesh(novaGeo, novaMat);
+    novaMesh.position.set(player.x, player.y, player.z);
+    scene.add(novaMesh);
+    
+    // Animate Nova
+    let nScale = 1;
+    const nInt = setInterval(() => {
+      nScale += 2;
+      novaMesh.scale.set(nScale, nScale, nScale);
+      novaMesh.material.opacity -= 0.05;
+      if (novaMesh.material.opacity <= 0) {
+        scene.remove(novaMesh);
+        clearInterval(nInt);
+      }
+    }, 16);
     activeBosses.forEach(b => {
       const bSize = b.sizeMult || GIANT_SIZE_MULT;
       const dx = (player.x + PLAYER_W / 2) - (b.x + (PLAYER_W * bSize) / 2);
@@ -2006,36 +2110,72 @@ function updatePlayer() {
 
   // Physics
   player.vy += GRAVITY * spMult;
-  player.x  += player.vx; // vx already incorporates spMult for movement
-  player.y  += player.vy; // vy already incorporates GRAVITY contribution
-
-
+  player.x  += player.vx;
+  player.y  += player.vy;
+  player.z  += player.vz;
 
   // Ground
-  if (player.y + PLAYER_H >= ARENA.ground) {
+  if (player.y <= ARENA.ground) {
     if (player.vy > 3) { player.squishY = 0.75; player.squishX = 1.25; }
-    player.y = ARENA.ground - PLAYER_H;
+    player.y = ARENA.ground;
     player.vy = 0; player.onGround = true;
     player.jumpsLeft = 2; 
   } else { player.onGround = false; }
 
-  // Platforms
-  applyPlatforms(player);
-
   // Walls
-  if (player.x < ARENA.left)             { player.x = ARENA.left;              player.vx = 0; }
-  if (player.x + PLAYER_W > ARENA.right) { player.x = ARENA.right - PLAYER_W;  player.vx = 0; }
+  if (Math.abs(player.x) > ARENA.limitX) player.x = Math.sign(player.x) * ARENA.limitX;
+  if (Math.abs(player.z) > ARENA.limitZ) player.z = Math.sign(player.z) * ARENA.limitZ;
 
-  // Squish recovery (Smooth Lerping)
+  // Visual Update
+  if (player.mesh) {
+    player.mesh.position.set(player.x, player.y + PLAYER_H/2, player.z);
+    const targetRot = Math.atan2(player.vx, player.vz || 0.001);
+    player.mesh.rotation.y = targetRot;
+  }
+
+  // Shield Visual
+  if (player.isShielded) {
+    if (!player.shieldMesh) {
+      const sGeo = new THREE.SphereGeometry(40, 32, 32);
+      const sMat = new THREE.MeshPhongMaterial({ color: 0x00ffff, transparent: true, opacity: 0.3, wireframe: true });
+      player.shieldMesh = new THREE.Mesh(sGeo, sMat);
+      scene.add(player.shieldMesh);
+    }
+    player.shieldMesh.position.set(player.x, player.y + PLAYER_H/2, player.z);
+    player.shieldMesh.visible = true;
+  } else if (player.shieldMesh) {
+    player.shieldMesh.visible = false;
+  }
+
+  // Squish recovery
   player.squishY += (1 - player.squishY) * 0.22;
   player.squishX += (1 - player.squishX) * 0.22;
 
   // Trail
-  player.trail.push({ x: player.x, y: player.y });
+  player.trail.push({ x: player.x, y: player.y, z: player.z });
   if (player.trail.length > 12) player.trail.shift();
 
-  // Clamp HP
+  updateCamera();
+
   player.hp = Math.max(0, Math.min(player.maxHp, player.hp));
+}
+
+function updateCamera() {
+  if (!camera || !player) return;
+  
+  const targetPos = new THREE.Vector3(player.x, player.y + 20, player.z);
+  
+  if (camMode === 0) { // ISO
+    camera.position.set(player.x + 300, player.y + 400, player.z + 300);
+    camera.lookAt(targetPos);
+  } else if (camMode === 1) { // FOLLOW
+    const offset = player.facing.clone().negate().multiplyScalar(250);
+    camera.position.lerp(new THREE.Vector3(player.x + offset.x, player.y + 150, player.z + offset.z), 0.1);
+    camera.lookAt(targetPos);
+  } else { // SIDE
+    camera.position.set(player.x, player.y + 100, player.z + 500);
+    camera.lookAt(targetPos);
+  }
 }
 
 // ── Spawn interval (scales with time) ─────────────────────────
@@ -3121,62 +3261,74 @@ function gameLoop(ts) {
   }
 
 
-  // ── Draw ──
-  drawArena();
-  drawGravitySpirals();
-  drawFireParticles();
-  drawBossProjectiles();
+// ── Main Game Loop ──────────────────────────────────────────
+function gameLoop(timestamp) {
+  if (!gameRunning) return;
+  
+  if (!window.lastTime) window.lastTime = timestamp;
+  const dt = timestamp - window.lastTime;
+  window.lastTime = timestamp;
 
-  if (screenFlash > 0) {
-    ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash / 8 * 0.45})`;
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  clones.forEach(c => {
-    drawCharacter(c, false);
-    drawHpBar(c, '#8e7c9d', '#462633');
+  // 1. Physics & Logic Updates
+  updateShake();
+  updatePlayer();
+  recordFrame();
+  
+  // Clones
+  clones.forEach(updateClone);
+  clones = clones.filter(c => {
+    if (c.hp <= 0) {
+      if (c.mesh) scene.remove(c.mesh);
+      return false;
+    }
+    return true;
   });
 
-  // Legacy giantEcho block removed to fix ReferenceError crash
-  if (!gameOver) {
-    drawCharacter(player, true);
-    drawHpBar(player, '#90a955', '#4f772d');
+  // Bosses
+  activeBosses.forEach(updateGiantEcho);
+  activeBosses = activeBosses.filter(b => {
+    if (b.hp <= 0) {
+      if (b.mesh) scene.remove(b.mesh);
+      clonesKilled++;
+      return false;
+    }
+    return true;
+  });
+
+  // Level Progression
+  survivalTime += dt / 1000;
+  
+  // Spawner
+  if (!spawnPaused) {
+    nextEchoTimer -= dt;
+    if (nextEchoTimer <= 0) {
+      spawnClone();
+      nextEchoTimer = spawnInterval();
+    }
   }
 
-  drawParticles();
-  drawFloatTexts();
-  drawShockwaves();
+  // 2. Ability Updates (3D Visuals)
+  // [Nova, Flame, Tornado logic would go here]
 
-    // Draw Bosses
-    activeBosses.forEach(b => {
-      drawCharacter(b, false);
-      drawHpBar(b, b.isSuperior ? '#ffd700' : '#c48d9e', b.isSuperior ? '#daa520' : '#8e7c9d');
-    });
+  // 3. Clear 2D Canvas for HUD/Text
+  if (ctx) {
+     ctx.clearRect(0, 0, W, H);
+     drawHUD2D(); // Minimal 2D overlay for text
+  }
 
-    // Draw Relics
-    droppedRelics.forEach(r => {
-      ctx.save();
-      ctx.shadowBlur = 20;
-      ctx.translate(r.x + r.w / 2, r.y + r.h / 2);
-      ctx.rotate(performance.now() / 500);
-      
-      if (r.type === 'WP') {
-        ctx.fillStyle = '#ffd700'; ctx.shadowColor = '#ffd700';
-        ctx.fillRect(-4, -10, 8, 20); ctx.fillRect(-10, 2, 20, 5);
-      } else if (r.type === 'HP') {
-        ctx.fillStyle = '#00ff41'; ctx.shadowColor = '#00ff41';
-        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.fillRect(-2, -6, 4, 12); ctx.fillRect(-6, -2, 12, 4);
-      } else {
-        ctx.fillStyle = '#ff33b2'; ctx.shadowColor = '#ff33b2';
-        ctx.beginPath();
-        ctx.moveTo(0, -10); ctx.bezierCurveTo(10, -20, 20, 0, 0, 15); ctx.bezierCurveTo(-20, 0, -10, -20, 0, -10);
-        ctx.fill();
-      }
-      ctx.restore();
-    });
+  // 4. Render 3D Scene
+  if (composer) composer.render();
 
-    // Level Clear Overlay
+  requestAnimationFrame(gameLoop);
+}
+
+function drawHUD2D() {
+    updateFloatTexts();
+    drawFloatTexts();
+    updateParticles();
+    drawParticles();
+    
+    // Level Clear Overlay 2D
     if (levelClearing) {
        ctx.save();
        ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -3189,62 +3341,6 @@ function gameLoop(ts) {
        ctx.fillText("PREPARING NEXT ZONE...", W/2, H/2 + 40);
        ctx.restore();
     }
-
-  // Time Distortion Overlay
-  if (isTimeDistorted) {
-    const pulse = Math.abs(Math.sin(distortionTimer * 4)) * 0.15;
-    ctx.save();
-    
-    ctx.fillStyle = globalTimeScale < 1 
-      ? `rgba(0, 100, 255, ${0.05 + pulse})` 
-      : `rgba(255, 50, 0, ${0.05 + pulse})`;  
-    
-    ctx.fillRect(0, 0, W, H);
-    
-    ctx.font = 'bold 12px Orbitron, monospace';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.textAlign = 'center';
-    const msg = `TIME SCALE: ${globalTimeScale.toFixed(2)}x`;
-    ctx.fillText(msg, W / 2, H - 20);
-    ctx.restore();
-  }
-
-
-  // Echo warning pulse
-  if (nextEchoTimer < 1000 && !gameOver && inputBuffer.length >= 15) {
-    const pulse = Math.abs(Math.sin(Date.now() / 110));
-    ctx.save();
-    ctx.globalAlpha = pulse * 0.22;
-    ctx.fillStyle   = '#8e7c9d';
-    ctx.fillRect(0, 0, W, H);
-    ctx.globalAlpha = pulse * 0.85;
-    ctx.font        = 'bold 14px Orbitron, monospace';
-    ctx.fillStyle   = '#f5f5f5';
-    ctx.textAlign   = 'center';
-    ctx.shadowColor = '#c48d9e';
-    ctx.shadowBlur  = 14;
-    ctx.fillText('⚡ ECHO SPAWNING...', W / 2, 56);
-    ctx.restore();
-  }
-
-  // Wave / difficulty badge
-  ctx.save();
-  let diffName = "EASY";
-  if (currentLevel === 2) diffName = "MEDIUM EASY";
-  else if (currentLevel === 3) diffName = "MEDIUM";
-  else if (currentLevel === 4) diffName = "MEDIUM HARD";
-  else if (currentLevel === 5) diffName = "HARD";
-  else if (currentLevel >= 6) diffName = "IMPOSSIBLE";
-
-  ctx.font      = '600 11px Inter, sans-serif';
-  ctx.fillStyle = currentLevel >= 6 ? 'rgba(255,50,50,0.8)' : 'rgba(196,141,158,0.5)';
-  ctx.textAlign = 'right';
-  ctx.fillText(`ZONE ${currentLevel} [${diffName}] | WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
-  ctx.restore();
-
-  ctx.restore(); // end shake
-
-  requestAnimationFrame(gameLoop);
 }
 
 // ── Boot ──────────────────────────────────────────────────────
