@@ -1233,6 +1233,8 @@ let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
 let droppedWeapons = [];
+let bossOrbs = [];
+let laserBeams = [];
 
 
 
@@ -3063,6 +3065,8 @@ function startGame(savedData = null) {
     startTime    = performance.now();
   }
   
+  nextEchoTimer = spawnInterval();
+  
   diffMult     = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
   gameOver     = false;
   gameRunning  = true;
@@ -3080,10 +3084,15 @@ function gameLoop(timestamp) {
   window.lastTime = timestamp;
 
   // 1. Logic Updates
+  if (survivalTime === 0 && !window._firstFrameLogged) {
+      console.log("DIAGNOSTIC: Game loop started. dt:", dt);
+  }
   updateShake();
   
   if (!gameOver) {
+    if (survivalTime === 0 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 1 - recordFrame");
     recordFrame();
+    if (survivalTime === 0 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 2 - updatePlayer");
     updatePlayer();
     
     // Time Scale for world entities
@@ -3091,6 +3100,7 @@ function gameLoop(timestamp) {
     
     // Level Progression
     if (eScale > 0) {
+      if (survivalTime === 0 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 3 - Progression Math");
       survivalTime += (dt * eScale) / 1000;
       nextEchoTimer -= dt * eScale;
       diffMult = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
@@ -3152,8 +3162,10 @@ function gameLoop(timestamp) {
       updateBossProjectiles();
     }
     
+    if (survivalTime < 0.1 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 4 - Updating Entities");
     updateParticles();
     updateFloatTexts();
+    if (survivalTime < 0.1 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 5 - updateHUD");
     updateHUD();
   }
 
@@ -3166,9 +3178,14 @@ function gameLoop(timestamp) {
      ctx.restore();
   }
 
+  if (survivalTime < 0.1 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 6 - Rendering 3D Scene");
   // 4. Render 3D Scene
   if (composer) composer.render();
 
+  if (survivalTime < 0.1 && !window._firstFrameLogged) {
+      console.log("DIAGNOSTIC: First frame complete.");
+      window._firstFrameLogged = true;
+  }
   requestAnimationFrame(gameLoop);
 }
 
