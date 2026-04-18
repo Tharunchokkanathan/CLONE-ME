@@ -1350,7 +1350,7 @@ function applyPlatforms(entity) {
 
 //  Player factory 
 function createPlayer() {
-  const geo = new THREE.CapsuleGeometry(PLAYER_W/2, PLAYER_H/2, 4, 8);
+  const geo = new THREE.CylinderGeometry(PLAYER_W/2, PLAYER_W/2, PLAYER_H*0.8, 8, 1);
   const mat = new THREE.MeshPhongMaterial({ color: 0x00ff41, emissive: 0x00ff41, emissiveIntensity: 0.5 });
   const mesh = new THREE.Mesh(geo, mat);
   scene.add(mesh);
@@ -1435,7 +1435,7 @@ function spawnClone() {
   const cloneColors = [0xff00ff, 0xff66b2, 0xff3131, 0xffff33, 0x00ccff];
   const color = cloneColors[Math.floor(Math.random() * cloneColors.length)];
 
-  const geo = new THREE.CapsuleGeometry(PLAYER_W/2, PLAYER_H/2, 4, 8);
+  const geo = new THREE.CylinderGeometry(PLAYER_W/2, PLAYER_W/2, PLAYER_H*0.8, 8, 1);
   const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.5, transparent: true, opacity: 0 });
   const mesh = new THREE.Mesh(geo, mat);
   scene.add(mesh);
@@ -1564,7 +1564,7 @@ function mergeClonesIntoGiant() {
   const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
   
   const color = isSuperior ? 0xffd700 : 0xff33ff;
-  const geo = new THREE.CapsuleGeometry((PLAYER_W/2)*s, (PLAYER_H/2)*s, 4, 8);
+  const geo = new THREE.CylinderGeometry((PLAYER_W/2)*s, (PLAYER_W/2)*s, (PLAYER_H*0.8)*s, 8, 1);
   const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
   const mesh = new THREE.Mesh(geo, mat);
   scene.add(mesh);
@@ -1791,7 +1791,7 @@ function spawnLevelBosses() {
     const calculatedHp = 350 * hpMult * (1 + (currentLevel - 1) * 0.5);
     const color = isSuperior ? 0xffd700 : 0xff33ff;
     
-    const geo = new THREE.CapsuleGeometry((PLAYER_W/2)*s, (PLAYER_H/2)*s, 4, 8);
+    const geo = new THREE.CylinderGeometry((PLAYER_W/2)*s, (PLAYER_W/2)*s, (PLAYER_H*0.8)*s, 8, 1);
     const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
     const mesh = new THREE.Mesh(geo, mat);
     scene.add(mesh);
