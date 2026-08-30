@@ -801,6 +801,7 @@
           <button class="menu-btn" id="new-game-btn">New Game</button>
           <button class="menu-btn" id="load-game-btn">Load Game</button>
           <button class="menu-btn" id="settings-btn">Settings</button>
+          <button class="menu-btn" id="info-btn">Game Info</button>
           <button class="menu-btn quit" id="quit-btn">Quit</button>
         </div>
       </div>
@@ -837,6 +838,34 @@
           </div>
         </div>
         <button class="btn" id="settings-back-btn" style="margin-top:16px">BACK</button>
+      </div>
+
+      <!-- GAME INFO MENU -->
+      <div id="info-menu" class="menu-view hidden">
+        <div class="overlay-title" style="font-size:1.4rem">GAME INFO</div>
+        <div class="overlay-sub" id="info-content" style="max-width:550px; text-align: left; padding: 20px; max-height: 60vh; overflow-y: auto; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #ccc;">
+          <p style="margin-bottom: 12px; color: #fff;"><strong>Clone Me</strong> is a fast-paced combat game where you battle your own past actions.</p>
+          <p style="margin-bottom: 20px;">Every move you make is recorded, and after a short delay, a clone appears and replays those exact actions. As time passes, more clones spawn  turning your own strategy into your biggest challenge.</p>
+          
+          <h3 style="color: #fff; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">Algorithms Used</h3>
+          <ul style="list-style-type: none; padding: 0; font-size: 0.8rem; line-height: 1.6;">
+            <li style="margin-bottom: 8px;"><strong>Time-Stamped Recording:</strong> Captures every player action with exact timing.</li>
+            <li style="margin-bottom: 8px;"><strong>Replay / Ghost Playback:</strong> Clones mimic past actions exactly as recorded.</li>
+            <li style="margin-bottom: 8px;"><strong>Finite State Machine (FSM):</strong> Controls states like Idle, Move, Jump, Attack.</li>
+            <li style="margin-bottom: 8px;"><strong>Collision Detection:</strong> Handles hits, damage, and interactions.</li>
+            <li style="margin-bottom: 8px;"><strong>Delay-Based Spawn:</strong> Spawns clones after a fixed time delay.</li>
+            <li style="margin-bottom: 20px;"><strong>Circular Buffer:</strong> Stores recent actions efficiently.</li>
+          </ul>
+
+          <h3 style="color: #fff; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">What Problem It Solves</h3>
+          <p style="margin-bottom: 12px; font-size: 0.8rem; line-height: 1.5;">Most combat games rely on predictable enemies or simple AI, which become repetitive and easy to master. <strong>Clone Me</strong> solves this by:</p>
+          <ul style="list-style-type: disc; padding-left: 20px; font-size: 0.8rem; line-height: 1.6;">
+            <li style="margin-bottom: 6px;">Turning the players own skill and behavior into the challenge.</li>
+            <li style="margin-bottom: 6px;">Creating infinite, unpredictable difficulty without complex AI.</li>
+            <li style="margin-bottom: 10px;">Forcing players to adapt, improve, and rethink their strategy constantly.</li>
+          </ul>
+        </div>
+        <button class="btn" id="info-back-btn" style="margin-top:16px">BACK</button>
       </div>
 
       <!-- LOAD GAME MENU -->
@@ -3354,7 +3383,14 @@ function gameLoop(ts) {
   // 5. LOAD BACK
   document.getElementById('load-back-btn').addEventListener('click', () => showMenu('main-menu'));
 
-  // 6. QUIT
+  // 6. GAME INFO
+  document.getElementById('info-btn').addEventListener('click', () => {
+    SFX.init();
+    showMenu('info-menu');
+  });
+  document.getElementById('info-back-btn').addEventListener('click', () => showMenu('main-menu'));
+
+  // 7. QUIT
   document.getElementById('quit-btn').addEventListener('click', () => {
     showMenu('quit-menu');
     const final = document.getElementById('final-stats');
