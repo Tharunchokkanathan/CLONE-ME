@@ -1532,8 +1532,12 @@ function updateClone(c) {
   // Ground
   if (c.y <= ARENA.ground) {
     c.y = ARENA.ground;
-    c.vy = 0; c.onGround = true;
-  } else { c.onGround = false; }
+    c.vy = 0; c.vz *= 0.8; c.onGround = true;
+  } else { 
+    c.onGround = false;
+    c.vx *= 0.95;
+    c.vz *= 0.95;
+  }
 
   // Walls
   if (Math.abs(c.x) > ARENA.limitX) c.x = Math.sign(c.x) * ARENA.limitX;
@@ -1656,8 +1660,12 @@ function updateGiantEcho(g) {
   // Ground
   if (g.y <= ARENA.ground) {
     g.y = ARENA.ground;
-    g.vy = 0; g.onGround = true;
-  } else { g.onGround = false; }
+    g.vy = 0; g.vz *= 0.8; g.onGround = true;
+  } else { 
+    g.onGround = false;
+    g.vx *= 0.95;
+    g.vz *= 0.95;
+  }
 
   // Walls
   if (Math.abs(g.x) > ARENA.limitX) g.x = Math.sign(g.x) * ARENA.limitX;
@@ -2135,9 +2143,14 @@ function updatePlayer() {
   if (player.y <= ARENA.ground) {
     if (player.vy > 3) { player.squishY = 0.75; player.squishX = 1.25; }
     player.y = ARENA.ground;
-    player.vy = 0; player.onGround = true;
+    player.vy = 0; player.vz *= 0.8; player.onGround = true;
     player.jumpsLeft = 2; 
-  } else { player.onGround = false; }
+  } else { 
+    player.onGround = false;
+    // Air drag to prevent infinite Z drift
+    player.vx *= 0.95;
+    player.vz *= 0.95;
+  }
 
   // Walls
   if (Math.abs(player.x) > ARENA.limitX) player.x = Math.sign(player.x) * ARENA.limitX;
