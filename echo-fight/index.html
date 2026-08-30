@@ -1190,6 +1190,7 @@ const FLAME_RANGE        = 240;
 const keys = {};
 document.addEventListener('keydown', e => { keys[e.code] = true;  });
 document.addEventListener('keyup',   e => { keys[e.code] = false; });
+window.addEventListener('blur', () => { Object.keys(keys).forEach(k => keys[k] = false); });
 let mouseX = 0, mouseY = 0;
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
@@ -1886,8 +1887,10 @@ function updatePlayer() {
     player.vz = dir.z * MOVE_SPEED * spMult * flamingMult * shieldMult;
     player.facing.copy(dir);
   } else {
-    player.vx *= 0.75;
-    player.vz *= 0.75;
+    player.vx *= 0.65;
+    player.vz *= 0.65;
+    if (Math.abs(player.vx) < 0.1) player.vx = 0;
+    if (Math.abs(player.vz) < 0.1) player.vz = 0;
   }
 
   // Jump logic
@@ -2143,13 +2146,18 @@ function updatePlayer() {
   if (player.y <= ARENA.ground) {
     if (player.vy > 3) { player.squishY = 0.75; player.squishX = 1.25; }
     player.y = ARENA.ground;
-    player.vy = 0; player.vz *= 0.8; player.onGround = true;
+    player.vy = 0;
+    // Stop horizontal drift when grounded and no input
+    if (mx === 0 && mz === 0) { player.vx = 0; player.vz = 0; }
+    player.onGround = true;
     player.jumpsLeft = 2; 
   } else { 
     player.onGround = false;
-    // Air drag to prevent infinite Z drift
-    player.vx *= 0.95;
-    player.vz *= 0.95;
+    // Air drag
+    if (mx === 0 && mz === 0) {
+      player.vx *= 0.9;
+      player.vz *= 0.9;
+    }
   }
 
   // Walls
