@@ -3,17 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CLONE ME  Battle Your Past Self</title>
-  <meta name="description" content="A 3D real-time arena game where you fight clones of your own past actions. How long can you survive yourself?" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <title>CLONE ME — Battle Your Past Self</title>
+  <meta name="description" content="A 2D real-time arena game where you fight clones of your own past actions. How long can you survive yourself?" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600;800&family=Michroma&family=Inter:wght@300;400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -21,7 +14,7 @@
       width: 100%; height: 100%;
       background: #000000;
       color: #ffffff;
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Inter', sans-serif;
       overflow: hidden;
       user-select: none;
     }
@@ -240,7 +233,32 @@
       box-shadow: 0 0 12px rgba(0,255,102,0.7);
     }
 
+    #thunder-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      flex: 1;
+      max-width: 160px;
+    }
 
+    #thunder-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,0,0.08);
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,0,0.15);
+      overflow: hidden;
+    }
+
+    #thunder-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffff33, #ffffff);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      width: 0%;
+      box-shadow: 0 0 12px rgba(255,255,0,0.7);
+    }
 
     #flame-bar-wrap {
       display: flex;
@@ -272,49 +290,50 @@
     /* --- Legend Box --- */
     #controls-legend {
       position: absolute;
-      bottom: 16px;
-      right: 16px;
-      padding: 12px 16px;
-      background: rgba(5, 10, 8, 0.85);
+      bottom: 20px;
+      right: 20px;
+      padding: 15px;
+      background: rgba(10,10,15,0.75);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(0, 200, 80, 0.25);
-      border-radius: 10px;
+      border: 1px solid rgba(255,102,178,0.25);
+      border-radius: 12px;
       z-index: 100;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      box-shadow: 0 0 20px rgba(0, 200, 80, 0.15), 0 5px 30px rgba(0,0,0,0.6);
+      gap: 10px;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.6);
       transition: opacity 0.3s;
-      min-width: 200px;
     }
     .legend-item {
-      display: grid;
-      grid-template-columns: auto 1fr;
+      display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      color: #ccffdd;
-      opacity: 0.9;
-      white-space: nowrap;
+      gap: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #ffffff;
+      opacity: 0.85;
     }
     .legend-key {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 28px;
-      padding: 2px 7px;
-      background: rgba(0, 180, 80, 0.12);
-      border: 1px solid rgba(0, 200, 80, 0.45);
-      color: #88ffbb;
+      display: inline-block;
+      min-width: 24px;
+      padding: 3px 6px;
+      background: rgba(255,102,178,0.15);
+      border: 1px solid rgba(255,102,178,0.5);
+      color: #ff66b2;
       border-radius: 4px;
       text-align: center;
       font-family: 'Orbitron', monospace;
-      font-size: 0.62rem;
-      box-shadow: 0 0 6px rgba(0, 200, 80, 0.2);
+      font-size: 0.7rem;
     }
     
     .interface-hidden { display: none !important; }
+      height: 100%;
+      background: linear-gradient(90deg, #ff6600, #ff0000);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+      width: 0%;
+      box-shadow: 0 0 15px rgba(255,102,0,0.8);
+    }
 
     canvas {
       display: block;
@@ -361,23 +380,16 @@
     }
 
     #overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 18px;
-      z-index: 200;
-      background: linear-gradient(135deg, #46000D 0%, #5E0009 20%, #720137 45%, #590054 70%, #42002E 100%);
-      background-size: 300% 300%;
-      animation: palette-shift 10s ease infinite alternate;
-    }
-    @keyframes palette-shift {
-      0%   { background-position: 0% 0%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 100%; }
+      z-index: 10;
+      background: rgba(4,2,12,0.92); /* Solid dark 2D background */
+      backdrop-filter: none;
     }
 
     #overlay.hidden { display: none; }
@@ -385,20 +397,40 @@
 
 
     .overlay-title {
-      font-family: 'Michroma', sans-serif;
-      font-size: 3.5rem;
+      position: relative;
+      background: linear-gradient(135deg, #00ffff 0%, #ff33ff 50%, #ffaa00 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: title-shimmer 4s ease-in-out infinite alternate;
+    }
+    @keyframes title-shimmer {
+      0%   { filter: drop-shadow(0 0 12px rgba(0,255,255,0.6)); }
+      50%  { filter: drop-shadow(0 0 24px rgba(255,51,255,0.8)); }
+      100% { filter: drop-shadow(0 0 12px rgba(255,170,0,0.6)); }
+    }
+
+    .overlay-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 2.2rem;
       font-weight: 900;
-      letter-spacing: 0.3em;
+      letter-spacing: 0.25em;
       text-transform: uppercase;
       text-align: center;
-      color: #ffffff;
-      margin-bottom: 20px;
-      text-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 0 60px rgba(255, 255, 255, 0.2);
-      animation: title-float 6s ease-in-out infinite alternate;
+      background: linear-gradient(135deg, #00ffff 0%, #ff33ff 50%, #ffaa00 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    @keyframes title-float {
-      0%   { transform: translateY(0); opacity: 0.8; }
-      100% { transform: translateY(-10px); opacity: 1; }
+      animation: title-gradient 4s ease-in-out infinite alternate;
+      text-shadow: none;
+      filter: drop-shadow(0 0 20px rgba(0,255,255,0.4));
+    }
+    @keyframes title-gradient {
+      0%   { background-position: 0% 50%; filter: drop-shadow(0 0 15px rgba(0,255,255,0.5)); }
+      50%  { background-position: 100% 50%; filter: drop-shadow(0 0 30px rgba(255,51,255,0.6)); }
+      100% { background-position: 0% 50%; filter: drop-shadow(0 0 15px rgba(255,170,0,0.5)); }
     }
 
     .overlay-sub {
@@ -495,78 +527,68 @@
       gap: 20px;
       width: 100%;
       height: 100%;
-      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-      padding: 40px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .menu-view.hidden {
       display: none;
       opacity: 0;
-      transform: translateY(30px) scale(0.98);
+      transform: scale(0.95);
       pointer-events: none;
     }
 
     .btn-stack {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      width: 320px;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 30px;
-      border-radius: 20px;
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      gap: 14px;
+      width: 260px;
     }
 
     .menu-btn {
       position: relative;
-      width: 100%;
-      padding: 16px 32px;
+      padding: 14px 32px;
       font-family: 'Orbitron', monospace;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.7);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
+      color: #e0e0ff;
+      background: rgba(10, 5, 25, 0.5);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 50px;
       cursor: pointer;
       overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      text-shadow: 0 0 12px rgba(0,255,255,0.3);
+      backdrop-filter: blur(8px);
     }
 
     .menu-btn::before {
       content: '';
       position: absolute;
-      top: 50%; left: 50%;
-      width: 120%; height: 300%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-      transform: translate(-50%, -50%) scale(0);
-      transition: transform 0.6s ease;
-      pointer-events: none;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,255,255,0.12), rgba(255,51,255,0.08), transparent);
+      transition: 0.6s;
     }
 
     .menu-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(0, 255, 255, 0.06);
+      border-color: rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.05);
+      transform: translateX(6px) scale(1.02);
+      letter-spacing: 0.22em;
       color: #ffffff;
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
-      text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      text-shadow: 0 0 15px rgba(0,255,255,0.5);
     }
 
     .menu-btn:hover::before {
-      transform: translate(-50%, -50%) scale(1);
+      left: 100%;
     }
 
     .menu-btn.quit:hover {
-      border-color: rgba(255, 80, 80, 0.5);
-      background: rgba(255, 0, 0, 0.05);
-      color: #ff8888;
-      box-shadow: 0 10px 30px rgba(255, 0, 0, 0.1);
+      border-color: rgba(255, 51, 255, 0.7);
+      box-shadow: 0 0 24px rgba(255, 51, 255, 0.35), inset 0 0 20px rgba(255, 51, 255, 0.05);
+      text-shadow: 0 0 15px rgba(255,51,255,0.5);
     }
 
     .settings-grid {
@@ -699,7 +721,7 @@
 
   <div id="hud" class="interface-hidden">
     <div id="health-bar-wrap">
-      <div class="hud-label"> Player Health</div>
+      <div class="hud-label">⚡ Player Health</div>
       <div id="health-bar-bg"><div id="health-bar-fill"></div></div>
     </div>
 
@@ -719,35 +741,38 @@
     </div>
 
     <div id="echo-bar-wrap">
-      <div class="hud-label"><span> Next Echo In</span></div>
+      <div class="hud-label"><span>🔮 Next Echo In</span></div>
       <div id="echo-bar-bg"><div id="echo-bar-fill"></div></div>
     </div>
 
     <!-- Power Bars -->
     <div id="nova-bar-wrap">
-      <div class="hud-label"><span> Nova</span> <span id="timer-nova" class="cooldown-timer">READY</span></div>
+      <div class="hud-label"><span>⚛ Nova</span> <span id="timer-nova" class="cooldown-timer">READY</span></div>
       <div id="nova-bar-bg"><div id="nova-bar-fill"></div></div>
     </div>
     
     <div id="shield-bar-wrap">
-      <div class="hud-label"><span> Kinetic Shield</span></div>
+      <div class="hud-label"><span>🛡️ Kinetic Shield</span></div>
       <div id="shield-bar-bg"><div id="shield-bar-fill"></div></div>
     </div>
     
     <div id="pistol-bar-wrap">
-      <div class="hud-label"><span> Pistol</span> <span id="timer-pistol" class="cooldown-timer">READY</span></div>
+      <div class="hud-label"><span>🔫 Pistol</span> <span id="timer-pistol" class="cooldown-timer">READY</span></div>
       <div id="pistol-bar-bg"><div id="pistol-bar-fill"></div></div>
     </div>
     
     <div id="gravity-bar-wrap">
-      <div class="hud-label"><span> Tornado</span> <span id="timer-gravity" class="cooldown-timer">READY</span></div>
+      <div class="hud-label"><span>🌀 Tornado</span> <span id="timer-gravity" class="cooldown-timer">READY</span></div>
       <div id="gravity-bar-bg"><div id="gravity-bar-fill"></div></div>
     </div>
     
-
-
+    <div id="thunder-bar-wrap">
+      <div class="hud-label"><span>⏳ Freeze</span> <span id="timer-thunder" class="cooldown-timer">READY</span></div>
+      <div id="thunder-bar-bg"><div id="thunder-bar-fill"></div></div>
+    </div>
+    
     <div id="flame-bar-wrap">
-      <div class="hud-label"><span> Flame</span> <span id="timer-flame" class="cooldown-timer">READY</span></div>
+      <div class="hud-label"><span>🔥 Flame</span> <span id="timer-flame" class="cooldown-timer">READY</span></div>
       <div id="flame-bar-bg"><div id="flame-bar-fill"></div></div>
     </div>
 
@@ -755,21 +780,17 @@
 
   <!-- Key Legend Box -->
   <div id="controls-legend" class="interface-hidden">
-    <div class="legend-item"><span class="legend-key"> </span> Move</div>
-    <div class="legend-item"><span class="legend-key"></span> Jump</div>
-    <div class="legend-item"><span class="legend-key">SPACE</span> Jump</div>
-    <div class="legend-item"><span class="legend-key">ALT</span> Attack</div>
-    <div class="legend-item"><span class="legend-key">SHIFT</span> Dash</div>
-    <div class="legend-item"><span class="legend-key">CAPS</span> Shield</div>
-    <div class="legend-item"><span class="legend-key">F</span> Flame</div>
-    <div class="legend-item"><span class="legend-key">G</span> Tornado</div>
-    <div class="legend-item"><span class="legend-key">E</span> Nova</div>
-    <div class="legend-item"><span class="legend-key">P</span> Pistol</div>
+    <div class="legend-item"><span class="legend-key">F</span> Flame Thrower</div>
+    <div class="legend-item"><span class="legend-key">T</span> Time Freeze</div>
+    <div class="legend-item"><span class="legend-key">G</span> Anti-Gravity (Tornado)</div>
+    <div class="legend-item"><span class="legend-key">E</span> Crimson Nova</div>
+    <div class="legend-item"><span class="legend-key">P</span> Precision Pistol</div>
+    <div class="legend-item"><span class="legend-key">SHIFT</span> Dash / Dodge</div>
+    <div class="legend-item" style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; opacity:0.6; font-size:0.6rem;">ALT: Attack | SPACE: Jump</div>
   </div>
 
   <div id="canvas-wrap">
     <canvas id="canvas" width="820" height="480"></canvas>
-    <canvas id="canvas2d" width="820" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></canvas>
 
     <!-- 2D Overlay Menu -->
     <div id="overlay">
@@ -777,10 +798,9 @@
       <div id="main-menu" class="menu-view">
         <div class="overlay-title">CLONE ME</div>
         <div class="btn-stack">
-          <button class="menu-btn" id="new-game-btn" onclick="console.log('HTML New Game Clicked'); if(typeof startGame !== 'undefined'){ startGame(); showMenu('none'); }">New Game</button>
-          <button class="menu-btn" id="load-game-btn" onclick="console.log('HTML Load Game Clicked')">Load Game</button>
-          <button class="menu-btn" id="settings-btn" onclick="console.log('HTML Settings Clicked')">Settings</button>
-          <button class="menu-btn" id="info-btn">Game Info</button>
+          <button class="menu-btn" id="new-game-btn">New Game</button>
+          <button class="menu-btn" id="load-game-btn">Load Game</button>
+          <button class="menu-btn" id="settings-btn">Settings</button>
           <button class="menu-btn quit" id="quit-btn">Quit</button>
         </div>
       </div>
@@ -817,34 +837,6 @@
           </div>
         </div>
         <button class="btn" id="settings-back-btn" style="margin-top:16px">BACK</button>
-      </div>
-
-      <!-- GAME INFO MENU -->
-      <div id="info-menu" class="menu-view hidden">
-        <div class="overlay-title" style="font-size:1.4rem">GAME INFO</div>
-        <div class="overlay-sub" id="info-content" style="max-width:550px; text-align: left; padding: 20px; max-height: 60vh; overflow-y: auto; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #ccc;">
-          <p style="margin-bottom: 12px; color: #fff;"><strong>Clone Me</strong> is a fast-paced combat game where you battle your own past actions.</p>
-          <p style="margin-bottom: 20px;">Every move you make is recorded, and after a short delay, a clone appears and replays those exact actions. As time passes, more clones spawn  turning your own strategy into your biggest challenge.</p>
-          
-          <h3 style="color: #fff; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">Algorithms Used</h3>
-          <ul style="list-style-type: none; padding: 0; font-size: 0.8rem; line-height: 1.6;">
-            <li style="margin-bottom: 8px;"><strong>Time-Stamped Recording:</strong> Captures every player action with exact timing.</li>
-            <li style="margin-bottom: 8px;"><strong>Replay / Ghost Playback:</strong> Clones mimic past actions exactly as recorded.</li>
-            <li style="margin-bottom: 8px;"><strong>Finite State Machine (FSM):</strong> Controls states like Idle, Move, Jump, Attack.</li>
-            <li style="margin-bottom: 8px;"><strong>Collision Detection:</strong> Handles hits, damage, and interactions.</li>
-            <li style="margin-bottom: 8px;"><strong>Delay-Based Spawn:</strong> Spawns clones after a fixed time delay.</li>
-            <li style="margin-bottom: 20px;"><strong>Circular Buffer:</strong> Stores recent actions efficiently.</li>
-          </ul>
-
-          <h3 style="color: #fff; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">What Problem It Solves</h3>
-          <p style="margin-bottom: 12px; font-size: 0.8rem; line-height: 1.5;">Most combat games rely on predictable enemies or simple AI, which become repetitive and easy to master. <strong>Clone Me</strong> solves this by:</p>
-          <ul style="list-style-type: disc; padding-left: 20px; font-size: 0.8rem; line-height: 1.6;">
-            <li style="margin-bottom: 6px;">Turning the players own skill and behavior into the challenge.</li>
-            <li style="margin-bottom: 6px;">Creating infinite, unpredictable difficulty without complex AI.</li>
-            <li style="margin-bottom: 10px;">Forcing players to adapt, improve, and rethink their strategy constantly.</li>
-          </ul>
-        </div>
-        <button class="btn" id="info-back-btn" style="margin-top:16px">BACK</button>
       </div>
 
       <!-- LOAD GAME MENU -->
@@ -885,26 +877,12 @@
 </div>
 
 <script>
-// 
-//  CLONE ME    Core Engine  (clean rewrite)
-// 
+// ═══════════════════════════════════════════════════════════════
+//  CLONE ME  –  Core Engine  (clean rewrite)
+// ═══════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('canvas');
-// Three.js Core
-let renderer, scene, camera, composer;
-let camMode = 0; // 0: Iso, 1: Follow, 2: Side
-const CAM_MODES = ['ISO', 'FOLLOW', 'SIDE'];
-
-// 3D Objects
-const meshes = {
-  player: null,
-  clones: [],
-  bosses: [],
-  arena: null,
-  platforms: []
-};
-
-let ctx; // 2D Context for HUD and UI overlays
+const ctx    = canvas.getContext('2d');
 
 /* --- Audio Synthesis System --- */
 const SFX = {
@@ -1012,10 +990,10 @@ const SFX = {
     osc.stop(this.ctx.currentTime + 0.5);
   }
 };
-const W = canvas.width;   // 820  internal resolution stays fixed
+const W = canvas.width;   // 820 – internal resolution stays fixed
 const H = canvas.height;  // 480
 
-//  Fullscreen canvas scaling 
+// ── Fullscreen canvas scaling ──────────────────────────────────
 function scaleCanvas() {
   const hudEl   = document.getElementById('hud');
   const hintEl  = document.getElementById('controls-hint');
@@ -1026,9 +1004,9 @@ function scaleCanvas() {
   const scale   = Math.min(availW / W, availH / H);
   
   const canv = document.getElementById('canvas');
-  if (canv && renderer) {
-    renderer.setSize(W * scale, H * scale);
-    if (composer) composer.setSize(W * scale, H * scale);
+  if (canv) {
+    canv.style.width  = (W * scale) + 'px';
+    canv.style.height = (H * scale) + 'px';
     canv._scale = scale;
   }
   
@@ -1038,13 +1016,6 @@ function scaleCanvas() {
     overlay.style.height = (H * scale) + 'px';
   }
   
-  const canv2d = document.getElementById('canvas2d');
-  if (canv2d) {
-    canv2d.width = W;
-    canv2d.height = H;
-    canv2d.style.width = (W * scale) + 'px';
-    canv2d.style.height = (H * scale) + 'px';
-  }
 }
 scaleCanvas();
 window.addEventListener('resize', scaleCanvas);
@@ -1052,10 +1023,6 @@ window.addEventListener('resize', scaleCanvas);
 // Prevent Alt-key from opening browser menus, and bind Escape to pause/resume
 window.addEventListener('keydown', e => { 
   if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); 
-  if (e.code === 'KeyV') {
-    camMode = (camMode + 1) % 3;
-    addFloatText(W/2, H/2, `CAMERA: ${CAM_MODES[camMode]}`, '#00ffff');
-  }
   if (e.code === 'Escape') {
     if (gameRunning && !gameOver) {
       gameRunning = false;
@@ -1068,97 +1035,32 @@ window.addEventListener('keydown', e => {
   }
 });
 
-//  Arena (3D Space) 
+// ── Arena ──────────────────────────────────────────────────────
 const ARENA = {
-  w: 1200,
-  d: 1200, // Depth (Z-axis)
-  ground: 0,
-  limitX: 600,
-  limitZ: 600
+  x: 30, y: 30,
+  w: W - 60,
+  ground: H - 60,
+  left:  30,
+  right: W - 30,
 };
 
-// Platforms 
+// ── Platforms ─────────────────────────────────────────────────
 const PLATFORMS = [
   { x: 160, y: ARENA.ground - 120, w: 140, h: 12 },
   { x: 520, y: ARENA.ground - 120, w: 140, h: 12 },
   { x: 337, y: ARENA.ground - 210, w: 146, h: 12 },
 ];
 
-function initEngine() {
-  if (renderer) return;
-  console.log("initEngine: Starting setup...");
-  scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x000000, 0.0008);
-
-  camera = new THREE.PerspectiveCamera(75, W / H, 0.1, 5000);
-  
-  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(W, H);
-  renderer.setClearColor(0x000000, 1);
-
-  // Lighting
-  const ambient = new THREE.AmbientLight(0x404040, 0.5);
-  scene.add(ambient);
-  
-  const sun = new THREE.DirectionalLight(0x00ffcc, 0.8);
-  sun.position.set(100, 200, 100);
-  scene.add(sun);
-
-  // Floor
-  const gridHelper = new THREE.GridHelper(ARENA.w, 40, 0xff00ff, 0x333333);
-  scene.add(gridHelper);
-  
-  const floorGeo = new THREE.PlaneGeometry(ARENA.w, ARENA.d);
-  const floorMat = new THREE.MeshPhongMaterial({ 
-    color: 0x050505, 
-    transparent: true, 
-    opacity: 0.8,
-    side: THREE.DoubleSide 
-  });
-  meshes.arena = new THREE.Mesh(floorGeo, floorMat);
-  meshes.arena.rotation.x = -Math.PI / 2;
-  scene.add(meshes.arena);
-
-  // Post-processing
-  const renderScene = new THREE.RenderPass(scene, camera);
-  const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(W, H), 1.5, 0.4, 0.85);
-  bloomPass.threshold = 0.2;
-  bloomPass.strength = 1.2;
-  bloomPass.radius = 0.5;
-
-  composer = new THREE.EffectComposer(renderer);
-  composer.addPass(renderScene);
-  composer.addPass(bloomPass);
-
-  // Initialize 2D context for HUD overlay (separate canvas)
-  const canvas2d = document.getElementById('canvas2d');
-  ctx = canvas2d ? canvas2d.getContext('2d') : null;
-
-  // Initialize Platforms as 3D Cubes
-  PLATFORMS.forEach(p => {
-    const geo = new THREE.BoxGeometry(p.w, 10, 60);
-    const mat = new THREE.MeshPhongMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5 });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set(p.x - W/2 + p.w/2, (H - p.y), 0);
-    scene.add(mesh);
-    meshes.platforms.push(mesh);
-  });
-
-  scaleCanvas();
-  console.log("initEngine: Complete.");
-}
-
-//  Constants 
+// ── Constants ─────────────────────────────────────────────────
 const GRAVITY            = 0.55;
 const JUMP_FORCE         = -13.5;
 const MOVE_SPEED         = 4.2;
 const CLONE_BASE_SPEED   = 3.6;
 
-const RECORD_FRAMES      = 5 * 60;   // 5 s  60 fps
+const RECORD_FRAMES      = 5 * 60;   // 5 s × 60 fps
 const PLAYER_W           = 26;
 const PLAYER_H           = 36;
-const PLAYER_HP          = 250;
+const PLAYER_HP          = 100;
 const ATTACK_DMG         = 35;
 const CLONE_DMG          = 8;
 const ATTACK_RANGE       = 55;
@@ -1166,9 +1068,9 @@ const ATTACK_DUR         = 18;
 const ATTACK_CD          = 28;
 const CLONE_ATTACK_RANGE = 52;
 const CLONE_ATTACK_CD    = 45;
-const CLONE_HP           = 50;
+const CLONE_HP           = 60;
 
-//  Boss Phase 
+// ── Boss Phase ────────────────────────────────────────────────
 const MERGE_THRESHOLD    = 4;
 const GIANT_SIZE_MULT    = 2.5;
 const GIANT_HP_MULT      = 1.2; // Extra health bonus for the boss
@@ -1179,18 +1081,17 @@ const GRAVITY_RADIUS     = 180;
 const GRAVITY_DURATION   = 180; // 3 seconds
 const GRAVITY_COOLDOWN   = 290; // Duration + ~1.8 seconds
 const FREEZE_DURATION    = 180; // 3 seconds
-
+const THUNDER_COOLDOWN   = 110; // ~1.8 seconds
 const FLAME_DURATION     = 300;  // 5 seconds of fire
 const FLAME_COOLDOWN     = 110; // ~1.8 seconds
 const FLAME_RANGE        = 240;
 
 
 
-//  Input map 
+// ── Input map ─────────────────────────────────────────────────
 const keys = {};
 document.addEventListener('keydown', e => { keys[e.code] = true;  });
 document.addEventListener('keyup',   e => { keys[e.code] = false; });
-window.addEventListener('blur', () => { Object.keys(keys).forEach(k => keys[k] = false); });
 let mouseX = 0, mouseY = 0;
 canvas.addEventListener('mousemove', e => {
   const rect = canvas.getBoundingClientRect();
@@ -1200,21 +1101,18 @@ canvas.addEventListener('mousemove', e => {
 });
 function pressing(...codes) { return codes.some(c => keys[c]); }
 function attackKey()  { return pressing('AltLeft', 'AltRight'); }
-function jumpKey()    { return pressing('Space'); }
+function jumpKey()    { return pressing('ArrowUp', 'KeyW', 'Space'); }
 function leftKey()    { return pressing('ArrowLeft',  'KeyA'); }
 function rightKey()   { return pressing('ArrowRight', 'KeyD'); }
-// 3D Specific
-function forwardKey() { return pressing('KeyW', 'ArrowUp'); }
-function backwardKey() { return pressing('KeyS', 'ArrowDown'); }
 function dashKey()    { return pressing('ShiftLeft', 'ShiftRight'); }
 function novaKey()    { return pressing('KeyE'); }
 function pistolKey()  { return pressing('KeyP', 'p', 'P'); }
 function gravityKey() { return pressing('KeyG'); }
-
+function thunderKey() { return pressing('KeyT'); }
 function flameKey()   { return pressing('KeyF'); }
 function shieldKey()  { return pressing('CapsLock', 'KeyC', 'c', 'C'); }
 
-//  State 
+// ── State ──────────────────────────────────────────────────────
 let player, clones, inputBuffer;
 let particles, floatingTexts;
 let shakeAmt, shakeX, shakeY;
@@ -1229,19 +1127,18 @@ let isBossPhase = false;
 let spawnPaused = false;
 let shockwaves = [];
 let gravitySpirals = [];
-let clonesKilled = 0;
-let survivalTime = 0;
-let startTime = 0;
+let lightnings = [];
+let screenFlash = 0;
+let fireParticles = [];
+let bossOrbs = [];
+let laserBeams = [];
 let globalTimeScale = 1.0;
 let isTimeDistorted = false;
 let distortionTimer = 0;
-let droppedWeapons = [];
-let bossOrbs = [];
-let laserBeams = [];
 
 
 
-//  Particles 
+// ── Particles ─────────────────────────────────────────────────
 function spawnParticles(x, y, color, count = 8, speed = 3) {
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 / count) * i + Math.random() * 0.6;
@@ -1282,7 +1179,7 @@ function drawParticles() {
   ctx.globalAlpha = 1;
 }
 
-//  Screen Shake 
+// ── Screen Shake ──────────────────────────────────────────────
 function triggerShake(amt) { shakeAmt = Math.max(shakeAmt, amt); }
 
 function updateShake() {
@@ -1294,7 +1191,7 @@ function updateShake() {
   } else { shakeX = 0; shakeY = 0; }
 }
 
-//  Floating Text 
+// ── Floating Text ─────────────────────────────────────────────
 function addFloatText(x, y, text, color) {
   floatingTexts.push({ x, y, text, color, life: 1, vy: -1.3 });
 }
@@ -1320,52 +1217,29 @@ function drawFloatTexts() {
   ctx.globalAlpha = 1;
 }
 
-//  Platform Collision 
+// ── Platform Collision ────────────────────────────────────────
 function applyPlatforms(entity) {
-  const ew = PLAYER_W;
-  const ed = 60; // Standard platform depth in 3D init
-  
-  for (let i = 0; i < PLATFORMS.length; i++) {
-    const p = PLATFORMS[i];
-    const mesh = meshes.platforms[i];
-    if (!mesh) continue;
-
-    // Platform bounds in 3D (mesh position is center)
-    const pX = mesh.position.x;
-    const pY = mesh.position.y;
-    const pZ = mesh.position.z;
-    const pW = p.w;
-    const pH = 10;
-    const pD = 60;
-
-    const inX = entity.x + ew/2 > pX - pW/2 && entity.x - ew/2 < pX + pW/2;
-    const inZ = entity.z + ed/2 > pZ - pD/2 && entity.z - ed/2 < pZ + pD/2;
-    
-    const prevBottom = entity.y - entity.vy;
-    const curBottom  = entity.y;
-    const crossed = prevBottom >= pY + pH/2 && curBottom <= pY + pH/2;
-
-    if (inX && inZ && crossed && entity.vy <= 0) {
-      entity.y = pY + pH/2;
-      entity.vy = 0;
+  for (const p of PLATFORMS) {
+    const prevBottom = entity.y + PLAYER_H - entity.vy;
+    const curBottom  = entity.y + PLAYER_H;
+    const inX  = entity.x + PLAYER_W > p.x + 4 && entity.x < p.x + p.w - 4;
+    const crossed = prevBottom <= p.y + 2 && curBottom >= p.y;
+    if (inX && crossed && entity.vy >= 0) {
+      entity.y       = p.y - PLAYER_H;
+      entity.vy      = 0;
       entity.onGround = true;
     }
   }
 }
 
-//  Player factory 
+// ── Player factory ────────────────────────────────────────────
 function createPlayer() {
-  const geo = new THREE.CylinderGeometry(PLAYER_W/2, PLAYER_W/2, PLAYER_H*0.8, 8, 1);
-  const mat = new THREE.MeshPhongMaterial({ color: 0x00ff41, emissive: 0x00ff41, emissiveIntensity: 0.5 });
-  const mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
-  meshes.player = mesh;
-
   return {
-    x: 0, y: 50, z: 0,
-    vx: 0, vy: 0, vz: 0,
+    x: W / 2 - PLAYER_W / 2,
+    y: ARENA.ground - PLAYER_H,
+    vx: 0, vy: 0,
     onGround: false,
-    facing: new THREE.Vector3(1, 0, 0),
+    facing: 1,
     hp: PLAYER_HP, maxHp: PLAYER_HP,
     attackTimer: 0, attackCooldown: 0,
     isAttacking: false,
@@ -1380,21 +1254,18 @@ function createPlayer() {
     novaEnergy: 0, maxNovaEnergy: 100,
     shieldEnergy: 100, maxShield: 100, isShielded: false,
     pistolCooldown: 0,
+    thunderCooldown: 0,
+    freezeTimer: 0,
     gravityCooldown: 0,
-    flameCooldown: 0, isFlaming: false, flameDuration: 0,
-    mesh: mesh
+    flameCooldown: 0, isFlaming: false, flameDuration: 0
   };
 }
 
-//  Damage Player 
+// ── Damage Player ────────────────────────────────────────────
 function damagePlayer(amount, sourceX) {
   if (player.invincible > 0) return;
   if (player.isShielded && player.shieldEnergy > 0) {
-    player.shieldEnergy -= 25;
-    if (player.shieldEnergy <= 0) {
-      player.shieldEnergy = 0;
-      player.shieldOverheated = true;
-    }
+    player.shieldEnergy = Math.max(0, player.shieldEnergy - 25);
     player.invincible = 20;
     spawnParticles(player.x + PLAYER_W/2, player.y + PLAYER_H/2, '#00ffff', 12, 3);
     addFloatText(player.x + PLAYER_W/2, player.y - 15, "BLOCKED", "#00ffff");
@@ -1410,19 +1281,17 @@ function damagePlayer(amount, sourceX) {
   }
 }
 
-//  Record one snapshot of the player 
+// ── Record one snapshot of the player ─────────────────────────
 function recordFrame() {
   inputBuffer.push({
-    x: player.x, y: player.y, z: player.z,
-    vx: player.vx, vy: player.vy, vz: player.vz,
-    facing: player.facing.clone(),
+    x: player.x, y: player.y,
+    vx: player.vx, vy: player.vy,
+    facing: player.facing,
     onGround: player.onGround,
     isAttacking: player.isAttacking,
     attackTimer: player.attackTimer,
     moveLeft:  leftKey(),
     moveRight: rightKey(),
-    moveForward: forwardKey(),
-    moveBackward: backwardKey(),
     jumping:   jumpKey(),
     attacking: attackKey(),
     dashing:   dashKey(),
@@ -1432,23 +1301,18 @@ function recordFrame() {
   if (inputBuffer.length > RECORD_FRAMES) inputBuffer.shift();
 }
 
-//  Spawn clone using recorded timeline 
+// ── Spawn clone using recorded timeline ───────────────────────
 function spawnClone() {
   if (inputBuffer.length < 15) return;
-  const timeline = JSON.parse(JSON.stringify(inputBuffer)); 
+  const timeline = [...inputBuffer];
   const first    = timeline[0];
-  const cloneColors = [0xff00ff, 0xff66b2, 0xff3131, 0xffff33, 0x00ccff];
-  const color = cloneColors[Math.floor(Math.random() * cloneColors.length)];
+  const cloneColors = ['#ff00ff', '#ff66b2', '#ff3131', '#ffff33', '#00ccff'];
 
-  const geo = new THREE.CylinderGeometry(PLAYER_W/2, PLAYER_W/2, PLAYER_H*0.8, 8, 1);
-  const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.5, transparent: true, opacity: 0 });
-  const mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
 
   const clone = {
-    x: first.x, y: first.y, z: first.z,
-    vx: 0, vy: 0, vz: 0,
-    facing: new THREE.Vector3(1, 0, 0),
+    x: first.x, y: first.y,
+    vx: 0, vy: 0,
+    facing: first.facing,
     onGround: false,
     hp: CLONE_HP, maxHp: CLONE_HP,
     frameIdx: 0,
@@ -1460,15 +1324,13 @@ function spawnClone() {
     alpha: 0,
     trail: [],
     flashTimer: 0,
-    color: '#' + color.toString(16).padStart(6, '0'),
-    mesh: mesh
+    color: cloneColors[Math.floor(Math.random() * cloneColors.length)],
   };
   clones.push(clone);
-  meshes.clones.push(mesh);
-  spawnParticles(clone.x, clone.y, clone.color, 18, 5);
+  spawnParticles(clone.x + PLAYER_W / 2, clone.y + PLAYER_H / 2, clone.color, 18, 5);
 }
 
-//  Update one clone 
+// ── Update one clone ──────────────────────────────────────────
 function updateClone(c) {
   if (c.alpha < 1) c.alpha = Math.min(1, c.alpha + 0.04);
   if (c.flashTimer > 0) c.flashTimer--;
@@ -1499,7 +1361,7 @@ function updateClone(c) {
     c.attackTimer = snap.attackTimer;
     c.frameIdx++;
   } else {
-    // Timeline done  walk toward player
+    // Timeline done — walk toward player
     const px = player.x + PLAYER_W / 2;
     const cx = c.x + PLAYER_W / 2;
     if (px > cx) { c.vx = CLONE_BASE_SPEED * sp * 0.7; c.facing =  1; }
@@ -1528,38 +1390,28 @@ function updateClone(c) {
   c.vy += GRAVITY * globalTimeScale;
   c.x  += c.vx * globalTimeScale;
   c.y  += c.vy * globalTimeScale;
-  c.z  += (c.vz || 0) * globalTimeScale;
+
+
 
   // Ground
-  if (c.y <= ARENA.ground) {
-    c.y = ARENA.ground;
-    c.vy = 0; c.vz *= 0.8; c.onGround = true;
-  } else { 
-    c.onGround = false;
-    c.vx *= 0.95;
-    c.vz *= 0.95;
-  }
+  if (c.y + PLAYER_H >= ARENA.ground) {
+    c.y = ARENA.ground - PLAYER_H;
+    c.vy = 0; c.onGround = true;
+  } else { c.onGround = false; }
+
+  // Platforms
+  applyPlatforms(c);
 
   // Walls
-  if (Math.abs(c.x) > ARENA.limitX) c.x = Math.sign(c.x) * ARENA.limitX;
-  if (Math.abs(c.z) > ARENA.limitZ) c.z = Math.sign(c.z) * ARENA.limitZ;
-
-  // Visual Update
-  if (c.mesh) {
-    c.mesh.position.set(c.x, c.y + PLAYER_H/2, c.z);
-    c.mesh.rotation.y = Math.atan2(c.vx, c.vz || 0.001);
-  }
-
-  // Attack timer
-  if (c.attackTimer > 0) c.attackTimer--;
-  else c.isAttacking = false;
+  if (c.x < ARENA.left)              { c.x = ARENA.left;              c.vx = 0; }
+  if (c.x + PLAYER_W > ARENA.right)  { c.x = ARENA.right - PLAYER_W;  c.vx = 0; }
 
   // Trail
   c.trail.push({ x: c.x, y: c.y });
   if (c.trail.length > 8) c.trail.shift();
 }
 
-//  Giant Echo Functions 
+// ── Giant Echo Functions ──────────────────────────────────────
 function mergeClonesIntoGiant() {
   if (clones.length < 4 || isBossPhase) return;
 
@@ -1567,45 +1419,31 @@ function mergeClonesIntoGiant() {
   spawnPaused = true;
   triggerShake(15);
 
-  let avgX = 0, avgY = 0, avgZ = 0, totalHP = 0;
-  clones.forEach(c => { avgX += c.x; avgY += c.y; avgZ += (c.z || 0); totalHP += c.hp; });
+  let avgX = 0, avgY = 0, totalHP = 0;
+  clones.forEach(c => { avgX += c.x; avgY += c.y; totalHP += c.hp; });
   avgX /= clones.length;
   avgY /= clones.length;
-  avgZ /= clones.length;
 
   const isSuperior = currentLevel >= 3;
   const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
   
-  const color = isSuperior ? 0xffd700 : 0xff33ff;
-  const geo = new THREE.CylinderGeometry((PLAYER_W/2)*s, (PLAYER_W/2)*s, (PLAYER_H*0.8)*s, 8, 1);
-  const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
-  const mesh = new THREE.Mesh(geo, mat);
-  scene.add(mesh);
-
-  const boss = {
-    x: avgX, y: avgY, z: avgZ,
-    vx: 0, vy: 0, vz: 0, facing: new THREE.Vector3(1, 0, 0), onGround: false,
+  activeBosses.push({
+    x: avgX, y: avgY, vx: 0, vy: 0, facing: 1, onGround: false,
     isGiant: true, isSuperior,
     sizeMult: s,
-    hp: totalHP * (isSuperior ? 5 : 1.3),
-    maxHp: totalHP * (isSuperior ? 5 : 1.3),
-    alpha: 1, color: '#' + color.toString(16).padStart(6, '0'),
+    hp: totalHP * (isSuperior ? 8 : 2),
+    maxHp: totalHP * (isSuperior ? 8 : 2),
+    alpha: 0, color: isSuperior ? '#ffd700' : '#ff33ff',
     trail: [], jumpsLeft: 0, dashCooldown: 0, 
     isTrapped: false,
     timeline: clones[0].timeline || [],
     isSlamming: false, slamState: 0, slamTimer: 0, shockwaveTimer: 300, phase: 1,
-    attackTimer: 0, attackCooldown: 0, isAttacking: false,
-    mesh: mesh
-  };
-  activeBosses.push(boss);
-  meshes.bosses.push(mesh);
-  
-  clones.forEach(c => {
-    spawnParticles(c.x, c.y, '#aa33ff', 10, 3);
-    scene.remove(c.mesh);
+    attackTimer: 0, attackCooldown: 0, isAttacking: false
   });
+  
+  clones.forEach(c => spawnParticles(c.x + PLAYER_W/2, c.y + PLAYER_H/2, '#aa33ff', 10, 3));
   clones = [];
-  addFloatText(0, 200, isSuperior ? "SUPERIOR GIANT FORMING" : "GIANT ECHO FORMING", isSuperior ? "#ffd700" : "#ff33ff");
+  addFloatText(W/2, H/2 - 50, isSuperior ? "SUPERIOR GIANT FORMING" : "GIANT ECHO FORMING", isSuperior ? "#ffd700" : "#ff33ff");
 }
 
 function updateGiantEcho(g) {
@@ -1618,71 +1456,141 @@ function updateGiantEcho(g) {
 
   const s = g.sizeMult || GIANT_SIZE_MULT;
 
-  // Boss Special Abilities in 3D
+  // Boss Special Abilities by Level
   if (currentLevel >= 3) {
     g.fireTrailTimer = (g.fireTrailTimer || 0) - 1 * globalTimeScale;
-    if (g.fireTrailTimer <= 0 && (Math.abs(g.vx) > 0.5 || Math.abs(g.vz) > 0.5) && !g.isSlamming) {
+    if (g.fireTrailTimer <= 0 && Math.abs(g.vx) > 0.5 && !g.isSlamming) {
       g.fireTrailTimer = 18;
-      spawnFireParticle(g.x, ARENA.ground, 0, -2); // Still 2D particles for now, but centered
+      spawnFireParticle(g.x + (PLAYER_W*s)/2, ARENA.ground - 10, 0, -2);
     }
   }
 
-  // Pursuit AI in 3D
-  if (!g.isSlamming) {
-    const dx = player.x - g.x;
-    const dz = player.z - g.z;
-    const dist = Math.sqrt(dx*dx + dz*dz);
-    
-    if (dist > 50) {
-      g.vx = (dx / dist) * MOVE_SPEED * 0.7 * globalTimeScale;
-      g.vz = (dz / dist) * MOVE_SPEED * 0.7 * globalTimeScale;
-      g.facing.set(dx/dist, 0, dz/dist);
-    } else {
-      g.vx *= 0.9;
-      g.vz *= 0.9;
+  if (currentLevel >= 4) {
+    g.orbTimer = (g.orbTimer || 300) - 1 * globalTimeScale;
+    if (g.orbTimer <= 0 && !g.isSlamming) {
+      g.orbTimer = 350 + Math.random() * 200;
+      bossOrbs.push({
+        x: g.x + (PLAYER_W*s)/2, y: g.y + (PLAYER_H*s)/2,
+        vx: 0, vy: 0, speed: 2.5, life: 600, radius: 15
+      });
+      triggerShake(5);
+      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 40, "SEEKER ORB!", "#ff00ff");
     }
+  }
 
-    if (g.attackCooldown <= 0 && dist < CLONE_ATTACK_RANGE * s) {
-        g.isAttacking = true;
-        g.attackTimer = Math.floor(ATTACK_DUR * 1.5); 
-        g.attackCooldown = CLONE_ATTACK_CD + 20;
-        if (player.invincible <= 0) {
-          damagePlayer(Math.round(CLONE_DMG * (g.isSuperior ? 3.5 : 1.8)), g.x);
+  if (currentLevel >= 5) {
+    g.blinkTimer = (g.blinkTimer || 450) - 1 * globalTimeScale;
+    if (g.blinkTimer <= 0 && !g.isSlamming) {
+      g.blinkTimer = 450 + Math.random() * 200;
+      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s)/2, '#ffffff', 30, 8); // Poof
+      g.x = Math.max(50, Math.min(W - (PLAYER_W*s) - 50, player.x + PLAYER_W/2 - (PLAYER_W*s)/2));
+      g.y = player.y - 150;
+      g.vy = 5;
+      spawnParticles(g.x + (PLAYER_W*s)/2, g.y + (PLAYER_H*s)/2, '#00ffff', 30, 8); // Reappear
+      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 20, "BLINK STRIKE", "#00ffff");
+      g.isSlamming = true; g.slamState = 2; // Immediate slam mid-air drop
+    }
+  }
+
+  if (currentLevel >= 6) {
+    g.laserTimer = (g.laserTimer || 600) - 1 * globalTimeScale;
+    if (g.laserTimer <= 0 && !g.isSlamming) {
+      g.laserTimer = 450 + Math.random() * 150;
+      g.vx = 0; // stop moving
+      const dir = player.x > g.x ? 1 : -1;
+      laserBeams.push({
+        x: g.x + (PLAYER_W*s)/2, y: g.y + (PLAYER_H*s)/2 - 30,
+        angle: dir === 1 ? -Math.PI/8 : Math.PI + Math.PI/8,
+        sweepSpeed: dir === 1 ? 0.015 : -0.015,
+        life: 150, width: 22
+      });
+      triggerShake(20);
+      addFloatText(g.x + (PLAYER_W*s)/2, g.y - 60, "OMEGA LASER", "#ff0000");
+    }
+  }
+
+  // Slam State Machine
+  if (g.isSlamming) {
+    if (g.slamState === 1) { // Jumping
+      g.vy = -18;
+      g.onGround = false;
+      g.slamState = 2;
+      addFloatText(g.x + (PLAYER_W * s) / 2, g.y - 20, "PREPARING SLAM", "#ffaa00");
+    } else if (g.slamState === 2) { // Mid-air wait
+      if (g.vy >= 0) { // Peak of jump
+        g.vy = 0;
+        g.slamTimer += 1 * globalTimeScale;
+        if (g.slamTimer > 40) {
+          g.slamState = 3;
+          g.vy = 25; // Slam down!
         }
+      }
+    } else if (g.slamState === 3) { // Slamming down
+      if (g.onGround) {
+        g.isSlamming = false;
+        g.shockwaveTimer = 400 + Math.random() * 200; // Reset cooldown
+        triggerShake(18);
+        spawnParticles(g.x + (PLAYER_W * s) / 2, ARENA.ground, "#ffaa00", 30, 8);
+        spawnShockwave();
+        addFloatText(g.x + (PLAYER_W * s) / 2, g.y - 20, "ECHO SHOCKWAVE!", "#ff4400");
+      }
     }
   }
+
+  // Large Boss independent attack
+  if (!g.isSlamming) {
+    // Pursuit AI
+    const px = player.x + PLAYER_W / 2;
+    const gx = g.x + (PLAYER_W * s) / 2;
+    if (px > gx + 20)      { g.vx = MOVE_SPEED * 0.75 * globalTimeScale; g.facing = 1; }
+    else if (px < gx - 20) { g.vx = -MOVE_SPEED * 0.75 * globalTimeScale; g.facing = -1; }
+    else                   { g.vx *= 0.9; }
+
+    if (g.attackCooldown <= 0) {
+      const dy = (player.y + PLAYER_H / 2) - (g.y + (PLAYER_H * s) / 2);
+      const dist = Math.abs(px - gx);
+      
+      if (dist < CLONE_ATTACK_RANGE * s * 0.7 && Math.abs(dy) < (PLAYER_H * s)) {
+        g.isAttacking = true;
+        g.attackTimer = Math.floor(ATTACK_DUR * 1.5); // 1.5x longer swing
+        g.attackCooldown = CLONE_ATTACK_CD + 20;
+        g.maxAttackTimer = g.attackTimer; // Store max for prog calc
+        
+        if (player.invincible <= 0) {
+          const damage = Math.round(CLONE_DMG * (g.isSuperior ? 3.5 : 1.8));
+          damagePlayer(damage, gx);
+        }
+      }
+    }
+  }
+
+  if (g.attackCooldown > 0) g.attackCooldown -= 1 * globalTimeScale;
+  if (g.attackTimer > 0)    g.attackTimer -= 1 * globalTimeScale; else g.isAttacking = false;
 
   // Physics
   g.vy += GRAVITY * globalTimeScale;
-  g.x  += g.vx;
-  g.y  += g.vy;
-  g.z  += g.vz;
+  g.x  += (g.vx || 0) * globalTimeScale;
+  g.y  += g.vy * globalTimeScale;
 
   // Ground
-  if (g.y <= ARENA.ground) {
-    g.y = ARENA.ground;
-    g.vy = 0; g.vz *= 0.8; g.onGround = true;
-  } else { 
-    g.onGround = false;
-    g.vx *= 0.95;
-    g.vz *= 0.95;
-  }
+  const gh = PLAYER_H * s;
+  const gw = PLAYER_W * s;
+  if (g.y + gh >= ARENA.ground) {
+    g.y = ARENA.ground - gh;
+    g.vy = 0; g.onGround = true;
+  } else { g.onGround = false; }
 
   // Walls
-  if (Math.abs(g.x) > ARENA.limitX) g.x = Math.sign(g.x) * ARENA.limitX;
-  if (Math.abs(g.z) > ARENA.limitZ) g.z = Math.sign(g.z) * ARENA.limitZ;
+  if (g.x < ARENA.left)      { g.x = ARENA.left;   g.vx = 0; }
+  if (g.x + gw > ARENA.right) { g.x = ARENA.right - gw; g.vx = 0; }
 
-  // Visual Update
-  if (g.mesh) {
-    g.mesh.position.set(g.x, g.y + (PLAYER_H*s)/2, g.z);
-    g.mesh.rotation.y = Math.atan2(g.vx, g.vz || 0.001);
-  }
+  // Trail
+  g.trail.push({ x: g.x, y: g.y });
+  if (g.trail.length > 8) g.trail.shift();
 }
 
-//  Shockwave Functions 
 
-
-//  Shockwave Functions 
+// ── Shockwave Functions ──────────────────────────────────────
 function spawnShockwave() {
   // Capture last 4 seconds of player path
   const path = inputBuffer.slice(-240).map(s => ({ x: s.x, y: s.y }));
@@ -1769,25 +1677,13 @@ function advanceLevel() {
   clones = [];
   nextEchoTimer = 2000;
   
-  if (player) {
-    player.hp = player.maxHp;
-    addFloatText(player.x + PLAYER_W / 2, player.y - 40, "HEALTH FULLY RESTORED!", "#00ff41");
-  }
-  
   if (currentLevel > 6) {
     addFloatText(W/2, H/2, "THE TIMELINE IS STABILIZED. YOU WIN!", "#ffd700");
     setTimeout(() => { showMenu('quit-menu'); }, 3000);
     return;
   }
   
-  let difficultyName = "EASY";
-  if (currentLevel === 2) difficultyName = "MEDIUM EASY";
-  else if (currentLevel === 3) difficultyName = "MEDIUM";
-  else if (currentLevel === 4) difficultyName = "MEDIUM HARD";
-  else if (currentLevel === 5) difficultyName = "HARD";
-  else if (currentLevel >= 6) difficultyName = "IMPOSSIBLE";
-
-  addFloatText(W/2, H/2 - 40, `ENTERING ZONE ${currentLevel} - ${difficultyName}`, "#00ffff");
+  addFloatText(W/2, H/2 - 40, `ENTERING ZONE ${currentLevel}`, "#00ffff");
   triggerShake(10);
 }
 
@@ -1796,102 +1692,63 @@ function spawnLevelBosses() {
   spawnPaused = true;
   triggerShake(20);
   
-  // Cleanup old boss meshes
-  activeBosses.forEach(b => { if(b.mesh) scene.remove(b.mesh); });
   activeBosses = [];
   bossOrbs = [];
   laserBeams = [];
   
-  const createBoss = (x, z, isSuperior = false) => {
+  const createBoss = (x, y, isSuperior = false) => {
     const s = isSuperior ? 3.5 : GIANT_SIZE_MULT;
-    const hpMult = isSuperior ? 3 : 1.1;
-    const calculatedHp = 350 * hpMult * (1 + (currentLevel - 1) * 0.5);
-    const color = isSuperior ? 0xffd700 : 0xff33ff;
-    
-    const geo = new THREE.CylinderGeometry((PLAYER_W/2)*s, (PLAYER_W/2)*s, (PLAYER_H*0.8)*s, 8, 1);
-    const mat = new THREE.MeshPhongMaterial({ color: color, emissive: color, emissiveIntensity: 0.8 });
-    const mesh = new THREE.Mesh(geo, mat);
-    scene.add(mesh);
-
+    const hpMult = isSuperior ? 5 : 1.5;
     return {
-      x, y: 0, z, vx: 0, vy: 0, vz: 0, facing: new THREE.Vector3(1, 0, 0), onGround: true,
+      x, y, vx: 0, vy: 0, facing: 1, onGround: false,
       isGiant: true, isSuperior,
       sizeMult: s,
-      hp: calculatedHp,
-      maxHp: calculatedHp,
-      alpha: 1, color: '#' + color.toString(16).padStart(6, '0'),
+      hp: 1500 * hpMult * (1 + currentLevel * 0.25),
+      maxHp: 1500 * hpMult * (1 + currentLevel * 0.25),
+      alpha: 1, color: isSuperior ? '#ffd700' : '#ff33ff',
       trail: [],
       jumpsLeft: 0, dashCooldown: 0, isTrapped: false,
       attackTimer: 0, attackCooldown: 0, isAttacking: false,
-      timeline: [],
-      mesh: mesh
+      timeline: [] // Bosses have no path initially
     };
   };
 
   if (currentLevel === 1) {
-    activeBosses.push(createBoss(0, -300));
+    activeBosses.push(createBoss(W/2 - 50, 100));
   } else if (currentLevel === 2) {
-    activeBosses.push(createBoss(-300, -300));
-    activeBosses.push(createBoss(300, -300));
-  } else if (currentLevel === 3) {
-    activeBosses.push(createBoss(0, -400, true));
-  } else if (currentLevel === 4) {
-    activeBosses.push(createBoss(-400, -400, true));
-    activeBosses.push(createBoss(400, -400, true));
-  } else if (currentLevel === 5) {
-    for(let i=0; i<4; i++) {
-        activeBosses.push(createBoss(-600 + i*400, -500, true));
-    }
+    activeBosses.push(createBoss(W/4, 100));
+    activeBosses.push(createBoss(3*W/4, 100));
   } else {
-    for(let i=0; i<6; i++) {
-      activeBosses.push(createBoss(-600 + i*200, -600, true));
+    // Levels 3-6 use combinations or multiple superiors
+    const bossCount = currentLevel >= 4 ? 2 : 4; 
+    for(let i=0; i<bossCount; i++) {
+       activeBosses.push(createBoss(100 + i * 200, 100, currentLevel >= 4));
     }
   }
 
-  addFloatText(0, 200, "TARGETS DETECTED", "#ff3300");
+  addFloatText(W/2, H/2 - 60, "TARGETS DETECTED", "#ff3300");
 }
 
-//  Update player 
+// ── Update player ─────────────────────────────────────────────
 function updatePlayer() {
   const spMult = globalTimeScale;
 
   // Kinetic Shield Logic
-  if (player.shieldEnergy <= 0) {
-    player.shieldOverheated = true;
-  } else if (player.shieldEnergy >= 40) {
-    player.shieldOverheated = false; 
-  }
-
-  if (shieldKey() && !player.shieldOverheated && player.shieldEnergy > 0) {
+  if (shieldKey() && player.shieldEnergy > 0) {
     player.isShielded = true;
-    player.shieldEnergy -= 0.6 * spMult;
-    if (player.shieldEnergy <= 0) player.shieldEnergy = 0;
+    player.shieldEnergy -= 0.6 * spMult; // Drain
+    if (player.shieldEnergy < 0) player.shieldEnergy = 0;
   } else {
     player.isShielded = false;
-    player.shieldEnergy = Math.min(player.maxShield, player.shieldEnergy + 0.18 * spMult);
+    player.shieldEnergy = Math.min(player.maxShield, player.shieldEnergy + 0.18 * spMult); // Regen
   }
 
   const flamingMult = (player.isFlaming ? 0.75 : 1.0);
   const shieldMult = (player.isShielded ? 0.35 : 1.0);
 
-  // 3D Movement
-  let mx = 0, mz = 0;
-  if (leftKey()) mx = -1;
-  if (rightKey()) mx = 1;
-  if (forwardKey()) mz = -1;
-  if (backwardKey()) mz = 1;
-
-  if (mx !== 0 || mz !== 0) {
-    const dir = new THREE.Vector3(mx, 0, mz).normalize();
-    player.vx = dir.x * MOVE_SPEED * spMult * flamingMult * shieldMult;
-    player.vz = dir.z * MOVE_SPEED * spMult * flamingMult * shieldMult;
-    player.facing.copy(dir);
-  } else {
-    player.vx *= 0.65;
-    player.vz *= 0.65;
-    if (Math.abs(player.vx) < 0.1) player.vx = 0;
-    if (Math.abs(player.vz) < 0.1) player.vz = 0;
-  }
+  if (leftKey())       { player.vx = -MOVE_SPEED * spMult * flamingMult * shieldMult; player.facing = -1; }
+  else if (rightKey()) { player.vx =  MOVE_SPEED * spMult * flamingMult * shieldMult; player.facing =  1; }
+  else                 { player.vx *= 0.75; }
 
   // Jump logic
   const jumping = jumpKey();
@@ -1901,12 +1758,12 @@ function updatePlayer() {
       player.onGround = false;
       player.jumpsLeft = 1;
       player.squishY = 0.7; player.squishX = 1.3;
-      spawnParticles(player.x, player.y, '#ff4444', 5, 2.5);
+      spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H, '#ff4444', 5, 2.5);
     } else if (player.jumpsLeft > 0) {
       player.vy = JUMP_FORCE * 0.9 * Math.sqrt(spMult);
       player.jumpsLeft--;
       player.squishY = 0.8; player.squishX = 1.2;
-      spawnParticles(player.x, player.y, '#ffaa00', 12, 3);
+      spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ffaa00', 12, 3);
       triggerShake(3);
     }
   }
@@ -1928,7 +1785,7 @@ function updatePlayer() {
   if (player.isDashing) {
     player.dashTimer -= spMult;
     player.vy = 0;
-    player.vx = player.facing.x * 14 * spMult;
+    player.vx = player.facing * 14 * spMult;
     if (player.dashTimer <= 0) {
       player.isDashing = false;
       player.vx *= 0.5;
@@ -1949,29 +1806,22 @@ function updatePlayer() {
     player.flameTimer -= spMult;
     if (player.flameTimer <= 0 || !flameKey()) {
       player.isFlaming = false;
-      if (player.flameMesh) player.flameMesh.visible = false;
     } else {
       if (Math.random() < 0.3 && SFX.playFire) SFX.playFire();
-      
-      // 3D Flame Visual
-      if (!player.flameMesh) {
-        const fGeo = new THREE.ConeGeometry(80, 240, 16);
-        const fMat = new THREE.MeshPhongMaterial({ color: 0xff4400, transparent: true, opacity: 0.5 });
-        player.flameMesh = new THREE.Mesh(fGeo, fMat);
-        player.flameMesh.rotation.z = Math.PI / 2;
-        scene.add(player.flameMesh);
-      }
-      player.flameMesh.visible = true;
-      const fPos = player.facing.clone().multiplyScalar(140);
-      player.flameMesh.position.set(player.x + fPos.x, player.y + PLAYER_H/2, player.z + fPos.z);
-      player.flameMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), player.facing);
-      player.flameMesh.rotateZ(-Math.PI/2); // Adjust cone orientation
-
       updateFlameLogic(spMult);
     }
   }
 
-
+  // Time Freeze Activation (Replaces Thunder)
+  if (player.thunderCooldown > 0 && (player.freezeTimer || 0) <= 0) player.thunderCooldown -= spMult;
+  if (thunderKey() && (player.thunderCooldown || 0) <= 0 && (player.freezeTimer || 0) <= 0) {
+    player.freezeTimer = FREEZE_DURATION;
+    player.thunderCooldown = THUNDER_COOLDOWN;
+    SFX.playFreeze();
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "TIME STOP!", "#00ffff");
+    triggerShake(15);
+  }
+  if (player.freezeTimer > 0) player.freezeTimer -= spMult;
 
   // Activation check
   if (player.gravityCooldown > 0) player.gravityCooldown -= spMult;
@@ -1990,34 +1840,14 @@ function updatePlayer() {
     spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ffaa00', 50, 10);
     addFloatText(player.x + PLAYER_W / 2, player.y - 40, "CRIMSON NOVA!", "#ffcc00");
     clones.forEach(c => {
-      const dx = player.x - c.x;
-      const dy = player.y - c.y;
-      const dz = player.z - c.z;
-      if (Math.sqrt(dx*dx + dy*dy + dz*dz) < 350) {
+      const dx = (player.x + PLAYER_W / 2) - (c.x + PLAYER_W / 2);
+      const dy = (player.y + PLAYER_H / 2) - (c.y + PLAYER_H / 2);
+      if (Math.sqrt(dx*dx + dy*dy) < 350) {
         c.hp -= 100;
         c.flashTimer = 20;
-        spawnParticles(c.x, c.y, '#ff3300', 15, 6);
+        spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#ff3300', 15, 6);
       }
     });
-
-    // 3D Nova Visual
-    const novaGeo = new THREE.SphereGeometry(10, 32, 32);
-    const novaMat = new THREE.MeshPhongMaterial({ color: 0xffaa00, emissive: 0xffaa00, transparent: true, opacity: 0.8 });
-    const novaMesh = new THREE.Mesh(novaGeo, novaMat);
-    novaMesh.position.set(player.x, player.y, player.z);
-    scene.add(novaMesh);
-    
-    // Animate Nova
-    let nScale = 1;
-    const nInt = setInterval(() => {
-      nScale += 2;
-      novaMesh.scale.set(nScale, nScale, nScale);
-      novaMesh.material.opacity -= 0.05;
-      if (novaMesh.material.opacity <= 0) {
-        scene.remove(novaMesh);
-        clearInterval(nInt);
-      }
-    }, 16);
     activeBosses.forEach(b => {
       const bSize = b.sizeMult || GIANT_SIZE_MULT;
       const dx = (player.x + PLAYER_W / 2) - (b.x + (PLAYER_W * bSize) / 2);
@@ -2032,7 +1862,7 @@ function updatePlayer() {
 
 
 
-    // Attack  Alt key
+    // Attack — Alt key
     if (attackKey() && player.attackCooldown <= 0) {
       player.isAttacking    = true;
       player.attackTimer    = ATTACK_DUR;
@@ -2050,14 +1880,14 @@ function updatePlayer() {
       const currentRange = isPower ? ATTACK_RANGE * 1.5 : ATTACK_RANGE;
 
       spawnParticles(
-        player.x + PLAYER_W / 2 + player.facing.x * 30,
+        player.x + PLAYER_W / 2 + player.facing * 30,
         player.y + PLAYER_H / 2,
         isPower ? '#ffcc00' : '#55aaff', 6, 2
       );
 
       // Hit clones
       clones.forEach(c => {
-        const ax = player.x + PLAYER_W / 2 + player.facing.x * (currentRange / 2);
+        const ax = player.x + PLAYER_W / 2 + player.facing * (currentRange / 2);
         const cx = c.x + PLAYER_W / 2;
         const py = player.y + PLAYER_H / 2;
         const cy = c.y + PLAYER_H / 2;
@@ -2075,7 +1905,7 @@ function updatePlayer() {
       // Hit Bosses
       activeBosses.forEach(b => {
         const s = b.sizeMult || GIANT_SIZE_MULT;
-        const ax = player.x + PLAYER_W / 2 + player.facing.x * (currentRange / 2);
+        const ax = player.x + PLAYER_W / 2 + player.facing * (currentRange / 2);
         const gx = b.x + (PLAYER_W * s) / 2;
         const py = player.y + PLAYER_H / 2;
         const gy = b.y + (PLAYER_H * s) / 2;
@@ -2120,7 +1950,7 @@ function updatePlayer() {
       spawnParticles(tx, ty, target.color || '#f1c40f', 15, 4);
 
       // Muzzle spark at player
-      spawnParticles(player.x + PLAYER_W/2 + player.facing.x * 20, player.y + PLAYER_H/2, '#ffffff', 8, 2);
+      spawnParticles(player.x + PLAYER_W/2 + player.facing * 20, player.y + PLAYER_H/2, '#ffffff', 8, 2);
 
       addFloatText(tx, target.y - 20, `-${dmg} (PISTOL)`, '#ffffff');
       addFloatText(player.x + PLAYER_W/2, player.y - 40, "BANG!", "#ffffff");
@@ -2138,92 +1968,44 @@ function updatePlayer() {
 
   // Physics
   player.vy += GRAVITY * spMult;
-  player.x  += player.vx;
-  player.y  += player.vy;
-  player.z  += player.vz;
+  player.x  += player.vx; // vx already incorporates spMult for movement
+  player.y  += player.vy; // vy already incorporates GRAVITY contribution
+
+
 
   // Ground
-  if (player.y <= ARENA.ground) {
+  if (player.y + PLAYER_H >= ARENA.ground) {
     if (player.vy > 3) { player.squishY = 0.75; player.squishX = 1.25; }
-    player.y = ARENA.ground;
-    player.vy = 0;
-    // Stop horizontal drift when grounded and no input
-    if (mx === 0 && mz === 0) { player.vx = 0; player.vz = 0; }
-    player.onGround = true;
+    player.y = ARENA.ground - PLAYER_H;
+    player.vy = 0; player.onGround = true;
     player.jumpsLeft = 2; 
-  } else { 
-    player.onGround = false;
-    // Air drag
-    if (mx === 0 && mz === 0) {
-      player.vx *= 0.9;
-      player.vz *= 0.9;
-    }
-  }
+  } else { player.onGround = false; }
+
+  // Platforms
+  applyPlatforms(player);
 
   // Walls
-  if (Math.abs(player.x) > ARENA.limitX) player.x = Math.sign(player.x) * ARENA.limitX;
-  if (Math.abs(player.z) > ARENA.limitZ) player.z = Math.sign(player.z) * ARENA.limitZ;
+  if (player.x < ARENA.left)             { player.x = ARENA.left;              player.vx = 0; }
+  if (player.x + PLAYER_W > ARENA.right) { player.x = ARENA.right - PLAYER_W;  player.vx = 0; }
 
-  // Visual Update
-  if (player.mesh) {
-    player.mesh.position.set(player.x, player.y + PLAYER_H/2, player.z);
-    const targetRot = Math.atan2(player.vx, player.vz || 0.001);
-    player.mesh.rotation.y = targetRot;
-  }
-
-  // Shield Visual
-  if (player.isShielded) {
-    if (!player.shieldMesh) {
-      const sGeo = new THREE.SphereGeometry(40, 32, 32);
-      const sMat = new THREE.MeshPhongMaterial({ color: 0x00ffff, transparent: true, opacity: 0.3, wireframe: true });
-      player.shieldMesh = new THREE.Mesh(sGeo, sMat);
-      scene.add(player.shieldMesh);
-    }
-    player.shieldMesh.position.set(player.x, player.y + PLAYER_H/2, player.z);
-    player.shieldMesh.visible = true;
-  } else if (player.shieldMesh) {
-    player.shieldMesh.visible = false;
-  }
-
-  // Squish recovery
+  // Squish recovery (Smooth Lerping)
   player.squishY += (1 - player.squishY) * 0.22;
   player.squishX += (1 - player.squishX) * 0.22;
 
   // Trail
-  player.trail.push({ x: player.x, y: player.y, z: player.z });
+  player.trail.push({ x: player.x, y: player.y });
   if (player.trail.length > 12) player.trail.shift();
 
-  updateCamera();
-
+  // Clamp HP
   player.hp = Math.max(0, Math.min(player.maxHp, player.hp));
 }
 
-function updateCamera() {
-  if (!camera || !player) return;
-  
-  const targetPos = new THREE.Vector3(player.x, player.y + 20, player.z);
-  
-  if (camMode === 0) { // ISO
-    camera.position.set(player.x + 300, player.y + 400, player.z + 300);
-    camera.lookAt(targetPos);
-  } else if (camMode === 1) { // FOLLOW
-    const offset = player.facing.clone().negate().multiplyScalar(250);
-    camera.position.lerp(new THREE.Vector3(player.x + offset.x, player.y + 150, player.z + offset.z), 0.1);
-    camera.lookAt(targetPos);
-  } else { // SIDE
-    camera.position.set(player.x, player.y + 100, player.z + 500);
-    camera.lookAt(targetPos);
-  }
-}
-
-//  Spawn interval (scales with time) 
+// ── Spawn interval (scales with time) ─────────────────────────
 function spawnInterval() {
-  let baseMultiplier = Math.max(0.2, 1.2 - (currentLevel * 0.15)); 
-  if (currentLevel >= 6) baseMultiplier = 0.15; // Impossible swarm
-  return Math.max(200, (5000 - (survivalTime / 60) * 2000) * baseMultiplier);
+  return Math.max(2000, 5000 - (survivalTime / 120) * 3000);
 }
 
-//  Draw arena background 
+// ── Draw arena background ─────────────────────────────────────
 function drawArena() {
   const theme = window.gameCfg ? window.gameCfg.theme : 'neon';
   const t = Date.now() / 1000;
@@ -2377,7 +2159,7 @@ function drawArena() {
   }
 }
 
-//  Draw a character (player or clone) 
+// ── Draw a character (player or clone) ───────────────────────
 function drawCharacter(ent, isPlayer) {
   const trail = ent.trail;
 
@@ -2402,7 +2184,7 @@ function drawCharacter(ent, isPlayer) {
     ctx.globalAlpha = a * 1.5;
     ctx.fillStyle   = isPlayer ? '#00ff41' : (ent.color || '#ffffff');
     ctx.beginPath();
-    ctx.rect(t.x, t.y, PLAYER_W * s, PLAYER_H * s);
+    ctx.roundRect(t.x, t.y, PLAYER_W * s, PLAYER_H * s, 6 * s);
     ctx.fill();
     ctx.restore();
   });
@@ -2442,17 +2224,17 @@ function drawCharacter(ent, isPlayer) {
     g.addColorStop(1, '#ffffff');
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.rect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s);
+    ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Highlight
     ctx.fillStyle = 'rgba(245,245,245,0.22)';
     ctx.beginPath();
-    ctx.rect(cx - hw + 3 * s, cy - hh + 3 * s, (PLAYER_W - 6) * s, (PLAYER_H / 2 - 2) * s);
+    ctx.roundRect(cx - hw + 3 * s, cy - hh + 3 * s, (PLAYER_W - 6) * s, (PLAYER_H / 2 - 2) * s, 5 * s);
     ctx.fill();
     // Eye
     ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 6;
     ctx.fillStyle   = '#ffffff';
-    const ex = cx + ent.facing.x * 4 * s;
+    const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#050505';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
@@ -2475,7 +2257,7 @@ function drawCharacter(ent, isPlayer) {
     g.addColorStop(1, '#000000');
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.rect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s);
+    ctx.roundRect(cx - hw, cy - hh, PLAYER_W * s, PLAYER_H * s, 7 * s);
     ctx.fill();
     // Scanlines
     ctx.fillStyle = 'rgba(0,0,0,0.12)';
@@ -2484,7 +2266,7 @@ function drawCharacter(ent, isPlayer) {
     // Dark eye
     ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 6 * s;
     ctx.fillStyle   = ent.color || '#ffffff';
-    const ex = cx + (typeof ent.facing === 'number' ? ent.facing : (ent.facing.x || 1)) * 4 * s;
+    const ex = cx + ent.facing * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3.2 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#000000';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
@@ -2496,8 +2278,7 @@ function drawCharacter(ent, isPlayer) {
     const isPower = isPlayer && ent.hasPowerSword && ent.powerHits > 0;
     const maxDur = ent.maxAttackTimer || ATTACK_DUR;
     const prog  = Math.min(1, ent.attackTimer / maxDur);
-    const fDir = typeof ent.facing === 'number' ? ent.facing : (ent.facing.x || 1);
-    const atkX  = cx + fDir * (hw + 6 * s);
+    const atkX  = cx + ent.facing * (hw + 6 * s);
     const usedRange = isPower ? ATTACK_RANGE * 1.5 : (ent.isGiant ? ATTACK_RANGE * 1.5 : ATTACK_RANGE);
     const atkLen = usedRange * s * prog;
 
@@ -2509,7 +2290,7 @@ function drawCharacter(ent, isPlayer) {
     ctx.lineWidth   = isPower ? 5 : 3;
     ctx.beginPath();
     ctx.moveTo(atkX, cy);
-    ctx.lineTo(atkX + fDir * atkLen, cy);
+    ctx.lineTo(atkX + ent.facing * atkLen, cy);
     ctx.stroke();
     ctx.globalAlpha = prog * 0.45;
     ctx.lineWidth   = isPower ? 3 : 2;
@@ -2522,7 +2303,7 @@ function drawCharacter(ent, isPlayer) {
   ctx.restore();
 }
 
-//  HP bar above character 
+// ── HP bar above character ────────────────────────────────────
 function drawHpBar(ent, fillColor, glowColor) {
   const s = ent.isGiant ? GIANT_SIZE_MULT : 1;
   const bw = (PLAYER_W + 10) * s;
@@ -2535,16 +2316,16 @@ function drawHpBar(ent, fillColor, glowColor) {
   ctx.save();
   ctx.globalAlpha = ent.alpha ?? 1;
   ctx.fillStyle = 'rgba(10,8,20,0.7)';
-  ctx.beginPath(); ctx.rect(bx, by, bw, bh); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 2); ctx.fill();
   if (fw > 0) {
     ctx.shadowColor = glowColor; ctx.shadowBlur = 8;
     ctx.fillStyle   = fillColor;
-    ctx.beginPath(); ctx.rect(bx, by, fw, bh); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(bx, by, fw, bh, 2); ctx.fill();
   }
   ctx.restore();
 }
 
-//  Anti-Gravity Spiral Logic 
+// ── Anti-Gravity Spiral Logic ──────────────────────────────
 function spawnGravitySpiral(px, py) {
   gravitySpirals.push({
     x: px,
@@ -2673,26 +2454,141 @@ function drawGravitySpirals() {
   });
 }
 
+// ── Thunder Strike Logic ───────────────────────────────────
+function executeThunderStrike() {
+  let target = null;
+  let minDist = THUNDER_RANGE;
 
+  const potentialTargets = [...clones, ...activeBosses];
 
-//  Flame Thrower Logic 
+  potentialTargets.forEach(c => {
+    const dx = player.x - c.x;
+    const dy = player.y - c.y;
+    const d = Math.sqrt(dx*dx + dy*dy);
+    if (d < minDist) { minDist = d; target = c; }
+  });
+
+  if (target) {
+    player.thunderCooldown = THUNDER_COOLDOWN;
+    
+    // Initial Impact
+    const dmg = Math.floor(target.hp * 0.8);
+    target.hp -= dmg;
+    target.flashTimer = 25;
+    
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "STORM OF JUDGEMENT!", "#ffff33");
+    addFloatText(target.x + 10, target.y - 30, `-${dmg} HEAVENLY DEVASTATION`, '#ffff00');
+
+    // Multi-Strike Loop (Visual)
+    for (let sIdx = 0; sIdx < 5; sIdx++) {
+      setTimeout(() => {
+        if (!target || !gameRunning) return;
+        
+        const bSize = target.sizeMult || (target.isGiant ? GIANT_SIZE_MULT : 1);
+        const tx = target.x + (PLAYER_W*bSize)/2 + (Math.random()-0.5)*30;
+        const ty = target.y + (PLAYER_H*bSize)/2 + (Math.random()-0.5)*20;
+        
+        lightnings.push({
+          segments: generateLightningPath({x: tx + (Math.random()-0.5)*100, y: -100}, {x: tx, y: ty}),
+          life: 12,
+          maxLife: 12,
+          tx, ty
+        });
+
+        triggerShake(35);
+        screenFlash = 5;
+        spawnParticles(tx, ty, '#ffff33', 15, 6);
+        spawnParticles(tx, ty, '#ffffff', 8, 3);
+        
+        // Minor extra damage for the follow-up bolts (visual consistency)
+        target.hp -= Math.floor(target.hp * 0.05); 
+        target.flashTimer = 15;
+      }, sIdx * 90);
+    }
+  } else {
+    // Miss / Out of range
+    player.thunderCooldown = 60; // 1s penalty
+    addFloatText(player.x + PLAYER_W/2, player.y - 50, "NO TARGET", "#777777");
+  }
+}
+
+function generateLightningPath(start, end) {
+  const segments = [];
+  let cur = { ...start };
+  const steps = 12;
+  const dx = (end.x - start.x) / steps;
+  const dy = (end.y - start.y) / steps;
+
+  for (let i = 0; i < steps; i++) {
+    const next = {
+      x: cur.x + dx + (Math.random() - 0.5) * 45,
+      y: cur.y + dy + (Math.random() - 0.5) * 10
+    };
+    if (i === steps - 1) { next.x = end.x; next.y = end.y; }
+    segments.push({ x1: cur.x, y1: cur.y, x2: next.x, y2: next.y });
+    cur = next;
+  }
+
+  // Branching logic
+  if (Math.random() < 0.6) {
+    const bStart = segments[Math.floor(segments.length * 0.4)];
+    let bCur = { x: bStart.x2, y: bStart.y2 };
+    for (let j = 0; j < 5; j++) {
+       const bNext = { x: bCur.x + (Math.random() - 0.5) * 60, y: bCur.y + 20 + Math.random() * 20 };
+       segments.push({ x1: bCur.x, y1: bCur.y, x2: bNext.x, y2: bNext.y, isBranch: true });
+       bCur = bNext;
+    }
+  }
+
+  return segments;
+}
+
+function updateLightnings() {
+  const ts = globalTimeScale;
+  for (let i = lightnings.length - 1; i >= 0; i--) {
+    lightnings[i].life -= ts;
+    if (lightnings[i].life <= 0) lightnings.splice(i, 1);
+  }
+}
+
+function drawLightnings() {
+  lightnings.forEach(l => {
+    const alpha = l.life / l.maxLife;
+    ctx.save();
+    ctx.shadowBlur = 30 * alpha;
+    ctx.shadowColor = '#00ffff';
+    
+    l.segments.forEach(seg => {
+      ctx.strokeStyle = seg.isBranch ? `rgba(180, 240, 255, ${alpha * 0.6})` : `rgba(255, 255, 255, ${alpha})`;
+      ctx.lineWidth = (seg.isBranch ? 1.5 : (3 + Math.random() * 4)) * alpha;
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(seg.x2, seg.y2);
+      ctx.stroke();
+    });
+
+    ctx.restore();
+  });
+}
+
+// ── Flame Thrower Logic ────────────────────────────────────
 function updateFlameLogic(spMult) {
   // Spawn high-density particles
-  const fx = player.x + PLAYER_W/2 + player.facing.x * 18;
+  const fx = player.x + PLAYER_W/2 + player.facing * 18;
   const fy = player.y + PLAYER_H/2;
   
   const particleCount = 12; // Doubled for smoothness
   for (let i = 0; i < particleCount; i++) {
     const angle = (Math.random() - 0.5) * 0.55; // Slightly wider spray
     const speed = 7 + Math.random() * 6;
-    const vx = Math.cos(angle) * speed * player.facing.x;
+    const vx = Math.cos(angle) * speed * player.facing;
     const vy = Math.sin(angle) * speed - (1.5 + Math.random() * 2.5);
     spawnFireParticle(fx, fy, vx, vy);
   }
 
   // Detect and Damage
   const flameRect = {
-    x: player.facing.x >= 0 ? player.x + PLAYER_W : player.x - FLAME_RANGE,
+    x: player.facing === 1 ? player.x + PLAYER_W : player.x - FLAME_RANGE,
     y: player.y - 40,
     w: FLAME_RANGE,
     h: PLAYER_H + 80
@@ -2801,7 +2697,7 @@ function drawFireParticles() {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-//  Boss Powers Updates 
+// ── Boss Powers Updates ──────────────────────────────────────────
 function updateBossProjectiles() {
   const ts = globalTimeScale;
   
@@ -2859,7 +2755,7 @@ function updateBossProjectiles() {
   }
 }
 
-//  Boss Powers Renders 
+// ── Boss Powers Renders ──────────────────────────────────────────
 function drawBossProjectiles() {
   bossOrbs.forEach(o => {
      ctx.save();
@@ -2889,7 +2785,7 @@ function drawBossProjectiles() {
   });
 }
 
-//  HUD update 
+// ── HUD update ────────────────────────────────────────────────
 function updateHUD() {
   const pct = player.hp / player.maxHp * 100;
   const fill = document.getElementById('health-bar-fill');
@@ -2910,13 +2806,6 @@ function updateHUD() {
   const shieldFill = document.getElementById('shield-bar-fill');
   if (shieldFill && player) {
     shieldFill.style.width = (player.shieldEnergy / player.maxShield * 100) + '%';
-    if (player.shieldOverheated) {
-       shieldFill.style.background = 'linear-gradient(90deg, #ff3300, #ff8800)';
-       shieldFill.style.boxShadow = '0 0 10px rgba(255,51,0,0.7)';
-    } else {
-       shieldFill.style.background = 'linear-gradient(90deg, #00ffff, #ffffff)';
-       shieldFill.style.boxShadow = '0 0 10px rgba(0,255,255,0.7)';
-    }
   }
   
   // Level display update
@@ -2949,13 +2838,13 @@ function updateHUD() {
   updateBar('nova-bar-fill',     'timer-nova',    player.novaEnergy, player.maxNovaEnergy, true);
   updateBar('pistol-bar-fill',   'timer-pistol',  player.pistolCooldown, 480);
   updateBar('gravity-bar-fill',  'timer-gravity', player.gravityCooldown, 110);
-
+  updateBar('thunder-bar-fill',  'timer-thunder', player.thunderCooldown, 110);
   updateBar('flame-bar-fill',    'timer-flame',    player.flameCooldown, 110);
 }
 
-//  Navigation Manager 
+// ── Navigation Manager ──────────────────────────────────────
 function showMenu(viewId) {
-  const views = ['main-menu', 'settings-menu', 'load-menu', 'quit-menu', 'game-over-view', 'info-menu'];
+  const views = ['main-menu', 'settings-menu', 'load-menu', 'quit-menu', 'game-over-view'];
   const isMenuVisible = viewId !== 'none';
   const overlay = document.getElementById('overlay');
 
@@ -3001,7 +2890,7 @@ function showMenu(viewId) {
   });
 }
 
-//  Save/Load Manager 
+// ── Save/Load Manager ────────────────────────────────────────
 function saveSession() {
   const data = {
     time: survivalTime,
@@ -3036,25 +2925,25 @@ function loadSession() {
   }
 }
 
-//  Game-Over overlay 
+// ── Game-Over overlay ────────────────────────────────────────
 function showGameOver() {
   saveSession();
   const view = document.getElementById('game-over-view');
   view.innerHTML = `
     <div class="overlay-title">GAME OVER</div>
-    <div class="overlay-sub" style="text-align:center;">Your echoes caught up with you.<br/><em>The past always returns.</em></div>
-    <div class="stat-row" style="justify-content:center;">
+    <div class="overlay-sub">Your echoes caught up with you.<br/><em>The past always returns.</em></div>
+    <div class="stat-row">
       <div class="stat-box">
         <span class="stat-value">${survivalTime.toFixed(1)}s</span>
-        <span class="stat-label"> Survived</span>
+        <span class="stat-label">⏱ Survived</span>
       </div>
       <div class="stat-box">
         <span class="stat-value">${clonesKilled}</span>
-        <span class="stat-label"> Echoes Defeated</span>
+        <span class="stat-label">💀 Echoes Defeated</span>
       </div>
     </div>
-    <div class="btn-stack" style="margin-top:20px; align-items:center;">
-      <button class="menu-btn" onclick="startGame(); showMenu('none'); document.getElementById('overlay').classList.add('hidden');"> QUICK RESTART</button>
+    <div class="btn-stack" style="margin-top:20px;">
+      <button class="menu-btn" onclick="startGame(); showMenu('none'); document.getElementById('overlay').classList.add('hidden');">↺ QUICK RESTART</button>
       <button class="menu-btn" onclick="showMenu('main-menu')">Main Menu</button>
     </div>
   `;
@@ -3062,7 +2951,7 @@ function showGameOver() {
   document.getElementById('overlay').classList.remove('hidden');
 }
 
-//  Game Initialization Logic 
+// ── Init ──────────────────────────────────────────────────────
 function startGame(savedData = null) {
   player       = createPlayer();
   clones       = [];
@@ -3070,11 +2959,10 @@ function startGame(savedData = null) {
   particles    = [];
   floatingTexts= [];
   shockwaves   = [];
-  droppedRelics = [];
   droppedWeapons = [];
   gravitySpirals = [];
+  lightnings = [];
   fireParticles = [];
-
   bossOrbs = [];
   laserBeams = [];
   activeBosses = [];
@@ -3087,6 +2975,10 @@ function startGame(savedData = null) {
     survivalTime = savedData.time || 0;
     currentLevel = savedData.level || 1;
     startTime    = performance.now() - (survivalTime * 1000);
+    if (savedData.stats) {
+       player.hp = savedData.stats.hp;
+       player.maxHp = savedData.stats.maxHp;
+    }
   } else {
     clonesKilled = 0;
     survivalTime = 0;
@@ -3094,9 +2986,10 @@ function startGame(savedData = null) {
     startTime    = performance.now();
   }
   
-  nextEchoTimer = spawnInterval();
-  
-  diffMult     = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
+  diffMult     = 1 + survivalTime / 30;
+  window.currentWave = Math.floor(clonesKilled / 3 + 1);
+
+  nextEchoTimer = 5000;
   gameOver     = false;
   gameRunning  = true;
   globalTimeScale = 1.0;
@@ -3104,38 +2997,34 @@ function startGame(savedData = null) {
   distortionTimer = 0;
 }
 
-//  Main Game Loop (3D Optimized) 
-function gameLoop(timestamp) {
-  if (!gameRunning) return;
-  
-  if (!window.lastTime) window.lastTime = timestamp;
-  const dt = timestamp - window.lastTime;
-  window.lastTime = timestamp;
 
-  // 1. Logic Updates
-  if (survivalTime === 0 && !window._firstFrameLogged) {
-      console.log("DIAGNOSTIC: Game loop started. dt:", dt);
-  }
+
+// ── Main Loop ─────────────────────────────────────────────────
+let lastTime = 0;
+
+function gameLoop(ts) {
+  const dt = Math.min(ts - lastTime, 33);
+  lastTime  = ts;
+
   updateShake();
-  
-  if (!gameOver) {
-    if (survivalTime === 0 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 1 - recordFrame");
-    recordFrame();
-    if (survivalTime === 0 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 2 - updatePlayer");
-    updatePlayer();
-    
-    // Time Scale for world entities
-    const eScale = globalTimeScale;
-    
-    // Level Progression
-    if (eScale > 0) {
-      if (survivalTime === 0 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 3 - Progression Math");
-      survivalTime += (dt * eScale) / 1000;
-      nextEchoTimer -= dt * eScale;
-      diffMult = 1 + (survivalTime / 30) + (currentLevel - 1) * 0.15;
-    }
 
-    // Spawner
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+
+  if (!gameOver && gameRunning) {
+    recordFrame();
+    updatePlayer();
+
+    // Time Scale for world entities
+    const eScale = player.freezeTimer > 0 ? 0 : globalTimeScale;
+    const eDt = eScale * dt;
+
+    if (eScale > 0) {
+      nextEchoTimer -= dt;
+      survivalTime = (ts - startTime) / 1000;
+      diffMult = 1 + survivalTime / 30;
+    }
+    
     if (nextEchoTimer <= 0 && !spawnPaused && eScale > 0) {
       spawnClone();
       nextEchoTimer = spawnInterval();
@@ -3147,82 +3036,217 @@ function gameLoop(timestamp) {
       }
     }
 
+    const newWave = Math.floor(clonesKilled / 3 + 1);
+    if (newWave > window.currentWave) {
+      window.currentWave = newWave;
+      saveSession();
+      addFloatText(W/2, H/2 - 40, "CHECKPOINT SAVED", "#00ff41");
+      SFX.playWin();
+    }
+
     // Check for merge
     if (!isBossPhase && clones.length >= MERGE_THRESHOLD) {
       mergeClonesIntoGiant();
     }
 
     // Update / cull clones
-    clones.forEach(c => { if (eScale > 0) updateClone(c); });
-    clones = clones.filter(c => {
-      if (c.hp <= 0) {
-        if (c.mesh) scene.remove(c.mesh);
-        clonesKilled++;
-        spawnParticles(c.x, c.y, c.color || '#ff00ff', 15, 3);
-        return false;
+    if (!isBossPhase) {
+      for (let i = clones.length - 1; i >= 0; i--) {
+        const c = clones[i];
+        if (eScale > 0) updateClone(c);
+        if (c.hp <= 0) {
+          const c = clones[i];
+          spawnParticles(c.x + PLAYER_W / 2, c.y + PLAYER_H / 2, '#cc44ff', 22, 5);
+          addFloatText(c.x + PLAYER_W / 2, c.y - 22, 'ECHO BANISHED', '#dd88ff');
+          clones.splice(i, 1);
+          clonesKilled++;
+          triggerShake(4);
+        }
       }
-      return true;
-    });
-
+    }
     // Update / cull Bosses
-    activeBosses.forEach(b => { if (eScale > 0) updateGiantEcho(b); });
-    activeBosses = activeBosses.filter(b => {
+    for (let i = activeBosses.length - 1; i >= 0; i--) {
+      const b = activeBosses[i];
+      if (eScale > 0) updateGiantEcho(b);
       if (b.hp <= 0) {
-        if (b.mesh) scene.remove(b.mesh);
-        clonesKilled += 5;
-        spawnParticles(b.x, b.y, b.color || '#ff00ff', 30, 5);
-        if (activeBosses.length === 0) startLevelClearTransition();
-        return false;
-      }
-      return true;
-    });
+        const bSize = b.sizeMult || GIANT_SIZE_MULT;
+        spawnParticles(b.x + (PLAYER_W * bSize) / 2, b.y + (PLAYER_H * bSize) / 2, b.isSuperior ? '#ffd700' : '#ff33ff', 50, 10);
+        addFloatText(b.x + (PLAYER_W * bSize) / 2, b.y - 40, b.isSuperior ? 'SUPERIOR BANISHED' : 'GIANT DESTROYED', b.isSuperior ? '#ffd700' : '#ff55ff');
+        
+        // Spawn Relic / Reward
+        droppedRelics.push({
+          x: b.x + (PLAYER_W * bSize) / 2 - 15,
+          y: b.y + (PLAYER_H * bSize) / 2,
+          w: 30, h: 30, vy: -8, type: Math.random() < 0.3 ? 'HP' : (Math.random() < 0.6 ? 'DUR' : 'WP'),
+          bounce: 3
+        });
 
-    // Progression logic
+        activeBosses.splice(i, 1);
+        clonesKilled += 2;
+        triggerShake(15);
+        SFX.playWin();
+
+        // Level clearing logic
+        if (activeBosses.length === 0) {
+           startLevelClearTransition();
+        }
+      }
+    }
+
     if (levelClearing && eScale > 0) {
-       levelTimer -= dt * eScale;
+       levelTimer -= dt;
        if (levelTimer <= 0) advanceLevel();
     }
 
-    // World Entities & Abilities
-    if (eScale > 0) {
-      updateShockwaves();
-      updateGravitySpirals();
-      updateFireParticles();
-      updateBossProjectiles();
+    // Update Relics
+    for (let i = droppedRelics.length - 1; i >= 0; i--) {
+      const r = droppedRelics[i];
+      if (eScale > 0) {
+        r.vy += GRAVITY * globalTimeScale;
+        r.y += r.vy * globalTimeScale;
+      }
+      if (r.y + r.h >= ARENA.ground) {
+        r.y = ARENA.ground - r.h;
+        if (r.bounce > 0) { r.vy = -r.vy * 0.4; r.bounce--; } else { r.vy = 0; }
+      }
+      
+      const pCx = player.x + PLAYER_W / 2;
+      const pCy = player.y + PLAYER_H / 2;
+      const rCx = r.x + r.w / 2;
+      const rCy = r.y + r.h / 2;
+      
+      if (Math.abs(pCx - rCx) < (PLAYER_W/2 + r.w/2) && Math.abs(pCy - rCy) < (PLAYER_H/2 + r.h/2)) {
+         if (r.type === 'WP') {
+           player.hasPowerSword = true;
+           player.powerHits = 40;
+           addFloatText(player.x, player.y - 60, "OMEGA BLADE ACQUIRED", "#ffd700");
+         } else if (r.type === 'HP') {
+           player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.5);
+           addFloatText(player.x, player.y - 60, "VITALITY POTION", "#00ff41");
+         } else if (r.type === 'DUR') {
+           player.maxHp += 100;
+           player.hp += 100;
+           addFloatText(player.x, player.y - 60, "FORTIFIED CORE (+100 HP)", "#ff33b2");
+         }
+         droppedRelics.splice(i, 1);
+         SFX.playWin();
+      }
     }
-    
-    if (survivalTime < 0.1 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 4 - Updating Entities");
+
+    // Update Shockwaves
+    if (eScale > 0) updateShockwaves();
+
+    // Update Weapons
+    for (let i = droppedWeapons.length - 1; i >= 0; i--) {
+      const w = droppedWeapons[i];
+      if (eScale > 0) {
+        w.vy += GRAVITY * globalTimeScale;
+        w.y += w.vy * globalTimeScale;
+      }
+      if (w.y + w.h >= ARENA.ground) {
+        w.y = ARENA.ground - w.h;
+        if (w.bounce > 0) { w.vy = -w.vy * 0.4; w.bounce--; } else { w.vy = 0; }
+      }
+      const pCx = player.x + PLAYER_W / 2;
+      const pCy = player.y + PLAYER_H / 2;
+      const wCx = w.x + w.w / 2;
+      const wCy = w.y + w.h / 2;
+      if (Math.abs(pCx - wCx) < (PLAYER_W/2 + w.w/2) && Math.abs(pCy - wCy) < (PLAYER_H/2 + w.h/2)) {
+         player.hasPowerSword = true;
+         player.powerHits = 15;
+         droppedWeapons.splice(i, 1);
+         addFloatText(pCx, pCy - 30, "POWER SWORD!", "#ffcc00");
+         spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#ffcc00', 15, 4);
+      }
+    }
+
+    // Time Distortion Logic
+    if (isTimeDistorted) {
+      distortionTimer += 0.015;
+      // Cycle: Normal (1.0) -> Slow (0.4) -> Fast (1.6) -> Normal (1.0)
+      const cycle = Math.sin(distortionTimer); // -1 to 1
+      globalTimeScale = 1.0 + cycle * 0.6;
+    } else {
+      globalTimeScale = 1.0;
+    }
+
+    // Player death
+    if (player.hp <= 0) {
+      gameOver = true;
+      gameRunning = false;
+      triggerShake(14);
+      spawnParticles(player.x + PLAYER_W / 2, player.y + PLAYER_H / 2, '#4488ff', 30, 7);
+      setTimeout(showGameOver, 1300);
+    }
+
+    updateGravitySpirals();
+    updateLightnings();
+    updateFireParticles();
+    updateBossProjectiles();
+    if (screenFlash > 0) screenFlash -= 1 * globalTimeScale;
     updateParticles();
     updateFloatTexts();
-    if (survivalTime < 0.1 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 5 - updateHUD");
     updateHUD();
   }
 
-  // 3. Clear 2D Canvas for HUD/Text
-  if (ctx) {
-     ctx.clearRect(0, 0, W, H);
-     ctx.save();
-     ctx.translate(shakeX, shakeY);
-     drawHUD2D(); 
-     ctx.restore();
+
+  // ── Draw ──
+  drawArena();
+  drawGravitySpirals();
+  drawLightnings();
+  drawFireParticles();
+  drawBossProjectiles();
+
+  if (screenFlash > 0) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash / 8 * 0.45})`;
+    ctx.fillRect(0, 0, W, H);
   }
 
-  if (survivalTime < 0.1 && !window._firstFrameLogged) console.log("DIAGNOSTIC: Step 6 - Rendering 3D Scene");
-  // 4. Render 3D Scene
-  if (composer) composer.render();
+  clones.forEach(c => {
+    drawCharacter(c, false);
+    drawHpBar(c, '#8e7c9d', '#462633');
+  });
 
-  if (survivalTime < 0.1 && !window._firstFrameLogged) {
-      console.log("DIAGNOSTIC: First frame complete.");
-      window._firstFrameLogged = true;
+  // Legacy giantEcho block removed to fix ReferenceError crash
+  if (!gameOver) {
+    drawCharacter(player, true);
+    drawHpBar(player, '#90a955', '#4f772d');
   }
-  requestAnimationFrame(gameLoop);
-}
 
-function drawHUD2D() {
-    drawFloatTexts();
-    drawParticles();
-    
-    // Level Clear Overlay 2D
+  drawParticles();
+  drawFloatTexts();
+  drawShockwaves();
+
+    // Draw Bosses
+    activeBosses.forEach(b => {
+      drawCharacter(b, false);
+      drawHpBar(b, b.isSuperior ? '#ffd700' : '#c48d9e', b.isSuperior ? '#daa520' : '#8e7c9d');
+    });
+
+    // Draw Relics
+    droppedRelics.forEach(r => {
+      ctx.save();
+      ctx.shadowBlur = 20;
+      ctx.translate(r.x + r.w / 2, r.y + r.h / 2);
+      ctx.rotate(performance.now() / 500);
+      
+      if (r.type === 'WP') {
+        ctx.fillStyle = '#ffd700'; ctx.shadowColor = '#ffd700';
+        ctx.fillRect(-4, -10, 8, 20); ctx.fillRect(-10, 2, 20, 5);
+      } else if (r.type === 'HP') {
+        ctx.fillStyle = '#00ff41'; ctx.shadowColor = '#00ff41';
+        ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.fillRect(-2, -6, 4, 12); ctx.fillRect(-6, -2, 12, 4);
+      } else {
+        ctx.fillStyle = '#ff33b2'; ctx.shadowColor = '#ff33b2';
+        ctx.beginPath();
+        ctx.moveTo(0, -10); ctx.bezierCurveTo(10, -20, 20, 0, 0, 15); ctx.bezierCurveTo(-20, 0, -10, -20, 0, -10);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+
+    // Level Clear Overlay
     if (levelClearing) {
        ctx.save();
        ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -3235,126 +3259,159 @@ function drawHUD2D() {
        ctx.fillText("PREPARING NEXT ZONE...", W/2, H/2 + 40);
        ctx.restore();
     }
+
+  // Time Distortion & Freeze Overlay
+  if (isTimeDistorted || (player && player.freezeTimer > 0)) {
+    const isFrozen = player && player.freezeTimer > 0;
+    const pulse = Math.abs(Math.sin((isFrozen ? player.freezeTimer : distortionTimer) * 2)) * 0.1;
+    ctx.save();
+    
+    if (isFrozen) {
+      ctx.fillStyle = `rgba(0, 180, 255, ${0.15 + pulse})`; // Cold heavy blue for freeze
+    } else {
+      ctx.fillStyle = globalTimeScale < 1 
+        ? `rgba(0, 100, 255, ${0.05 + pulse})` // Blueish for slow
+        : `rgba(255, 50, 0, ${0.05 + pulse})`;  // Redish for fast
+    }
+    
+    ctx.fillRect(0, 0, W, H);
+    
+    ctx.font = 'bold 12px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.textAlign = 'center';
+    const msg = isFrozen ? "STASIS ACTIVE" : `TIME SCALE: ${globalTimeScale.toFixed(2)}x`;
+    ctx.fillText(msg, W / 2, H - 20);
+    ctx.restore();
+  }
+
+  // Echo warning pulse
+  if (nextEchoTimer < 1000 && !gameOver && inputBuffer.length >= 15) {
+    const pulse = Math.abs(Math.sin(Date.now() / 110));
+    ctx.save();
+    ctx.globalAlpha = pulse * 0.22;
+    ctx.fillStyle   = '#8e7c9d';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = pulse * 0.85;
+    ctx.font        = 'bold 14px Orbitron, monospace';
+    ctx.fillStyle   = '#f5f5f5';
+    ctx.textAlign   = 'center';
+    ctx.shadowColor = '#c48d9e';
+    ctx.shadowBlur  = 14;
+    ctx.fillText('⚡ ECHO SPAWNING...', W / 2, 56);
+    ctx.restore();
+  }
+
+  // Wave / difficulty badge
+  ctx.save();
+  ctx.font      = '600 11px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(196,141,158,0.5)';
+  ctx.textAlign = 'right';
+  ctx.fillText(`WAVE ${Math.floor(clonesKilled / 3 + 1)}  ×${diffMult.toFixed(1)}`, W - 38, 56);
+  ctx.restore();
+
+  ctx.restore(); // end shake
+
+  requestAnimationFrame(gameLoop);
 }
 
-// --- BOOTSTRAP ---
-window.addEventListener('load', () => {
-    console.log("=== ECHO FIGHT: SYSTEM BOOT STARTING ===");
-    
-    // 1. Setup UI
-    if (typeof scaleCanvas === 'function') scaleCanvas();
-    if (typeof showMenu === 'function') showMenu('main-menu');
-    console.log("UI: Main Menu displayed.");
+// ── Boot ──────────────────────────────────────────────────────
+(function initGame() {
+  // 1. Show menu immediately - no dependencies
+  showMenu('main-menu');
 
-    // 2. Initialize 3D Engine
-    if (typeof initEngine === 'function') {
-        initEngine();
+  // 2. NEW GAME
+  document.getElementById('new-game-btn').addEventListener('click', () => {
+    SFX.init();
+    showMenu('none');
+    scaleCanvas();
+    startGame();
+    requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
+  });
+
+  // 3. LOAD GAME (Resume)
+  document.getElementById('load-game-btn').addEventListener('click', () => {
+    SFX.init();
+    const raw = localStorage.getItem('echo_fight_save');
+    if (raw) {
+      const data = JSON.parse(raw);
+      showMenu('none');
+      scaleCanvas();
+      startGame(data);
+      requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(gameLoop); });
     } else {
-        console.error("BOOT ERROR: initEngine is not defined.");
+      loadSession();
+      showMenu('load-menu');
     }
+  });
 
-    // 3. Attach Listeners
-    console.log("SYS: Attaching event listeners...");
-    
-    const btnNew = document.getElementById('new-game-btn');
-    if (btnNew) {
-        btnNew.onclick = (e) => {
-            console.log("EVENT: New Game Clicked (onclick)");
-            if (typeof SFX !== 'undefined') SFX.init();
-            showMenu('none');
-            scaleCanvas();
-            if (typeof startGame === 'function') {
-                startGame();
-                requestAnimationFrame(ts => { 
-                    window.lastTime = ts; 
-                    requestAnimationFrame(gameLoop); 
-                });
-            } else {
-                console.error("GAME ERROR: startGame is not defined.");
-            }
-        };
-    } else {
-        console.error("SYS ERROR: new-game-btn not found in DOM.");
+  // 4. SETTINGS
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    SFX.init();
+    showMenu('settings-menu');
+  });
+  document.getElementById('settings-back-btn').addEventListener('click', () => showMenu('main-menu'));
+
+  // 5. LOAD BACK
+  document.getElementById('load-back-btn').addEventListener('click', () => showMenu('main-menu'));
+
+  // 6. QUIT
+  document.getElementById('quit-btn').addEventListener('click', () => {
+    showMenu('quit-menu');
+    const final = document.getElementById('final-stats');
+    const raw = localStorage.getItem('echo_fight_save');
+    if (raw) {
+      const d = JSON.parse(raw);
+      final.innerHTML = `<div class="stat-box"><span class="stat-value">${d.time.toFixed(1)}s</span><span class="stat-label">Best Time</span></div>
+        <div class="stat-box"><span class="stat-value">${d.kills}</span><span class="stat-label">Echoes Defeated</span></div>`;
     }
+  });
 
-    const btnLoad = document.getElementById('load-game-btn');
-    if (btnLoad) {
-        btnLoad.onclick = () => {
-            console.log("EVENT: Load Game Clicked");
-            const raw = localStorage.getItem('echo_fight_save');
-            if (raw) {
-                const data = JSON.parse(raw);
-                showMenu('none');
-                scaleCanvas();
-                startGame(data);
-                requestAnimationFrame(ts => { window.lastTime = ts; requestAnimationFrame(gameLoop); });
-            } else {
-                loadSession();
-                showMenu('load-menu');
-            }
-        };
-    }
+  // 7. Settings sliders - persist to localStorage
+  const settingsKey = 'echo_fight_settings';
+  const saved = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+  const defaults = { music: 80, sense: 50, vibe: 70, fps: 60, theme: 'neon' };
+  const cfg = { ...defaults, ...saved };
+  window.gameCfg = cfg; // Expose globally for rendering
 
-    const btnSettings = document.getElementById('settings-btn');
-    if (btnSettings) {
-        btnSettings.onclick = () => {
-            console.log("EVENT: Settings Clicked");
-            showMenu('settings-menu');
-        };
-    }
-
-    document.getElementById('settings-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
-    document.getElementById('info-btn')?.addEventListener('click', () => showMenu('info-menu'));
-    document.getElementById('info-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
-    document.getElementById('load-back-btn')?.addEventListener('click', () => showMenu('main-menu'));
-
-    // 4. Load Persistence
-    const settingsKey = 'echo_fight_settings';
-    const saved = JSON.parse(localStorage.getItem(settingsKey) || '{}');
-    const cfg = { music: 80, sense: 50, vibe: 70, fps: 60, theme: 'neon', ...saved };
-    window.gameCfg = cfg;
-
-    const setSlider = (id, valId, key) => {
-        const el = document.getElementById(id);
-        const valEl = document.getElementById(valId);
-        if (el && valEl) {
-            el.value = cfg[key];
-            valEl.textContent = cfg[key];
-            el.oninput = (e) => {
-                cfg[key] = Number(e.target.value);
-                valEl.textContent = cfg[key];
-                localStorage.setItem(settingsKey, JSON.stringify(cfg));
-            };
-        }
-    };
-    setSlider('set-music', 'val-music', 'music');
-    setSlider('set-sense', 'val-sense', 'sense');
-    setSlider('set-vibe',  'val-vibe',  'vibe');
-
-    const setFPS = fps => {
-      cfg.fps = fps;
+  const setSlider = (id, valId, key) => {
+    const el = document.getElementById(id);
+    const valEl = document.getElementById(valId);
+    if (!el || !valEl) return;
+    el.value = cfg[key];
+    valEl.textContent = cfg[key];
+    el.addEventListener('input', e => {
+      cfg[key] = Number(e.target.value);
+      valEl.textContent = cfg[key];
       localStorage.setItem(settingsKey, JSON.stringify(cfg));
-      const f60 = document.getElementById('fps-60');
-      const f90 = document.getElementById('fps-90');
-      if(f60) f60.style.borderColor = fps === 60 ? '#ff66b2' : '#333';
-      if(f90) f90.style.borderColor = fps === 90 ? '#ff66b2' : '#333';
-    };
-    document.getElementById('fps-60')?.addEventListener('click', () => setFPS(60));
-    document.getElementById('fps-90')?.addEventListener('click', () => setFPS(90));
+      if (key === 'vibe' && navigator.vibrate) navigator.vibrate(15);
+    });
+  };
+  setSlider('set-music', 'val-music', 'music');
+  setSlider('set-sense', 'val-sense', 'sense');
+  setSlider('set-vibe',  'val-vibe',  'vibe');
 
-    const setTheme = theme => {
-      cfg.theme = theme;
-      localStorage.setItem(settingsKey, JSON.stringify(cfg));
-      const tNeon = document.getElementById('theme-neon');
-      const tRuin = document.getElementById('theme-ruin');
-      if(tNeon) tNeon.style.borderColor = theme === 'neon' ? '#ff66b2' : '#333';
-      if(tRuin) tRuin.style.borderColor = theme === 'ruin' ? '#00ff41' : '#333';
-    };
-    document.getElementById('theme-neon')?.addEventListener('click', () => setTheme('neon'));
-    document.getElementById('theme-ruin')?.addEventListener('click', () => setTheme('ruin'));
+  // FPS toggle
+  const setFPS = fps => {
+    cfg.fps = fps;
+    localStorage.setItem(settingsKey, JSON.stringify(cfg));
+    document.getElementById('fps-60').style.borderColor = fps === 60 ? '#ff66b2' : '#333';
+    document.getElementById('fps-90').style.borderColor = fps === 90 ? '#ff66b2' : '#333';
+  };
+  document.getElementById('fps-60').addEventListener('click', () => setFPS(60));
+  document.getElementById('fps-90').addEventListener('click', () => setFPS(90));
+  setFPS(cfg.fps);
 
-    console.log("=== ECHO FIGHT: SYSTEM BOOT READY ===");
-});
+  // Theme toggle
+  const setTheme = theme => {
+    cfg.theme = theme;
+    localStorage.setItem(settingsKey, JSON.stringify(cfg));
+    document.getElementById('theme-neon').style.borderColor = theme === 'neon' ? '#ff66b2' : '#333';
+    document.getElementById('theme-ruin').style.borderColor = theme === 'ruin' ? '#00ff41' : '#333';
+  };
+  document.getElementById('theme-neon').addEventListener('click', () => setTheme('neon'));
+  document.getElementById('theme-ruin').addEventListener('click', () => setTheme('ruin'));
+  setTheme(cfg.theme);
+})();
 </script>
 </body>
 </html>
