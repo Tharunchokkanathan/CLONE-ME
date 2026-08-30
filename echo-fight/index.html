@@ -1200,7 +1200,7 @@ canvas.addEventListener('mousemove', e => {
 });
 function pressing(...codes) { return codes.some(c => keys[c]); }
 function attackKey()  { return pressing('AltLeft', 'AltRight'); }
-function jumpKey()    { return pressing('ArrowUp', 'KeyW', 'Space'); }
+function jumpKey()    { return pressing('Space'); }
 function leftKey()    { return pressing('ArrowLeft',  'KeyA'); }
 function rightKey()   { return pressing('ArrowRight', 'KeyD'); }
 // 3D Specific
