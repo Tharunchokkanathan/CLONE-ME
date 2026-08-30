@@ -315,13 +315,6 @@
     }
     
     .interface-hidden { display: none !important; }
-      height: 100%;
-      background: linear-gradient(90deg, #ff6600, #ff0000);
-      border-radius: 5px;
-      transition: width 0.1s linear;
-      width: 0%;
-      box-shadow: 0 0 15px rgba(255,102,0,0.8);
-    }
 
     canvas {
       display: block;
@@ -776,6 +769,7 @@
 
   <div id="canvas-wrap">
     <canvas id="canvas" width="820" height="480"></canvas>
+    <canvas id="canvas2d" width="820" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;"></canvas>
 
     <!-- 2D Overlay Menu -->
     <div id="overlay">
@@ -1044,6 +1038,13 @@ function scaleCanvas() {
     overlay.style.height = (H * scale) + 'px';
   }
   
+  const canv2d = document.getElementById('canvas2d');
+  if (canv2d) {
+    canv2d.width = W;
+    canv2d.height = H;
+    canv2d.style.width = (W * scale) + 'px';
+    canv2d.style.height = (H * scale) + 'px';
+  }
 }
 scaleCanvas();
 window.addEventListener('resize', scaleCanvas);
@@ -1130,8 +1131,9 @@ function initEngine() {
   composer.addPass(renderScene);
   composer.addPass(bloomPass);
 
-  // Initialize 2D context for HUD
-  ctx = canvas.getContext('2d');
+  // Initialize 2D context for HUD overlay (separate canvas)
+  const canvas2d = document.getElementById('canvas2d');
+  ctx = canvas2d ? canvas2d.getContext('2d') : null;
 
   // Initialize Platforms as 3D Cubes
   PLATFORMS.forEach(p => {
@@ -1543,6 +1545,10 @@ function updateClone(c) {
     c.mesh.rotation.y = Math.atan2(c.vx, c.vz || 0.001);
   }
 
+  // Attack timer
+  if (c.attackTimer > 0) c.attackTimer--;
+  else c.isAttacking = false;
+
   // Trail
   c.trail.push({ x: c.x, y: c.y });
   if (c.trail.length > 8) c.trail.shift();
@@ -1911,7 +1917,7 @@ function updatePlayer() {
   if (player.isDashing) {
     player.dashTimer -= spMult;
     player.vy = 0;
-    player.vx = player.facing * 14 * spMult;
+    player.vx = player.facing.x * 14 * spMult;
     if (player.dashTimer <= 0) {
       player.isDashing = false;
       player.vx *= 0.5;
@@ -2033,14 +2039,14 @@ function updatePlayer() {
       const currentRange = isPower ? ATTACK_RANGE * 1.5 : ATTACK_RANGE;
 
       spawnParticles(
-        player.x + PLAYER_W / 2 + player.facing * 30,
+        player.x + PLAYER_W / 2 + player.facing.x * 30,
         player.y + PLAYER_H / 2,
         isPower ? '#ffcc00' : '#55aaff', 6, 2
       );
 
       // Hit clones
       clones.forEach(c => {
-        const ax = player.x + PLAYER_W / 2 + player.facing * (currentRange / 2);
+        const ax = player.x + PLAYER_W / 2 + player.facing.x * (currentRange / 2);
         const cx = c.x + PLAYER_W / 2;
         const py = player.y + PLAYER_H / 2;
         const cy = c.y + PLAYER_H / 2;
@@ -2058,7 +2064,7 @@ function updatePlayer() {
       // Hit Bosses
       activeBosses.forEach(b => {
         const s = b.sizeMult || GIANT_SIZE_MULT;
-        const ax = player.x + PLAYER_W / 2 + player.facing * (currentRange / 2);
+        const ax = player.x + PLAYER_W / 2 + player.facing.x * (currentRange / 2);
         const gx = b.x + (PLAYER_W * s) / 2;
         const py = player.y + PLAYER_H / 2;
         const gy = b.y + (PLAYER_H * s) / 2;
@@ -2103,7 +2109,7 @@ function updatePlayer() {
       spawnParticles(tx, ty, target.color || '#f1c40f', 15, 4);
 
       // Muzzle spark at player
-      spawnParticles(player.x + PLAYER_W/2 + player.facing * 20, player.y + PLAYER_H/2, '#ffffff', 8, 2);
+      spawnParticles(player.x + PLAYER_W/2 + player.facing.x * 20, player.y + PLAYER_H/2, '#ffffff', 8, 2);
 
       addFloatText(tx, target.y - 20, `-${dmg} (PISTOL)`, '#ffffff');
       addFloatText(player.x + PLAYER_W/2, player.y - 40, "BANG!", "#ffffff");
@@ -2425,7 +2431,7 @@ function drawCharacter(ent, isPlayer) {
     // Eye
     ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 6;
     ctx.fillStyle   = '#ffffff';
-    const ex = cx + ent.facing * 4 * s;
+    const ex = cx + ent.facing.x * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#050505';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.3 * s, 0, Math.PI * 2); ctx.fill();
@@ -2457,7 +2463,7 @@ function drawCharacter(ent, isPlayer) {
     // Dark eye
     ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 6 * s;
     ctx.fillStyle   = ent.color || '#ffffff';
-    const ex = cx + ent.facing * 4 * s;
+    const ex = cx + (typeof ent.facing === 'number' ? ent.facing : (ent.facing.x || 1)) * 4 * s;
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 3.2 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#000000';
     ctx.beginPath(); ctx.arc(ex, cy - 4 * s, 1.5 * s, 0, Math.PI * 2); ctx.fill();
@@ -2469,7 +2475,8 @@ function drawCharacter(ent, isPlayer) {
     const isPower = isPlayer && ent.hasPowerSword && ent.powerHits > 0;
     const maxDur = ent.maxAttackTimer || ATTACK_DUR;
     const prog  = Math.min(1, ent.attackTimer / maxDur);
-    const atkX  = cx + ent.facing * (hw + 6 * s);
+    const fDir = typeof ent.facing === 'number' ? ent.facing : (ent.facing.x || 1);
+    const atkX  = cx + fDir * (hw + 6 * s);
     const usedRange = isPower ? ATTACK_RANGE * 1.5 : (ent.isGiant ? ATTACK_RANGE * 1.5 : ATTACK_RANGE);
     const atkLen = usedRange * s * prog;
 
@@ -2481,7 +2488,7 @@ function drawCharacter(ent, isPlayer) {
     ctx.lineWidth   = isPower ? 5 : 3;
     ctx.beginPath();
     ctx.moveTo(atkX, cy);
-    ctx.lineTo(atkX + ent.facing * atkLen, cy);
+    ctx.lineTo(atkX + fDir * atkLen, cy);
     ctx.stroke();
     ctx.globalAlpha = prog * 0.45;
     ctx.lineWidth   = isPower ? 3 : 2;
@@ -2650,21 +2657,21 @@ function drawGravitySpirals() {
 //  Flame Thrower Logic 
 function updateFlameLogic(spMult) {
   // Spawn high-density particles
-  const fx = player.x + PLAYER_W/2 + player.facing * 18;
+  const fx = player.x + PLAYER_W/2 + player.facing.x * 18;
   const fy = player.y + PLAYER_H/2;
   
   const particleCount = 12; // Doubled for smoothness
   for (let i = 0; i < particleCount; i++) {
     const angle = (Math.random() - 0.5) * 0.55; // Slightly wider spray
     const speed = 7 + Math.random() * 6;
-    const vx = Math.cos(angle) * speed * player.facing;
+    const vx = Math.cos(angle) * speed * player.facing.x;
     const vy = Math.sin(angle) * speed - (1.5 + Math.random() * 2.5);
     spawnFireParticle(fx, fy, vx, vy);
   }
 
   // Detect and Damage
   const flameRect = {
-    x: player.facing === 1 ? player.x + PLAYER_W : player.x - FLAME_RANGE,
+    x: player.facing.x >= 0 ? player.x + PLAYER_W : player.x - FLAME_RANGE,
     y: player.y - 40,
     w: FLAME_RANGE,
     h: PLAYER_H + 80
@@ -3045,6 +3052,7 @@ function startGame(savedData = null) {
   droppedRelics = [];
   droppedWeapons = [];
   gravitySpirals = [];
+  fireParticles = [];
 
   bossOrbs = [];
   laserBeams = [];
@@ -3190,9 +3198,7 @@ function gameLoop(timestamp) {
 }
 
 function drawHUD2D() {
-    updateFloatTexts();
     drawFloatTexts();
-    updateParticles();
     drawParticles();
     
     // Level Clear Overlay 2D
